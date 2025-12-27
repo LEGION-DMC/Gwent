@@ -1,0 +1,333 @@
+/* Стили для колоды */
+.deck-visual { position: relative; width: 100px; height: 150px; }
+.deck-stack { position: relative; width: 100%; height: 100%; }
+.deck-card-back { width: 100%; height: 100%; object-fit: cover;}
+.deck-card-back:hover { transform: scale(1.05); filter: drop-shadow(0 0 10px rgba(212,175,55,0.5)); cursor: url('../ui/cursor_hover.png'), pointer; }
+.deck-count { position: absolute; top: 86%; left: 50%; transform: translate(-50%,-50%); 
+	color: white; font-size: 18px; background: rgba(0,0,0,0.9); border-radius: 20%; 
+	width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; 
+}
+
+/* Стили для лидера */
+.leader-card-on-board { width: 110px; height: 160px; cursor: url('../ui/cursor_hover.png'), !important; transition: all 0.3s ease; }
+.leader-card-on-board:hover { transform: scale(1.05); filter: drop-shadow(0 0 10px rgba(212,175,55,0.5)); }
+.leader-card-container { position: relative; width: 100%; height: 100%; }
+.leader-card-media { width: 100%; height: 100%; object-fit: cover; }
+.leader-card-border { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; }
+.leader-card-banner { position: absolute; top: -26px; left: -18px; width: calc(100% + 10px); height: calc(100% + 10px); object-fit: contain; z-index: 3; pointer-events: none; }
+.leader-card-name { position: absolute; top: 8px; left: 0; right: 0; text-align: center; color: #d4af37; -webkit-text-stroke: 0.3px black; font-size: 14px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 2; padding: 0 5px; }
+
+/* Стили для карт в руке */
+.hand-card { position: relative; width: 88px; height: 128px; transition: all 0.3s ease; }
+.hand-card:hover { transform: translateY(-15px) scale(1.1); z-index: 10; cursor: url('../ui/cursor_hover.png'), pointer; }
+.hand-card-container { position: relative; width: 100%; height: 100%; }
+.hand-card-media { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+.hand-card-border { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; }
+.hand-card-banner { position: absolute; top: -22px; left: -15px; width: calc(100% + 8px); height: calc(100% + 8px); object-fit: contain; z-index: 3; pointer-events: none; }
+.hand-card-name { position: absolute; top: 6px; left: 0; right: 0; text-align: center; color: #d4af37; -webkit-text-stroke: 0.3px black; font-size: 12px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 2; padding: 0 3px; }
+.hand-card-strength { position: absolute; top: 3px; left: 2px; color: white; font-size: 16px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 3; }
+.hand-card-type-icon { position: absolute; top: 2px; left: -1px; z-index: 3; }
+.hand-card-type-icon img { width: 20px; height: 20px; }
+.hand-card-position { position: absolute; bottom: -1px; right: 0px; width: 30px; height: 30px; z-index: 3; }
+.hand-card-position-banner { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 2px rgba(0,0,0,0.8)); }
+.hand-card-position-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 25px; height: 25px; object-fit: contain; }
+
+.hand-cards { display: flex; justify-content: center; align-items: flex-end; gap:5px; flex-wrap: wrap; }
+
+.card-selected { animation: cardSelectPulse 0.3s ease; filter: drop-shadow(0 0 10px #ffd700); }
+
+@keyframes cardSelectPulse {
+	0% { transform: translateY(-15px) scale(1.1); }
+	50% { transform: translateY(-15px) scale(1.15); }
+	100% { transform: translateY(-15px) scale(1.1); }
+}
+
+/* Стили для карт на поле (такой же стиль как в руке) */
+.board-card { position: relative; width: 88px; height: 128px; transition: all 0.3s ease; }	
+.board-card:hover { transform: translateY(-5px) scale(1.05); z-index: 5;}
+.board-card-container { position: relative; width: 100%; height: 100%; }
+.board-card-media { width: 100%; height: 100%; object-fit: cover; border-radius: 6px;}
+.board-card-border {  position: absolute;  top: 0;  left: 0;  width: 100%;  height: 100%;  object-fit: cover;  z-index: 2;  }
+.board-card-banner { position: absolute; top: -22px; left: -15px; width: calc(100% + 8px); height: calc(100% + 8px); object-fit: contain; z-index: 3; pointer-events: none; }
+.board-card-name { position: absolute; top: 6px; left: 0; right: 0; text-align: center; color: #d4af37; -webkit-text-stroke: 0.3px black; font-size: 12px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 2; padding: 0 3px; }
+.board-card-strength {  position: absolute;  top: 3px;  left: 2px;  color: white;  font-size: 16px;  font-weight: bold;  text-shadow: 2px 2px 4px rgba(0,0,0,0.8);  z-index: 3;  }
+.board-card-type-icon { position: absolute; top: 2px; left: -1px; z-index: 3; }
+.board-card-type-icon img { width: 20px; height: 20px; }
+.board-card-position { position: absolute; bottom: -1px; right: 0px; width: 30px; height: 30px; z-index: 3; }
+.board-card-position-banner { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 2px rgba(0,0,0,0.8)); }
+.board-card-position-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 25px; height: 25px; object-fit: contain; }
+
+/* Стили для карт тактики на поле */
+.board-card.tactic { width: 85px; height: 125px; bottom: 1px; cursor: url('../ui/cursor_hover.png'), pointer; }
+.board-card.tactic .board-card-name { font-size: 10px; } 
+.board-card.tactic .board-card-strength { font-size: 14px; }
+
+/* Стили для карт погоды (такой же стиль как в руке) */
+.weather-card {  position: relative;  width: 88px;  height: 128px;  cursor: pointer; transition: all 0.3s ease; cursor: url('../ui/cursor_hover.png'), pointer; }   
+.weather-card:hover {  transform: translateY(-5px) scale(1.05); z-index: 10; } 
+.weather-card-container {  position: relative;  width: 100%;  height: 100%;  } 
+.weather-card-media {  width: 100%;  height: 100%;  object-fit: cover;  border-radius: 6px; } 
+.weather-card-border { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; } 
+.weather-card-banner { position: absolute; top: -22px; left: -15px; width: calc(100% + 8px); height: calc(100% + 8px); object-fit: contain; z-index: 3; pointer-events: none; } 
+.weather-card-name { position: absolute; top: 6px; left: 0; right: 0; text-align: center; color: #d4af37; -webkit-text-stroke: 0.3px black; font-size: 12px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 2; padding: 0 3px; } 
+.weather-card-type-icon { position: absolute; top: 2px; left: -1px; z-index: 3; } 
+.weather-card-type-icon img { width: 20px; height: 20px; } 
+.weather-card-counter { position: absolute; top: 2px; right: 2px; background: #2196F3; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; z-index: 4; font-weight: bold; border: 1px solid white; } 
+
+/* Контейнер для карт погоды */
+.weather-cards-container { display: flex; gap: 8px; align-items: center; justify-content: center; max-width: 110%; }
+
+/* Стили для доступных рядов */
+.row-available { cursor: url('../ui/cursor_move.png'), pointer; box-shadow: 1px 5px 5px rgba(212, 175, 55, 1); }
+.tactic-slot-available { cursor: url('../ui/cursor_move.png'), pointer; box-shadow: 1px 5px 5px rgba(212, 175, 55, 1); }
+
+/* Обновляем позиционирование рядов игрока и противника */
+.player-rows-area { bottom: 23.9%; left: 29.6%; width: 950px; } 
+.opponent-rows-area { bottom: 62.5%; left: 29.6%; width: 950px; }
+
+.cards-row { display: flex; gap: 4px; flex: 1; height: 120px; align-items: center; padding: 5px 5px 5px 0; flex-wrap: wrap; justify-content: flex-start; margin-left: -36px; min-width: 0; /* Разрешаем сжатие */ overflow-x: visible; /* Разрешаем выход за границы если нужно */ }
+
+/* Уменьшаем размер карт на поле для лучшего размещения */
+.board-card {  position: relative;  width: 85px; /* Уменьшили на 6px */ height: 125px; /* Уменьшили на 10px */ bottom: 8px; transition: all 0.3s ease; flex-shrink: 0; /* Запрещаем сжатие карт */ cursor: url('../ui/cursor_hover.png'), pointer; } 
+.tactics-slot { display: flex; align-items: center; justify-content: center; width: 130px; height: 120px; transform: translateX(-50px); }
+
+/* Анимация для новых карт */
+@keyframes cardAppear {
+	0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+	70% { transform: scale(1.1) rotate(10deg); opacity: 1; }
+	100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+
+.opponent-total-score { top: 3.9%; left: 8%; }
+.player-total-score { bottom: 5.6%; left: 8%; }
+
+.board-card:last-child,
+.weather-card:last-child { animation: cardAppear 0.5s ease-out; }
+
+/* Стили для слота погоды */
+.weather-area { position: absolute; top: 41.5%; left: 7.4%; transform: translateY(-50%) translateX(-50px); width: 275px; height: 140px; } 
+.weather-slot { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
+
+/* Стили для модального окна колоды */
+.deck-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px); } 
+.deck-modal-overlay.active { opacity: 1; visibility: visible; }
+.deck-modal { background: linear-gradient(145deg, #1a1a1a, #2a2a2a); border: 2px solid #d4af37; border-radius: 10px; width: 800px; height: 500px; transform: scale(0.9); opacity: 0; transition: all 0.3s ease; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 50px rgba(212, 175, 55, 0.3); } 
+.deck-modal-overlay.active .deck-modal { transform: scale(1); opacity: 1; } 
+.deck-modal__header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 2px solid #d4af37; position: relative; min-height: 50px; }
+.deck-modal__title { color: #d4af37; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; } 
+.deck-modal__count { position: absolute; color: #ffd700; font-size: 18px; right: 20px; } 
+.deck-modal__close { display: none; } 
+.deck-modal__content { overflow-x: hidden; flex: 1; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; align-content: flex-start; }
+
+/* Стили для карт в модальном окне колоды */
+.deck-card {
+	position: relative;
+	width: 120px;
+	height: 170px;
+	transition: all 0.3s ease;
+}
+
+.deck-card:hover {
+	transform: translateY(-5px) scale(1.05);
+	z-index: 10;
+	cursor: url('../ui/cursor_hover.png'), pointer;
+}
+
+.deck-card__container {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.deck-card__media {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: 6px;
+}
+
+.deck-card__border {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	z-index: 2;
+}
+
+.deck-card__banner {
+	position: absolute;
+	top: -26px;
+	left: -18px;
+	width: calc(100% + 8px);
+	height: calc(100% + 8px);
+	object-fit: contain;
+	z-index: 3;
+	pointer-events: none;
+}
+
+.deck-card__name {
+	position: absolute;
+	top: 6px;
+	left: 0;
+	right: 0;
+	text-align: center;
+	color: #d4af37;
+	-webkit-text-stroke: 0.3px black;
+	font-size: 11px;
+	text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+	z-index: 2;
+	padding: 0 3px;
+}
+
+.deck-card__strength {
+	position: absolute;
+	top: 3px;
+	left: 2px;
+	color: white;
+	font-size: 14px;
+	font-weight: bold;
+	text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+	z-index: 3;
+}
+
+.deck-card__type-icon {
+	position: absolute;
+	top: 2px;
+	left: -2px;
+	z-index: 4;
+}
+
+.deck-card__type-icon img {
+	width: 25px;
+	height: 25px;
+}
+
+.deck-card__position {
+	position: absolute;
+	bottom: -1px;
+	right: 0px;
+	width: 28px;
+	height: 28px;
+	z-index: 3;
+}
+
+.deck-card__position-banner {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	filter: drop-shadow(0 0 2px rgba(0,0,0,0.8));
+}
+
+.deck-card__position-icon {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%,-50%);
+	width: 23px;
+	height: 23px;
+	object-fit: contain;
+}
+
+/* Стили для скроллбара */
+.deck-modal__content::-webkit-scrollbar {
+	width: 8px;
+}
+
+.deck-modal__content::-webkit-scrollbar-track {
+	background: rgba(0, 0, 0, 0.3);
+	border-radius: 4px;
+}
+
+.deck-modal__content::-webkit-scrollbar-thumb {
+	background: #d4af37;
+	border-radius: 4px;
+}
+
+.deck-modal__content::-webkit-scrollbar-thumb:hover {
+	background: #ffd700;
+}
+
+/* Стили для сбросов */
+.discard-visual {
+	position: relative;
+	width: 100px;
+	height: 150px;
+}
+
+.discard-stack {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.discard-card-back {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: 6px;
+	box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+
+.discard-card-back:hover { 
+	transform: scale(1.05); 
+	filter: drop-shadow(0 0 10px rgba(212,175,55,0.5)); 
+	cursor: url('../ui/cursor_hover.png'), pointer;
+}
+
+.discard-count {
+	position: absolute; top: 86%; left: 50%; transform: translate(-50%,-50%); 
+	color: white; font-size: 18px; background: rgba(0,0,0,0.9); border-radius: 20%; 
+	width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; 
+}
+
+/* Стили для общих счетчиков */
+.total-score-display {
+    pointer-events: none;
+}
+
+.opponent-total-score {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+}
+
+.player-total-score {
+    filter: drop-shadow(0 -2px 4px rgba(0,0,0,0.7));
+}
+
+/* Анимации для общих счетчиков */
+@keyframes scorePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.score-update {
+    animation: scorePulse 0.3s ease-in-out;
+}
+
+/* Стили для Муллиганы */
+.mulligan-card:hover {
+    transform: translateY(-15px);
+}
+
+.mulligan-selected {
+    transform: translateY(-15px);
+	  border: 3px solid #4CAF50 !important;
+    border-radius: 3px;
+}
+
+/* Анимация выбора */
+@keyframes cardSelectPulse {
+    0% { box-shadow: 0 0 5px rgba(76, 175, 80, 0.7); }
+    50% { box-shadow: 0 0 20px rgba(76, 175, 80, 1); }
+    100% { box-shadow: 0 0 5px rgba(76, 175, 80, 0.7); }
+}
+
+.mulligan-selected {
+    animation: cardSelectPulse 2s infinite;
+}

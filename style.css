@@ -1,0 +1,175 @@
+/* ===== ОБЩИЕ СТИЛИ ===== */
+/* Сброс стандартных отступов и границ для всех элементов */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Подключение  шрифтов */
+@font-face {
+    font-family: 'Gwent';
+    src: url('ui/font.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Стили для основного контейнера страницы */
+body {
+    background: url('ui/fon.jpg') no-repeat center center fixed;
+    background-size: cover; 
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Gwent', sans-serif; 
+    color: #fff; 
+    cursor: url('ui/cursor.png'), auto; 
+}
+
+/* Скрытие  скроллбара */
+* {
+    scrollbar-width: none;
+}
+	
+/* ===== ГЛАВНОЕ МЕНЮ ===== */
+/* Контейнер стартовой страницы */
+.start-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 5vh;
+    position: relative;
+}
+
+/* Стили для логотипа */
+.logo {
+    width: 400px;
+    margin-bottom: 80px; 
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.7)); 
+}
+
+/* Стили для контейнера кнопок меню */
+.main-menu-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    z-index: 10;
+}
+
+/* Стили для кнопок меню */
+.menu-btn {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    color: #d4af37;
+    border: 2px solid #d4af37; 
+    padding: 10px;
+    font-size: 24px;
+    font-family: 'Gwent', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px; 
+    cursor: url('ui/cursor_hover.png'), pointer;
+    transition: all 0.3s ease; 
+    border-radius: 5px; 
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+    position: relative;
+    overflow: hidden;
+    width: 200px;
+}
+
+/* Эффекты при наведении на кнопку */
+.menu-btn:hover {
+    transform: scale(1.1);   
+}
+
+/* Анимация свечения при наведении */
+.menu-btn:hover::before {
+    left: 100%;
+}
+
+/* Анимированная полоса свечения (псевдоэлемент) */
+.menu-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+/* Эффект нажатия на кнопку */
+.menu-btn:active {
+    transform: scale(1.1);   
+}
+
+/* Анимация исчезновения с движением вверх */
+@keyframes fadeOutUp {
+	from { 
+		opacity: 1; 
+		transform: translateY(0); 
+	}
+	to { 
+		opacity: 0; 
+		transform: translateY(-50px); 
+	}
+}
+
+/* Анимация исчезновения Логотипа с движением вверх */
+@keyframes fadeOutUp {
+	from { 
+		opacity: 1; 
+		transform: translateY(0); 
+	}
+	to { 
+		opacity: 0; 
+		transform: translateY(-50px); 
+	}
+}
+    
+/* Анимация исчезновения Меню с движением вниз */
+@keyframes fadeOutDown {
+	from { 
+		opacity: 1; 
+		transform: translateY(0); 
+	}
+	to { 
+		opacity: 0; 
+		transform: translateY(50px); 
+	}
+}
+    
+/* Анимация появления Меню с движением снизу */
+@keyframes fadeInUp {
+	from { 
+		opacity: 0; 
+		transform: translateY(30px); 
+	}
+	to { 
+		opacity: 1; 
+		transform: translateY(0); 
+	}
+}
+    
+/* Анимация появления Логотипа с движением сверху */
+@keyframes fadeInDown {
+	from { 
+		opacity: 0; 
+		transform: translateY(-30px); 
+	}
+	to { 
+		opacity: 1; 
+		transform: translateY(0); 
+	}
+}
+    
+/* Применяем анимацию появления к кнопкам главного меню */
+.main-menu-buttons {
+	animation: fadeInUp 0.8s ease;
+}
+    
+/* Применяем анимацию появления к логотипу */
+.logo {
+	animation: fadeInDown 0.8s ease;
+}

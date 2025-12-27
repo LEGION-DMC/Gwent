@@ -1,0 +1,175 @@
+/* Основные стили игрового поля */
+.game-board {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	transition: opacity 1s ease;
+	z-index: 1000;
+	overflow: hidden;
+}
+
+.board-background {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1920px;
+  height: 1080px;
+	background: url('../gwent/board.jpg') no-repeat center center;
+	background-size: cover;
+	transition: background 1s ease;
+}
+
+/* Общие стили для областей */
+.leader-area, .decks-area, .weather-area, .round-counter-area,
+.battle-rows, .player-hand-area, .game-controls {
+	position: absolute;
+	transition: all 0.8s ease;
+	opacity: 0;
+}
+
+/* Область лидера противника */
+.opponent-leader-area {
+	top: 6.5%;
+	left: 7.2%;
+	transform: translateY(-50px);
+}
+
+/* Область лидера игрока */
+.player-leader-area {
+	bottom: 9%;
+	left: 7.2%;
+	transform: translateY(50px);
+}
+
+/* Колоды противника */
+.opponent-decks-area {
+	top: 6.3%;
+	right: 5%;
+	display: flex;
+	gap: 74px;
+}
+
+/* Колоды игрока */
+.player-decks-area {
+	bottom: 9.5%;
+	right: 5%;
+	display: flex;
+	gap: 74px;
+}
+
+.deck-slot {
+	width: 100px;
+	height: 150px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #fff;
+	font-size: 15px;
+	text-align: center;
+}
+
+/* Счетчик раундов */
+.round-counter-area {
+	top: 30%;
+	right: 9.5%;
+}
+
+.round-display {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 5px;
+}
+
+.round-image {
+	width: 100px;
+	height: 90px;
+	filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5));
+}
+
+/* Рука игрока */
+.player-hand-area {
+	bottom: 11%;
+	left: 29.7%;
+	width: 950px;
+	height: 130px;
+}
+
+.hand-cards {
+	display: flex;
+	justify-content: center;
+	gap: 10px;
+	min-height: 120px;
+	padding: 10px;
+}
+
+/* Боевые ряды */
+.battle-row {
+	display: flex;
+	align-items: center;
+	height: 120px;
+}
+
+.player-rows-area .battle-row {
+	margin-top: 15.5px;
+}
+
+.opponent-rows-area .battle-row {
+	margin-top: 20px;
+}
+
+.opponent-rows-area .battle-row #opponentSiegeRow {
+	margin-top: 30px;
+}
+
+.opponent-rows-area .battle-row #opponentSiegeTactics {
+	margin-top: 10px;
+}
+
+.opponent-rows-area .battle-row #opponentSiegeStrength {
+	margin-top: 20px;
+}
+
+.row-strength {
+	width: 50px;
+	height: 50px;
+	transform: translateX(-58px);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: black;
+	font-size: 25px;
+}
+
+/* Элементы управления */
+.game-controls {
+	bottom: 26%;
+	right: 5.4%;
+	display: flex;
+	gap: 10px;
+}
+
+.control-btn {
+	background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+	color: #d4af37;
+	border: 2px solid #d4af37;
+	padding: 10px 20px;
+	font-size: 15px;
+	font-family: 'Gwent', sans-serif;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+	cursor: url('../ui/cursor_hover.png'), pointer;
+	transition: all 0.3s ease;
+	border-radius: 5px;
+	box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+}
+
+.control-btn:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 0 25px rgba(212, 175, 55, 0.8);
+	color: #ffd700;
+}

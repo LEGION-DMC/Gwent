@@ -1,0 +1,157 @@
+/* ===== СТИЛИ ДЛЯ ВЫБОРА ФРАКЦИИ ===== */
+/* Основной контейнер выбора фракции */
+.faction-selection {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(50px);
+    transition: all 0.8s ease;
+    z-index: 1000;
+    padding: 20px;
+}
+
+/* Заголовок выбора фракции */
+.faction-selection__title {
+    font-size: 32px;
+    color: #d4af37;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.7);
+}
+
+/* Контейнер для карточек фракций */
+.faction-selection__container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+/* Карточка отдельной фракции */
+.faction-card {
+    position: relative;
+    width: 120px;
+    height: 110px;
+    transition: all 0.4s ease;
+    overflow: hidden;
+}
+
+/* Эффект при наведении на карточку фракции */
+.faction-card:hover {
+    transform: scale(1.25);
+}
+
+/* Стиль для выбранной фракции */
+.faction-card--selected {
+    transform: scale(1.25);
+}
+
+/* Логотип фракции на карточке */
+.faction-card__logo {
+    width: 70%;
+    height: 70%;
+    object-fit: contain;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+    cursor: url('../ui/cursor_hover.png'), pointer;
+}
+
+/* Эффект свечения при наведении на логотип */
+.faction-card:hover .faction-card__logo {
+    filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6));
+}
+
+/* Эффект свечения для выбранной фракции */
+.faction-card--selected .faction-card__logo {
+    filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6));
+}
+
+/* Контейнер для описания фракции */
+.faction-description {
+    width: 720px;
+    min-height: 120px;
+    padding: 20px;
+    margin-bottom: 10px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s ease;
+    text-align: center;
+}
+
+/* Название фракции в описании */
+.faction-description__name {
+    font-size: 25px;
+    color: #ffd700;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* Текст описания фракции */
+.faction-description__text {
+    font-size: 17px;
+    color: #ccc;
+    line-height: 1.5;
+}
+
+/* Кнопка подтверждения выбора фракции */
+.confirm-btn {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    color: #d4af37;
+    border: 2px solid #d4af37;
+    padding: 15px 40px;
+    font-size: 20px;
+    font-family: 'Gwent', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: url('../ui/cursor_hover.png'), pointer;
+    transition: all 0.3s ease;
+    border-radius: 5px; 
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+    opacity: 0;
+    transform: translateY(30px);
+    pointer-events: none;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Эффекты при наведении на кнопку подтверждения */
+.confirm-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.8);
+    color: #ffd700;
+}
+
+/* Эффект при нажатии на кнопку */
+.confirm-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+/* Анимированная полоса свечения для кнопки */
+.confirm-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+/* Анимация свечения при наведении */
+.confirm-btn:hover::before {
+    left: 100%;
+}

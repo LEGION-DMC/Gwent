@@ -1,0 +1,170 @@
+/* ===== ЭКРАН ПРАВИЛ ИГРЫ ===== */
+/* Полноэкранный контейнер для правил */
+.rules-page {
+    position: fixed;              
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9); 
+    display: none;               
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    z-index: 2000;                  
+}
+
+/* Класс для отображения экрана правил */
+.rules-page.active {
+    display: flex;               
+}
+
+/* Кнопка возврата в меню */
+.rules-back-btn {
+    position: absolute;           
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    color: #d4af37;
+    border: 2px solid #d4af37;
+    padding: 5px 10px;           
+    font-size: 16px;                
+    font-family: 'Gwent', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;           
+    cursor: url('../ui/cursor_hover.png'), pointer;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+}
+
+.rules-back-btn:hover {
+    transform: translateX(5px);    
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+    color: #ffd700;
+}
+
+/* Заголовок экрана правил */
+.rules-title {
+    color: #d4af37;
+    font-size: 36px;            
+    margin-bottom: 30px;         
+    text-transform: uppercase;
+    letter-spacing: 3px;          
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.7);
+}
+
+/* Сетка для карточек правил */
+.rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+    gap: 15px;                      
+    max-width: 1200px;         
+    width: 100%;            
+}
+
+/* Карточка отдельного правила */
+.rule-card {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border: 2px solid #444;      
+    border-radius: 10px;          
+    padding: 20px;                  
+    cursor: url('../ui/cursor_hover.png'), pointer; 
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;              
+}
+
+.rule-card:hover {
+    transform: translateY(-5px);   
+    border-color: #d4af37;         
+    box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3); 
+}
+
+.rule-card__title {
+    color: #d4af37;
+    font-size: 20px;
+    margin-bottom: 10px;          
+    text-transform: uppercase;
+}
+
+.rule-card__description {
+    color: #ccc;                   
+    font-size: 14px;
+    line-height: 1.4;              
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО ПРАВИЛ ===== */
+/* Затемненный фон модального окна */
+.rule-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;                 
+    opacity: 0;                    
+    visibility: hidden;            
+    transition: all 0.3s ease;    
+}
+
+.rule-modal-overlay.active {
+    opacity: 1;                     
+    visibility: visible;           
+}
+
+/* Контейнер модального окна */
+.rule-modal {
+    background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+    border: 3px solid #d4af37;      
+    border-radius: 15px;           
+    padding: 30px;                 
+    max-width: 800px;              
+    width: 90%;                     
+    max-height: 80vh;             
+    overflow-y: auto;               
+    transform: scale(0.9);          
+    opacity: 0;                   
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.rule-modal-overlay.active .rule-modal {
+    transform: scale(1);            
+    opacity: 1;                     
+}
+
+.rule-modal__title {
+    color: #d4af37;
+    font-size: 28px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    text-align: center;             
+}
+
+.rule-modal__content {
+    color: #ccc;
+    font-size: 16px;
+    line-height: 1.6;             
+}
+
+/* Стили для заголовков h3 внутри модального окна */
+.rule-modal__content h3 {
+    color: #a6c516;                 
+}
+
+/* Контейнер для блоков правил с иконками */
+.bloc-rule {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;                      
+    padding-bottom: 15px;           
+}
+
+.rule-modal__image {
+    height: 80px;                   
+}
