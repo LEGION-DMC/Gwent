@@ -132,10 +132,6 @@ const rulesData = {
 			<img src="deck/any-row.png" alt="Гибрид" class="rule-modal__image">
             <h3>Гибрид</h3>
             <p>Возможно размещение в любом из доступных рядов</p>
-            
-            <div class="bloc-rule">
-                <img src="data/rules/rows.jpg" alt="Боевые ряды" class="rule-modal__image">
-            </div>
         `
     },
     abilities: {
