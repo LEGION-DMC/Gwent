@@ -1606,26 +1606,26 @@ function validateDeckAndStartGame() {
     const errors = [];
     
     // Проверяем общее количество карт
-    if (totalCards < 2) {
-        errors.push(`Минимальный размер колоды - 11 карты`);
+    if (totalCards < 15) {
+        errors.push(`Минимальный размер колоды - 15 карты`);
     }
     
-    if (totalCards > 50) {
-        errors.push(`Максимальный размер колоды - 11 карт`);
+    if (totalCards > 25) {
+        errors.push(`Максимальный размер колоды - 25 карт`);
     }
     
     // Проверяем количество карт юнитов
-    if (unitCardsCount < 2) {
-        errors.push(`Минимальное количество карт отрядов - 8`);
+    if (unitCardsCount < 10) {
+        errors.push(`Минимальное количество карт отрядов - 10`);
     }
     
     // Проверяем количество специальных карт
-    if (specialCardsCount < 0) {
+    if (specialCardsCount < 3) {
         errors.push(`Обязательное количество специальных карт - 3`);
     }
     
-    if (specialCardsCount > 10) {
-        errors.push(`Максимальное количество специальных карт - 3`);
+    if (specialCardsCount > 5) {
+        errors.push(`Максимальное количество специальных карт - 5`);
     }
     
     // Если есть ошибки - показываем их
