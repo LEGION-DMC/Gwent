@@ -80,14 +80,16 @@ const gameModule = {
         },
 		
 		turnTimer: {
-        active: false,
-        timeLeft: 60, // 60 секунд на ход
-        maxTime: 60,
-        intervalId: null,
-        timeouts: 0, // счетчик бездействий
-        maxTimeouts: 3 // после 3 бездействий - авто пас
-    },
+			active: false,
+			timeLeft: 60,
+			maxTime: 60,
+			intervalId: null,
+			timeouts: 0,
+			maxTimeouts: 2, 
+			penaltyApplied: false 
+		},
 		
+		roundLossDueToTimeout: null,
     },
 	
 	currentSettings: {
@@ -232,7 +234,7 @@ startTurnTimer: function() {
     // Создаем отображение таймера
     this.createTimerDisplay();
     
-    // Устанавливаем начальное время
+    // Сбрасываем таймер до 60 секунд
     this.gameState.turnTimer.timeLeft = 60;
     this.gameState.turnTimer.active = true;
     
@@ -240,6 +242,10 @@ startTurnTimer: function() {
     this.updateTimerDisplay();
     
     // Запускаем интервал
+    if (this.gameState.turnTimer.intervalId) {
+        clearInterval(this.gameState.turnTimer.intervalId);
+    }
+    
     this.gameState.turnTimer.intervalId = setInterval(() => {
         this.updateTimer();
     }, 1000);
@@ -289,13 +295,68 @@ handleTimeExpired: function() {
     this.gameState.turnTimer.timeouts++;
     console.log(`🚫 Бездействий: ${this.gameState.turnTimer.timeouts}/${this.gameState.turnTimer.maxTimeouts}`);
     
-    // Проверяем не достигнут ли лимит бездействий
-    if (this.gameState.turnTimer.timeouts >= this.gameState.turnTimer.maxTimeouts) {
-        console.log('⏸️ Достигнут лимит бездействий - автоматический пас');
-        this.forceAutoPass();
+    const currentPlayer = this.gameState.currentPlayer;
+    
+    // ✅ Первое бездействие - штраф картой
+    if (this.gameState.turnTimer.timeouts === 1 && !this.gameState.turnTimer.penaltyApplied) {
+        console.log('🎯 Первое бездействие - наложение штрафа');
+        this.applyCardPenalty(currentPlayer);
+        this.gameState.turnTimer.penaltyApplied = true;
+        
+        // Перезапускаем таймер для следующего хода
+        setTimeout(() => {
+            if (currentPlayer === 'player') {
+                this.startTurnTimer();
+            }
+        }, 1000);
+    }
+    // ✅ Второе бездействие - авто-пас и поражение в раунде
+    else if (this.gameState.turnTimer.timeouts >= 2) {
+        console.log('⏸️ Достигнут лимит бездействий - авто-пас и поражение в раунде');
+        this.forceAutoPassWithRoundLoss(currentPlayer);
+    }
+},
+
+// Новый метод для применения штрафа картой
+applyCardPenalty: function(player) {
+    console.log(`🎯 Применение штрафа для ${player}`);
+    
+    const playerState = this.gameState[player];
+    
+    if (playerState.hand.length === 0) {
+        console.log(`❌ У ${player} нет карт в руке для штрафа`);
+        return;
+    }
+    
+    // Выбираем случайную карту из руки
+    const randomIndex = Math.floor(Math.random() * playerState.hand.length);
+    const penaltyCard = playerState.hand[randomIndex];
+    
+    console.log(`🗑️ Штраф: карта "${penaltyCard.name}" отправляется в сброс`);
+    
+    // Удаляем карту из руки
+    playerState.hand.splice(randomIndex, 1);
+    
+    // Добавляем карту в сброс
+    this.addCardToDiscard(penaltyCard, player);
+    
+    // Обновляем отображение
+    if (player === 'player') {
+        this.displayPlayerHand();
+        this.displayPlayerDiscard();
     } else {
-        console.log('🔄 Время вышло - передача хода');
-        this.forceEndTurn();
+        this.displayOpponentDiscard();
+    }
+    
+    // Показываем сообщение
+    const message = player === 'player' 
+        ? 'Бездействие! Случайная карта отправлена в сброс' 
+        : 'Противник бездействует! Карта отправлена в сброс';
+    this.showGameMessage(message, 'warning');
+    
+    // Воспроизводим звук штрафа
+    if (audioManager && audioManager.playSound) {
+        audioManager.playSound('button');
     }
 },
 
@@ -321,35 +382,31 @@ forceEndTurn: function() {
     }
 },
 
-forceAutoPass: function() {
-    const currentPlayer = this.gameState.currentPlayer;
+forceAutoPassWithRoundLoss: function(player) {
+    console.log(`💀 ${player} теряет раунд из-за бездействия`);
     
-    if (currentPlayer === 'player') {
-        // Игрок пасует автоматически
-        this.gameState.player.passed = true;
-        console.log('⏸️ Игрок автоматически пасует');
-        
-        // Обновляем интерфейс
-        this.updateControlButtons();
-        
-        // Проверяем конец раунда
-        if (window.gameModule) {
-            window.gameModule.checkRoundEnd();
-        }
+    // Принудительно завершаем раунд в пользу противника
+    this.gameState[player].passed = true;
+    
+    // Устанавливаем специальный флаг для поражения из-за бездействия
+    this.gameState.roundLossDueToTimeout = player;
+    
+    // Если игрок проигрывает раунд из-за бездействия
+    if (player === 'player') {
+        this.showGameMessage('Вы проиграли раунд из-за бездействия!', 'error');
     } else {
-        // ИИ пасует автоматически
-        this.gameState.opponent.passed = true;
-        console.log('⏸️ Противник автоматически пасует');
-        
-        // Проверяем конец раунда
-        if (window.gameModule) {
-            window.gameModule.checkRoundEnd();
-        }
+        this.showGameMessage('Противник проиграл раунд из-за бездействия!', 'info');
     }
+    
+    // Ждем немного и завершаем раунд
+    setTimeout(() => {
+        this.endRound();
+    }, 2000);
 },
 
 resetTimeoutCounter: function() {
     this.gameState.turnTimer.timeouts = 0;
+    this.gameState.turnTimer.penaltyApplied = false; // Сбрасываем флаг штрафа
     console.log('🔄 Счетчик бездействий сброшен');
 },
 
@@ -1817,47 +1874,63 @@ handleTurnEnd: function() {
     
     console.log(`Счет: Игрок ${playerScore} - ${opponentScore} Противник`);
     
-    // ✅ ИСПОЛЬЗУЕМ НОВУЮ СИСТЕМУ ПРОВЕРКИ ПОБЕДИТЕЛЯ С УЧЕТОМ СПОСОБНОСТЕЙ
-    let roundWinner = null;
-    
-    if (window.factionAbilitiesModule) {
-        roundWinner = window.factionAbilitiesModule.checkRoundWinner(
-            this.gameState, 
-            playerScore, 
-            opponentScore
-        );
-    } else {
-        // Старая логика как fallback
-        if (playerScore > opponentScore) {
-            roundWinner = 'player';
-        } else if (opponentScore > playerScore) {
-            roundWinner = 'opponent';
+    // Проверяем поражение из-за бездействия
+    if (this.gameState.roundLossDueToTimeout) {
+        const losingPlayer = this.gameState.roundLossDueToTimeout;
+        
+        if (losingPlayer === 'player') {
+            console.log('🎯 Противник выиграл раунд из-за бездействия игрока');
+            this.gameState.roundsWon.opponent++;
+            this.showRoundResult('opponent', playerScore, opponentScore);
+        } else {
+            console.log('🎯 Игрок выиграл раунд из-за бездействия противника');
+            this.gameState.roundsWon.player++;
+            this.showRoundResult('player', playerScore, opponentScore);
         }
-    }
-    
-    // Обновляем счет побед
-    if (roundWinner === 'player') {
-        this.gameState.roundsWon.player++;
-        console.log('🎯 Победитель раунда: Игрок');
-    } else if (roundWinner === 'opponent') {
-        this.gameState.roundsWon.opponent++;
-        console.log('🎯 Победитель раунда: Противник');
+        
+        // Сбрасываем флаг
+        this.gameState.roundLossDueToTimeout = null;
     } else {
-        // ✅ НИЧЬЯ - оба получают по баллу (если нет Нильфгаарда)
-        this.gameState.roundsWon.player++;
-        this.gameState.roundsWon.opponent++;
-        console.log('🤝 Ничья в раунде - оба получают по баллу');
+        // Обычная логика определения победителя
+        let roundWinner = null;
+        
+        if (window.factionAbilitiesModule) {
+            roundWinner = window.factionAbilitiesModule.checkRoundWinner(
+                this.gameState, 
+                playerScore, 
+                opponentScore
+            );
+        } else {
+            if (playerScore > opponentScore) {
+                roundWinner = 'player';
+            } else if (opponentScore > playerScore) {
+                roundWinner = 'opponent';
+            }
+        }
+        
+        // Обновляем счет побед
+        if (roundWinner === 'player') {
+            this.gameState.roundsWon.player++;
+            console.log('🎯 Победитель раунда: Игрок');
+        } else if (roundWinner === 'opponent') {
+            this.gameState.roundsWon.opponent++;
+            console.log('🎯 Победитель раунда: Противник');
+        } else {
+            this.gameState.roundsWon.player++;
+            this.gameState.roundsWon.opponent++;
+            console.log('🤝 Ничья в раунде - оба получают по баллу');
+        }
+        
+        // ✅ ИСПОЛЬЗУЕМ новый визуал
+        this.showRoundResult(roundWinner, playerScore, opponentScore);
     }
     
-    // ✅ ОБРАБОТКА СПОСОБНОСТИ ЧУДОВИЩ
+    // ✅ ОБРАБОТКА СПОСОБНОСТИ ЧУДОВИЩ (в любом случае)
     if (window.factionAbilitiesModule) {
         window.factionAbilitiesModule.handleRoundEndForMonsters(this.gameState);
     }
     
-    // ✅ ИСПОЛЬЗУЕМ новый визуал
-    this.showRoundResult(roundWinner, playerScore, opponentScore);
-    
-    // Проверяем конец игры (теперь нужно 2 очка для победы)
+    // Проверяем конец игры
     if (this.gameState.roundsWon.player >= 2 || this.gameState.roundsWon.opponent >= 2) {
         setTimeout(() => this.endGame(), 3000);
     } else {
@@ -1977,8 +2050,11 @@ handleTurnEnd: function() {
     this.gameState.opponent.passed = false;
     this.gameState.cardsPlayedThisTurn = 0;
     
-    // ✅ СБРАСЫВАЕМ СЧЕТЧИК БЕЗДЕЙСТВИЯ
+    // ✅ СБРАСЫВАЕМ счетчик бездействия
     this.resetTimeoutCounter();
+    
+    // ✅ СБРАСЫВАЕМ флаг поражения из-за таймаута
+    this.gameState.roundLossDueToTimeout = null;
 		
 		// ✅ СБРАСЫВАЕМ кеш счетов
 		this.invalidateScoreCache('player');
