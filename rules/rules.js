@@ -1,8 +1,8 @@
-// Данные правил игры, организованные по категориям
 const rulesData = {
     faction: {
 			title: 'Фракции',
             description: 'Противоборствующие фракции',
+            hasModal: true,
             content: `
 				<div class="bloc-rule">
 				<p>У каждой фракции своя история и свои способы ведения боя.</p>
@@ -75,6 +75,7 @@ const rulesData = {
     cards: {
 			title: 'Типы карт',
             description: 'Различные виды карт и их особенности',
+            hasModal: true,
             content: `
 				<div class="bloc-rule">
 				<p>У каждой фракции своя история и свои способы ведения боя.</p>
@@ -116,6 +117,7 @@ const rulesData = {
     rows: {
         title: 'Боевые ряды',
         description: 'Размещение карт на поле боя',
+        hasModal: true,
         content: `
             <img src="deck/close-row.png" alt="Ближний бой" class="rule-modal__image">
 			<h3>Ближний бой</h3>
@@ -137,6 +139,7 @@ const rulesData = {
     abilities: {
         title: 'Способности',
         description: 'Особые умения карт',
+        hasModal: true,
         content: `
             <h3>Боевые способности</h3>
             <p>Усиление, ослабление или уничтожение карт.</p>
@@ -154,6 +157,7 @@ const rulesData = {
     strategy: {
         title: 'Стратегия',
         description: 'Советы по построению колоды и тактике',
+        hasModal: true,
         content: `
             <h3>Построение колоды</h3>
             <p>Баланс между картами отрядов и специальными картами.</p>
@@ -171,6 +175,7 @@ const rulesData = {
 	sinergy: {
         title: 'Синергия',
         description: 'Взаимодейстdbt карт друг с другом',
+        hasModal: true,
         content: `
             <h3>Пример:</h3>
             <p>Ледяной великан + Трескучий мороз</p>
@@ -179,10 +184,7 @@ const rulesData = {
 	mulligan: {
         title: 'Муллиган',
         description: 'фаза перед началом каждого раунда, во время которой происходит замена карт в руке',
-        content: `
-            <h3>Пример:</h3>
-            <p>Ледяной великан + Трескучий мороз</p>
-        `
+        hasModal: false,
     }
 };
 
@@ -199,24 +201,25 @@ const rulesModule = {
         const rulesPage = document.createElement('div');
         rulesPage.className = 'rules-page';
         rulesPage.innerHTML = `
-            <button class="rules-back-btn" id="rulesBackBtn">НАЗАД</button>
             <div class="rules-title">ПРАВИЛА ИГРЫ</div>
             <div class="rules-grid" id="rulesGrid">
                 ${this.generateRulesGrid()}
             </div>
         `;
-        
         document.body.appendChild(rulesPage);
         this.createRuleModal();
     },
 
     generateRulesGrid: function() {
-        return Object.values(rulesData).map(rule => `
-            <div class="rule-card" data-rule="${rule.title}">
-                <div class="rule-card__title">${rule.title}</div>
-                <div class="rule-card__description">${rule.description}</div>
-            </div>
-        `).join('');
+        return Object.values(rulesData).map(rule => {
+            const modalClass = rule.hasModal ? '' : 'no-modal';
+            return `
+                <div class="rule-card ${modalClass}" data-rule="${rule.title}" data-has-modal="${rule.hasModal}">
+                    <div class="rule-card__title">${rule.title}</div>
+                    <div class="rule-card__description">${rule.description}</div>
+                </div>
+            `;
+        }).join('');
     },
 
     createRuleModal: function() {
@@ -232,43 +235,36 @@ const rulesModule = {
     },
 
     setupRulesEventListeners: function() {
-        document.getElementById('rulesBackBtn').addEventListener('click', () => {
-            this.hideRulesPage();
-            audioManager.playSound('button');
-        });
-
-        document.querySelectorAll('.rule-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                const ruleTitle = e.currentTarget.dataset.rule;
-                this.showRuleModal(ruleTitle);
-                audioManager.playSound('button');
-            });
-            
-            card.addEventListener('mouseenter', () => {
-                audioManager.playSound('touch');
-            });
-        });
-
-        document.querySelector('.rule-modal-overlay').addEventListener('click', (e) => {
-            if (e.target.classList.contains('rule-modal-overlay')) {
-                this.hideRuleModal();
-            }
-        });
-
-        this.setupEscapeHandler();
-    },
+		document.querySelectorAll('.rule-card').forEach(card => {
+			const hasModal = card.dataset.hasModal === 'true'; 
+			if (hasModal) {
+				card.addEventListener('click', (e) => {
+					const ruleTitle = e.currentTarget.dataset.rule;
+					this.showRuleModal(ruleTitle);
+					audioManager.playSound('button');
+				});
+			}          
+			card.addEventListener('mouseenter', () => {
+				audioManager.playSound('touch');
+			});
+		});
+		document.querySelector('.rule-modal-overlay').addEventListener('click', (e) => {
+			if (e.target.classList.contains('rule-modal-overlay')) {
+				this.hideRuleModal();
+			}
+		});
+		this.setupEscapeHandler();
+	},
 
     setupEscapeHandler: function() {
         if (this.escapeHandler) {
             document.removeEventListener('keydown', this.escapeHandler);
-        }
-        
+        }  
         this.escapeHandler = (e) => {
             if (e.key === 'Escape') {
                 this.handleEscape();
             }
-        };
-        
+        };   
         document.addEventListener('keydown', this.escapeHandler);
     },
 
@@ -288,19 +284,16 @@ const rulesModule = {
 
     showRulesPage: function() {
         const rulesPage = document.querySelector('.rules-page');
-        rulesPage.classList.add('active');
-        
+        rulesPage.classList.add('active');     
         setTimeout(() => {
             rulesPage.style.opacity = '1';
-        }, 50);
-        
+        }, 50);     
         this.setupEscapeHandler();
     },
 
     hideRulesPage: function() {
         const rulesPage = document.querySelector('.rules-page');
-        rulesPage.style.opacity = '0';
-        
+        rulesPage.style.opacity = '0';      
         setTimeout(() => {
             rulesPage.classList.remove('active');
             if (this.escapeHandler) {
@@ -314,12 +307,10 @@ const rulesModule = {
 
     showRuleModal: function(ruleTitle) {
         const rule = Object.values(rulesData).find(r => r.title === ruleTitle);
-        if (!rule) return;
-
+        if (!rule || !rule.content) return;
         const modalOverlay = document.querySelector('.rule-modal-overlay');
         const titleElement = document.getElementById('ruleModalTitle');
         const contentElement = document.getElementById('ruleModalContent');
-
         titleElement.textContent = rule.title;
         contentElement.innerHTML = rule.content;
         modalOverlay.classList.add('active');

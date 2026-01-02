@@ -17,7 +17,7 @@
 	left: 0;
 	width: 1920px;
   height: 1080px;
-	background: url('../gwent/board.jpg') no-repeat center center;
+	background: url('../board/board.jpg') no-repeat center center;
 	background-size: cover;
 	transition: background 1s ease;
 }

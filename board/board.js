@@ -77,7 +77,7 @@ const boardModule = {
             <!-- Счетчик раундов -->
             <div class="round-counter-area">
                 <div class="round-display">
-                    <img src="gwent/round1.png" alt="Раунд 1" class="round-image" id="roundImage">
+                    <img src="board/round1.png" alt="Раунд 1" class="round-image" id="roundImage">
                 </div>
             </div>
 
@@ -210,7 +210,7 @@ const boardModule = {
         const roundNumberElement = document.getElementById('roundNumber');
         
         if (roundImage) {
-            roundImage.src = `gwent/round${Math.min(roundNumber, 10)}.png`;
+            roundImage.src = `board/round${Math.min(roundNumber, 10)}.png`;
         }
         if (roundNumberElement) {
             roundNumberElement.textContent = roundNumber;

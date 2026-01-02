@@ -3,6 +3,7 @@ const audioManager = {
     musicEnabled: true,
     backgroundMusic: null,
     sounds: {},
+    isFirstInteractionHandled: false,
     
     init: function() {
         this.createAudioElements();
@@ -11,32 +12,28 @@ const audioManager = {
     },
     
     createAudioElements: function() {
-        // Фоновая музыка
         this.backgroundMusic = new Audio('sfx/fon.mp3');
         this.backgroundMusic.loop = true;
         this.backgroundMusic.volume = 0.3;
-        this.backgroundMusic.preload = 'auto';
         
-        // Звуковые эффекты
-        this.sounds = {
-            button: new Audio('sfx/button.mp3'),
-            transition: new Audio('sfx/transition.mp3'),
-            choice: new Audio('sfx/choice.mp3'),
-            touch: new Audio('sfx/touch.mp3'),
-            cardAdd: new Audio('sfx/card_add.mp3'),
-            cardRemove: new Audio('sfx/card_remove.mp3'),
-            weatherFrost: new Audio('sfx/frost.mp3'),
-            weatherFog: new Audio('sfx/fog.mp3'),
-            weatherRain: new Audio('sfx/rain.mp3'),
-            weatherClear: new Audio('sfx/clear.mp3')
+        const soundFiles = {
+            button: 'sfx/button.mp3',
+            transition: 'sfx/transition.mp3',
+            choice: 'sfx/choice.mp3',
+            touch: 'sfx/touch.mp3',
+            cardAdd: 'sfx/card_add.mp3',
+            cardRemove: 'sfx/card_remove.mp3',
+            weatherFrost: 'sfx/frost.mp3',
+            weatherFog: 'sfx/fog.mp3',
+            weatherRain: 'sfx/rain.mp3',
+            weatherClear: 'sfx/clear.mp3'
         };
         
-        Object.values(this.sounds).forEach(sound => {
-            sound.volume = 0.5;
-            sound.preload = 'auto';
-        });
+        for (const [key, src] of Object.entries(soundFiles)) {
+            this.sounds[key] = new Audio(src);
+            this.sounds[key].volume = 0.5;
+        }
         
-        // Особые настройки для звуков погоды
         this.sounds.weatherFrost.volume = 0.4;
         this.sounds.weatherFog.volume = 0.4;
         this.sounds.weatherRain.volume = 0.4;
@@ -45,8 +42,7 @@ const audioManager = {
     
     loadSettings: function() {
         const soundSetting = localStorage.getItem('soundEnabled');
-        const musicSetting = localStorage.getItem('musicEnabled');
-        
+        const musicSetting = localStorage.getItem('musicEnabled');       
         if (soundSetting !== null) this.soundEnabled = JSON.parse(soundSetting);
         if (musicSetting !== null) this.musicEnabled = JSON.parse(musicSetting);
     },
@@ -57,20 +53,25 @@ const audioManager = {
     },
     
     setupEventListeners: function() {
-        document.addEventListener('click', this.handleFirstInteraction.bind(this), { once: true });
+        const handler = () => this.handleFirstInteraction();
+        ['click', 'touchstart', 'keydown'].forEach(event => {
+            document.addEventListener(event, handler, { once: false });
+        });
     },
     
     handleFirstInteraction: function() {
-        if (this.musicEnabled) {
+        if (this.isFirstInteractionHandled) return;
+        this.isFirstInteractionHandled = true;
+        if (this.musicEnabled && this.backgroundMusic.paused) {
             this.playBackgroundMusic();
         }
     },
     
     playBackgroundMusic: function() {
         if (this.backgroundMusic && this.musicEnabled) {
-            this.backgroundMusic.play().catch(e => {
-                console.log('Автовоспроизведение музыки заблокировано:', e);
-            });
+            this.backgroundMusic.currentTime = 0;
+            const playPromise = this.backgroundMusic.play();
+            if (playPromise !== undefined) playPromise.catch(() => {});
         }
     },
     
@@ -83,16 +84,9 @@ const audioManager = {
     
     playSound: function(soundName) {
         if (!this.soundEnabled || !this.sounds[soundName]) return;
-        
-        try {
-            const sound = this.sounds[soundName].cloneNode();
-            sound.volume = 0.5;
-            sound.play().catch(e => {
-                console.log('Ошибка воспроизведения звука:', soundName, e);
-            });
-        } catch (e) {
-            console.log('Ошибка клонирования звука:', soundName, e);
-        }
+        const sound = this.sounds[soundName].cloneNode();
+        sound.volume = this.sounds[soundName].volume;
+        sound.play().catch(() => {});
     },
     
     toggleSound: function() {
@@ -104,13 +98,7 @@ const audioManager = {
     toggleMusic: function() {
         this.musicEnabled = !this.musicEnabled;
         this.saveSettings();
-        
-        if (this.musicEnabled) {
-            this.playBackgroundMusic();
-        } else {
-            this.stopBackgroundMusic();
-        }
-        
+        this.musicEnabled ? this.playBackgroundMusic() : this.stopBackgroundMusic();
         return this.musicEnabled;
     },
     
@@ -126,34 +114,29 @@ const audioManager = {
             sound.volume = newVolume;
         });
     },
-	
-	playWeatherSound: function(weatherType) {
+    
+    playWeatherSound: function(weatherType) {
         if (!this.soundEnabled) return;
-        
-        const soundMap = {
+        const weatherSounds = {
             'frost': this.sounds.weatherFrost,
             'fog': this.sounds.weatherFog,
             'rain': this.sounds.weatherRain,
             'clear': this.sounds.weatherClear
         };
-        
-        const sound = soundMap[weatherType];
+        const sound = weatherSounds[weatherType];
         if (sound) {
-            try {
-                const weatherSound = sound.cloneNode();
-                weatherSound.volume = sound.volume;
-                weatherSound.play().catch(e => {
-                    console.log('Ошибка воспроизведения звука погоды:', weatherType, e);
-                });
-            } catch (e) {
-                console.log('Ошибка клонирования звука погоды:', weatherType, e);
-            }
+            const weatherSound = sound.cloneNode();
+            weatherSound.volume = sound.volume;
+            weatherSound.play().catch(() => {});
         }
-    },
+    }
 };
 
-document.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('load', () => {
     audioManager.init();
+    setTimeout(() => {
+        if (audioManager.musicEnabled) audioManager.playBackgroundMusic();
+    }, 100);
 });
 
 window.audioManager = audioManager;

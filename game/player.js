@@ -183,7 +183,7 @@ const playerModule = {
         } else if (card.type === 'unit' && card.position) {
             if (Array.isArray(card.position)) {
                 availableRows = card.position.map(pos => pos.replace('-row', ''));
-            } else if (card.position === 'any') {
+            } else if (card.position === 'any-row') {
                 availableRows = ['close', 'ranged', 'siege'];
             } else {
                 availableRows = [card.position.replace('-row', '')];

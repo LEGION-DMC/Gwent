@@ -27,8 +27,8 @@
 .deck-building__container {
 	display: grid;
 	grid-template-columns: 1fr 300px 1fr;
-	gap: 30px;
-	height: calc(100% - 88px);
+	gap: 20px;
+	height: calc(100% - 40px);
 	max-width: 1600px;
 	margin: 0 auto;
 	margin-top: 20px;
@@ -38,7 +38,7 @@
 .cards-collection,
 .deck-cards {
 	background: rgba(20, 20, 20, 0.8);
-	border: 2px solid #444;
+	border: 1px solid #222;
 	border-radius: 10px;
 	padding: 0;
 	overflow: hidden;
@@ -51,8 +51,7 @@
 .deck-cards__header {
 	position: sticky;
 	top: 0;
-	background: rgba(20, 20, 20, 1);
-	border-bottom: 2px solid #444;
+	border-bottom: 1px solid #222;
 	z-index: 100;
 	padding: 0 20px;
 }
@@ -60,7 +59,7 @@
 .deck-cards__content {
 	flex: 1;
 	overflow-y: auto;
-	padding: 15px 20px;
+	padding: 5px 15px;
 	min-height: 200px;
 }
 
@@ -68,27 +67,27 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 15px;
-	border-bottom: 2px solid #d4af37;
+	margin-bottom: 10px;
+	border-bottom: 1px solid #d4af37;
 	position: sticky;
-	height: 60px;
+	height: 55px;
 	top: 0;
 	z-index: 100;
 }
 
 .section-header h2 {
 	color: #d4af37;
-	font-size: 24px;
+	font-size: 25px;
 	text-transform: uppercase;
 	letter-spacing: 2px;
 	margin: 0;
-	padding-top: 15px;
+	padding-top: 10px;
 }
 
 .sort-buttons {
 	display: flex;
 	gap: 10px;
-	padding-top: 15px;
+	padding-top: 5px;
 }
 
 .sort-btn {
@@ -104,13 +103,13 @@
 }
 
 .sort-btn img:hover {
-	transform: translateY(-6px) scale(1.3);
-	filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6));
+	transform: scale(1.2);
+	filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.3));
 }
 
 .sort-btn.active img{
-	transform: translateY(-6px) scale(1.4);
-	filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6));
+	transform: scale(1.4);
+	filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
 }
 
 .cards-grid {
@@ -142,16 +141,17 @@
 }
 
 .card__media {
-	width: 100%;
-	height: 100%;
+	margin-top: 1px;
+	width: 99%;
+	height: 99%;
 	object-fit: cover;
-	border-radius: 8px;
+	border-radius: 5px;
 }
 .card__media video {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
-	border-radius: 8px;
+	border-radius: 5px;
 }
 
 .card__border {
@@ -162,12 +162,13 @@
 	height: 100%;
 	object-fit: cover;
 	z-index: 2;
+	border-radius: 5px;
 }
 
 .card__banner {
 	position: absolute;
-	top: -26px;
-	left: -18px;
+	top: -27px;
+	left: -19px;
 	width: calc(100% + 10px);
 	height: calc(100% + 10px);
 	object-fit: contain;
@@ -177,8 +178,8 @@
 
 .card__type-icon img {
 	position: absolute;
-	top: 2px;
-	left: -2px;
+	top: 1px;
+	left: -2.5px;
 	width: 25px;
 	height: 25px;
 	z-index: 4;
@@ -186,23 +187,24 @@
 
 .card__name {
 	position: absolute;
-	top: 8px;
-	left: 15px;
+	top: 7px;
+	left: 4px;
 	right: 0;
 	text-align: center;
 	color: #d4af37;
-	-webkit-text-stroke: 0.3px black;
-	font-size: 14px;
-	text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+	-webkit-text-stroke: 0.2px black;
+	font-size: 13px;
+	text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 	z-index: 3;
-	padding: 0 5px;
 }
 
 .card__strength {
 	position: absolute;
-	top: 4px;
-	left: 3px;
-	font-size: 20px;
+	top: 5px;
+	left: 8.5%;
+	transform: translateX(-58%);
+	-webkit-text-stroke: 0.1px black;
+	font-size: 18px;
 	text-align: center;
 	z-index: 4;
 }
@@ -219,27 +221,27 @@
 	opacity: 0;
 	transition: all 0.3s ease;
 	z-index: 5;
-	border-radius: 0 0 4px 4px;
+	border-radius: 0 0 5px 5px;
 }
 
 .card__description-text {
 	font-size: 11px;
-	line-height: 1.3;
+	line-height: 1.1;
 	text-align: center;
+	-webkit-text-stroke: 0.1px black;
 }
 
 .deck-stats {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 30px;
+	gap: 4%;
 }
 
-/* Стили для карты лидера */
 .leader-card {
 	position: relative;
 	width: 195px;
-	height: 280px;
+	height: 277px;
 	cursor: url('../ui/cursor_hover.png'), pointer;
 }
 
@@ -247,14 +249,14 @@
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
-	border-radius: 8px;
+	border-radius: 5px;
 }
 
 .leader-card__image {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
-	border-radius: 8px;
+	border-radius: 5px;
 }
 
 .leader__border {
@@ -265,11 +267,12 @@
 	height: 100%;
 	object-fit: cover;
 	z-index: 2;
+	border-radius: 5px;
 }
 
 .leader__banner {
 	position: absolute;
-	top: -43px;
+	top: -46px;
 	left: -32px;
 	width: calc(100% + 10px);
 	height: calc(100% + 10px);
@@ -278,40 +281,51 @@
 	pointer-events: none;
 }
 
+.card__type_leader {
+	position: absolute;
+	top: -2px;
+	left: -7px;
+	width: 40px;
+	height: auto;
+	z-index: 3;
+}
+
 .leader__name {
 	position: absolute;
-	top: 10px;
+	top: 8px;
 	left: 0;
 	right: 0;
 	text-align: center;
 	color: #d4af37;
-	-webkit-text-stroke: 0.3px black;
+	-webkit-text-stroke: 0.2px black;
 	font-size: 18px;
-	text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+	text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 	z-index: 2;
 }
 
 .leader__logo {
 	position: absolute;
-	top: 231px;
-	left: 45px;
-	width: 100px;
+	top: 220px;
+	left: 40px;
 	z-index: 4;
-	padding: 0 5px;
 	transition: transform 0.3s ease;
 }
 
+.leader__logo {
+	width: 110px;
+}
+
 .leader__logo:hover {
-	transform: scale(1.2);
-	filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.8));
+	transform: scale(1.05);
+	filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5));
 	cursor: url('../ui/cursor_hover.png'), pointer !important;
 }
 
 .stats-info {
-	background: rgba(30, 30, 30, 0.8);
-	border: 2px solid #444;
-	border-radius: 10px;
-	margin-top: -20px;
+	background: rgba(20, 20, 20, 0.8);
+	border: 1px solid #222;
+	border-radius: 8px;
+	margin-top: -15px;
 	padding: 10px;
 	width: 200px;
 }
@@ -329,13 +343,14 @@
 	display: block;
 	font-size: 15px;
 	margin-bottom: 5px;
+	letter-spacing: 1.5px;
 }
 
 .stat-item {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 10px;
+	gap: 1px;
 }
 
 .stat-item img {
@@ -344,8 +359,8 @@
 }
 
 .stat-value {
-	color: #ffd700;
-	font-size: 20px;
+	color: #d4af37;
+	font-size: 22px;
 	font-weight: bold;
 	min-width: 30px;
 	text-align: center;
@@ -354,7 +369,7 @@
 .empty-deck-message {
 	grid-column: 1 / -1;
 	text-align: center;
-	color: #999;
+	color: #777;
 	padding: 40px;
 	font-style: italic;
 }
@@ -362,16 +377,16 @@
 .start-game-btn {
 	background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
 	color: #d4af37;
-	border: 2px solid #d4af37;
-	padding: 10px 30px;
-	font-size: 20px;
+	border: 1px solid #d4af37;
+	padding: 8px 30px;
+	font-size: 18px;
 	font-family: 'Gwent', sans-serif;
 	text-transform: uppercase;
 	letter-spacing: 2px;
 	cursor: url('../ui/cursor_hover.png'), pointer;
 	transition: all 0.3s ease;
-	border-radius: 5px;
-	box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+	border-radius: 4px;
+	box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
 	margin: 0 auto;
 	display: block;
 	position: absolute;
@@ -381,14 +396,13 @@
 }
 
 .start-game-btn:hover {
-	transform: translateY(-3px); /* Более светлый градиент */
-	box-shadow: 0 0 25px rgba(212, 175, 55, 0.8); /* Усиленная тень */
-	color: #ffd700;
+	scale: 1.05;
+	box-shadow: 0 0 25px rgba(212, 175, 55, 0.3);
+	color: #d4af37;
 }
 
 .start-game-btn:active {
-	transform: translateY(1px);
-	box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+	box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
 }
 
 .start-game-btn::before {
@@ -409,24 +423,17 @@
 .empty-category-message {
 	grid-column: 1 / -1;
 	text-align: center;
-	color: #666;
+	color: #777;
 	padding: 40px;
 	font-style: italic;
-	font-size: 16px;
-}
-
-.empty-category-message p {
-	margin: 0;
-	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .empty-deck-icon {
-	padding-top: 20px;
-	width: 30px;
+	padding-top: 25px;
+	width: 35px;
 	height: auto;
 }
 
-/* Стили для модального окна просмотра карты */
 .card-modal-overlay {
 	position: fixed;
 	top: 0;
@@ -454,8 +461,8 @@
 	width: 800px;
 	display: grid;
 	grid-template-columns: 300px 1fr;
-	gap: 50px;
-	transform: scale(0.9);
+	gap: 40px;
+	transform: scale(0.5);
 	opacity: 0;
 	transition: all 0.3s ease;
 	position: relative;
@@ -479,8 +486,9 @@
 }
 
 .card-modal__preview .card__media {
-	width: 100%;
-	height: 100%;
+	margin-top: 3px;
+	width: 99%;
+	height: 98%;
 	object-fit: cover;
 	border-radius: 10px;
 }
@@ -489,47 +497,54 @@
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
+	border-radius: 10px;
 }
 
 .card-modal__preview .card__banner {
-	top: -77px;
-	left: -52px;
+	top: -79px;
+	left: -55px;
 	width: calc(100% + 60px);
 	height: calc(100% + 80px);
 }
 
-.card-modal__preview .card__name {
-	font-size: 20px;
-	top: 15px;
-}
-
 .card-modal__preview .card__strength {
-	font-size: 30px;
-	top: 22px;
-	left: 16px;
+	font-size: 40px;
+	top: 18px;
+	left: 8.5%;
+	transform: translateX(-58%);
+	text-align: center;
+	-webkit-text-stroke: 1px black;
 }
 
 .card-modal__preview .card__type-icon img {
 	width: 60px;
 	height: 60px;
-	top: 11px;
-	left: -4px;
+	top: 8px;
+	left: -7px;
+}
+
+.card-modal__preview .card__type-leader img {
+	position: absolute;
+	width: 60px;
+	height: 60px;
+	top: 6px;
+	left: -7.5px;
+	z-index: 5;
 }
 
 .card-modal__info {
-	color: #fff;
 	display: flex;
 	flex-direction: column;
 }
 
 .card-modal__title {
 	color: #d4af37;
-	font-size: 28px;
-	margin-top: -35px;
+	font-size: 30px;
+	margin-top: -41px;
 	margin-bottom: 5px;
 	text-transform: uppercase;
 	letter-spacing: 2px;
-	text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+	text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
 }
 
 .card-modal__faction {
@@ -541,35 +556,35 @@
 
 .card-modal__stats {
 	display: grid;
-	grid-template-columns: repeat(2, 1fr);
+	grid-template-columns: repeat(3, 1fr);
 	gap: 5px;
 	margin-bottom: 10px;
 }
 
 .card-modal__stat {
-	background: rgba(50, 50, 50, 0.6);
-	padding: 8px;
+	background: rgba(30, 30, 30, 0.5);
+	padding: 5px;
 	border-radius: 4px;
-	border-left: 3px solid #d4af37;
+	border-left: 2px solid #d4af37;
 }
 
 .card-modal__stat-label {
-	color: #999;
-	font-size: 10px;
+	color: #ccc;
+	font-size: 11px;
 	text-transform: uppercase;
 	margin-bottom: 5px;
 }
 
 .card-modal__stat-value {
-	color: #ffd700;
+	color: #d4af37;
 	font-size: 15px;
 }
 
 .card-modal__description {
-	background: rgba(30, 30, 30, 0.8);
+	background: rgba(30, 30, 30, 0.5);
 	padding: 10px;
-	border-radius: 5px;
-	border: 1px solid #444;
+	border-radius: 4px;
+	border: 1px solid #222;
 	flex-grow: 1;
 	margin-bottom: 5px;
 }
@@ -584,15 +599,16 @@
 .card-modal__description-text {
 	color: #ccc;
 	font-size: 13px;
-	line-height: 1.5;
+	line-height: 1.3;
 	font-style: italic;
 }
 
 .card-modal__abilities {
-	background: rgba(30, 30, 30, 0.8);
+	background: rgba(30, 30, 30, 0.5);
 	padding: 10px;
 	border-radius: 5px;
-	border: 1px solid #444;
+	border: 1px solid #222;
+	margin-bottom: 5px;
 }
 
 .card-modal__abilities-title {
@@ -603,44 +619,43 @@
 }
 
 .card-modal__ability {
-	background: rgba(40, 40, 40, 0.6);
+	background: rgba(50, 50, 50, 0.5);
 	padding: 5px;
 	margin-bottom: 10px;
 	border-radius: 4px;
-	border-left: 3px solid #2196F3;
+	border-left: 2px solid #2196F3;
 }
 
 .card-modal__ability-name {
 	color: #2196F3;
-	font-size: 13px;
-	font-weight: bold;
+	font-size: 14px;
 	margin-bottom: 5px;
 }
 
 .card-modal__ability-description {
 	color: #ccc;
-	font-size: 13px;
-	line-height: 1.4;
+	font-size: 12px;
+	line-height: 1.2;
+	font-style: italic;
 }
 
-/* Стили для области умения фракции */
 .faction-ability {
-	background: rgba(30, 30, 30, 0.8);
-	border: 2px solid #444;
+	background: rgba(20, 20, 20, 0.8);
+	border: 1px solid #222;
 	border-radius: 10px;
 	margin-top: 25px;
-	padding: 10px;
+	padding: 5px;
 	width: 300px;
 }
 
 .faction-ability__header {
 	border-bottom: 1px solid #d4af37;
-	margin-bottom: 10px;
+	margin-bottom: 5px;
 	padding-bottom: 3px;
 }
 
 .faction-ability__header h3 {
-	color: #d4af37;
+  color: #d4af37;        
 	font-size: 16px;
 	text-transform: uppercase;
 	letter-spacing: 1px;
@@ -654,10 +669,6 @@
 	text-align: center;
 }
 
-.ability-icon {
-	flex-shrink: 0;
-}
-
 .ability-icon img {
 	width: 70px;
 	height: auto;
@@ -668,7 +679,7 @@
 }
 
 .ability-name {
-	color: #ffd700;
+	color: #d4af37;
 	font-size: 14px;
 	margin-bottom: 5px;
 }
@@ -676,17 +687,16 @@
 .ability-description {
 	color: #ccc;
 	font-size: 11px;
-	line-height: 1.3;
+	line-height: 1.2;
 }
 
-/* Стили для модального окна выбора умений */
 .abilities-modal-overlay {
 	position: fixed;
 	top: 0;
 	left: 0;
 	width: 100%;
 	height: 100%;
-	background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.9);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -694,6 +704,7 @@
 	opacity: 0;
 	visibility: hidden;
 	transition: all 0.3s ease;
+	backdrop-filter: blur(5px);
 }
 
 .abilities-modal-overlay.active {
@@ -702,10 +713,10 @@
 }
 
 .abilities-modal {
-	background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
-	border: 3px solid #d4af37;
+  background: url('../ui/fon.jpg') no-repeat center center fixed;
+	border: 2px solid #d4af37;
 	border-radius: 10px;
-	padding: 15px;
+	padding: 10px;
 	max-width: 700px;
 	width: 90%;
 	max-height: 80vh;
@@ -721,10 +732,12 @@
 }
 
 .abilities-modal__title {
-	color: #d4af37;
-	font-size: 24px;
+  color: #d4af37;        
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+	font-size: 25px;
 	text-align: center;
-	margin-bottom: 15px;
+	margin-top: 5px;
+	margin-bottom: 8px;
 	text-transform: uppercase;
 	letter-spacing: 2px;
 }
@@ -732,17 +745,17 @@
 .abilities-list {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
-	margin-bottom: 15px;
+	gap: 5px;
+	margin-bottom: 10px;
 }
 
 .ability-option {
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	padding: 10px;
-	background: rgba(50, 50, 50, 0.6);
-	border: 2px solid #666;
+	padding: 5px;
+  background: rgba(10, 10, 10, 0.4); 
+	border: 1px solid #222;
 	border-radius: 5px;
 	cursor: url('../ui/cursor.png'), pointer;
 	transition: all 0.3s ease;
@@ -755,8 +768,7 @@
 }
 
 .ability-option.selected {
-	border-color: #ffd70;
-	background: rgba(212, 175, 55, 0.1);
+	border-color: #d4af37;
 }
 
 .ability-option__icon img {
@@ -769,48 +781,56 @@
 }
 
 .ability-option__name {
-	color: #ffd700;
+	color: #d4af37;
 	font-size: 15px;
 	margin-bottom: 3px;
 }
 
 .ability-option__description {
 	color: #ccc;
-	font-size: 13px;
-	line-height: 1.3;
+	font-size: 12px;
+	line-height: 1.2;
+	font-style: italic;
 }
 
 .ability-option__check {
-	color: #4CAF50;
-	font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+}
+
+.ability-option__check img {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.3));
 }
 
 .abilities-confirm-btn {
 	background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
 	color: #d4af37;
-	border: 2px solid #d4af37;
-	padding: 10px 20px;
+	border: 1px solid #d4af37;
+	padding: 10px;
 	font-size: 16px;
 	font-family: 'Gwent', sans-serif;
 	text-transform: uppercase;
 	letter-spacing: 2px;
 	cursor: url('../ui/cursor_hover.png'), pointer;
 	transition: all 0.3s ease;
-	border-radius: 5px;
+	border-radius: 4px;
 	width: 100%;
 }
 
 .abilities-confirm-btn:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-	color: #ffd700;
+	transform: scale(1.01);
+	box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
+	color: #d4af37;
 }
 
-/* Стили для иконки позиционирования карты */
 .card__position {
 	position: absolute;
-	bottom: -1px;
-	right: 0px;
+	bottom: -3px;
+	right: -4px;
 	width: 40px;
 	height: 40px;
 	z-index: 4;
@@ -823,7 +843,7 @@
 	width: 100%;
 	height: 100%;
 	object-fit: contain;
-	filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+	filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 }
 
 .card__position-icon {
@@ -836,25 +856,11 @@
 	object-fit: contain;
 }
 
-/* Адаптация для модального окна */
 .card-modal__preview .card__position {
-	width: 40px;
-	height: 40px;
-	bottom: 10px;
-	right: 10px;
-}
-
-.card-modal__preview .card__position-icon {
-	width: 24px;
-	height: 24px;
-}
-
-/* Стили для отображения позиции в статистике модального окна */
-.card-modal__preview .card__position {
-	width: 80px;
-	height: 80px;
-	bottom: -6px;
-	right: -7px;
+	width: 85px;
+	height: 85px;
+	bottom: -5px;
+	right: -9px;
 }
 
 .card-modal__preview .card__position-icon {
@@ -865,36 +871,35 @@
 .back-to-faction-btn {
 	position: absolute;
 	top: 8px;
-	left: 15px;
+	left: 20px;
 	background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
 	color: #d4af37;
-	border: 2px solid #d4af37;
-	padding: 3px 10px;
+	border: 1px solid #d4af37;
+	padding: 5px 10px 4px 10px;
 	font-size: 13px;
 	font-family: 'Gwent', sans-serif;
 	text-transform: uppercase;
 	letter-spacing: 1px;
 	cursor: url('../ui/cursor_hover.png'), pointer;
 	transition: all 0.3s ease;
-	border-radius: 5px;
+	border-radius: 4px;
 	z-index: 1000;
 }
 
 .back-to-faction-btn:hover {
-	scale: 1.1;
+	scale: 1.05;
 	box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-	color: #ffd700;
+	color: #d4af37;
 }
 
 .deck-controls-panel {
-	background: rgba(20, 20, 20, 0.95);
-	border-top: 2px solid #444;
+	background: rgba(20, 20, 20, 0.8);
+	border-top: 1px solid #222;
 	padding: 5px;
 	display: flex;
 	justify-content: center;
-	gap: 10px;
+	gap: 8px;
 	z-index: 100;
-	backdrop-filter: blur(10px);
 	flex-shrink: 0;
 	position: sticky;
 	bottom: 0;
@@ -904,51 +909,30 @@
 .deck-control-btn {
 	background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
 	color: #d4af37;
-	border: 2px solid #444;
+	border: 1px solid #d4af37;
 	padding: 5px;
 	font-size: 13px;
 	font-family: 'Gwent', sans-serif;
 	text-transform: uppercase;
-	letter-spacing: 2px;
+	letter-spacing: 2.5px;
 	cursor: url('../ui/cursor_hover.png'), pointer;
 	transition: all 0.3s ease;
 	border-radius: 4px;
 	display: flex;
 	align-items: center;
-	gap: 5px;
+	gap: 8px;
 	min-width: 140px;
 	justify-content: center;
 }
 
 .deck-control-btn:hover {
-	transform: translateY(-2px);
+	scale: 1.02;
 	border-color: #d4af37;
 	box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-	color: #ffd700;
+	color: #d4af37;
 }
 
 .deck-control-btn img {
 	width: auto;
 	height: 21px;
-}
-
-/* Специфичные стили для кнопок */
-.auto-build-btn:hover {
-	border-color: #4CAF50;
-	box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
-}
-
-.save-deck-btn:hover {
-	border-color: #2196F3;
-	box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
-}
-
-.load-deck-btn:hover {
-	border-color: #FF9800;
-	box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
-}
-
-.clear-deck-btn:hover {
-	border-color: #f44336;
-	box-shadow: 0 5px 15px rgba(244, 67, 54, 0.3);
 }

@@ -1,12 +1,10 @@
-/* ===== МОДАЛЬНОЕ ОКНО НАСТРОЕК ===== */
-/* Фон модального окна настроек */
 .settings-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5); 
+    background: rgba(0, 0, 0, 0.9); 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -14,6 +12,7 @@
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
+	backdrop-filter: blur(5px);
 }
 
 .settings-modal-overlay.active {
@@ -22,9 +21,9 @@
 }
 
 .settings-modal {
-    background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
-    border: 3px solid #d4af37;    
-    border-radius: 15px;
+    background: url('../ui/fon.jpg') no-repeat center center fixed;
+    border: 2px solid #d4af37;
+    border-radius: 10px;
     padding: 15px;                 
     max-width: 400px;              
     width: 100%;
@@ -41,55 +40,51 @@
 .settings-modal__title {
     color: #d4af37;                
     font-size: 30px;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     text-transform: uppercase;
     text-align: center;
     text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
 }
 
 .settings-title {
-    color: #d4af17;                
-    font-size: 17px;
+    color: #d4af37;                
+    font-size: 18px;
     text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
 }
 
-/* Контейнер для элементов управления настройками */
 .settings-controls {
     display: flex;
     flex-direction: column;
     gap: 10px;                     
 }
 
-/* Отдельный элемент настройки (звук, музыка) */
 .settings-control {
     display: flex;
     justify-content: space-between; 
     align-items: center;
-    padding: 10px;
-    background: rgba(50, 50, 50, 0.6); 
-    border-radius: 8px;
-    border-left: 3px solid #d4af37; 
+    padding: 8px;
+    background: rgba(10, 10, 10, 0.5); 
+    border-radius: 5px;
+    border-left: 2px solid #d4af37; 
 }
 
 .settings-control__label {
     color: #ccc;
-    font-size: 18px;
+    font-size: 16px;
 }
 
-/* Контейнер для кнопок включения/выключения */
 .settings-control__buttons {
     display: flex;
     gap: 10px;                      
 }
 
-/* Кнопки настроек (вкл/выкл звука и музыки) */
 .settings-control__btn {
-    background: rgba(70, 70, 70, 0.8); 
-    border: 2px solid #666;         
+    background: rgba(10, 10, 10, 0.4); 
+    border: 1px solid #333;         
     border-radius: 50%;            
     width: 40px;                 
     height: 40px;
-    font-size: 18px;               
+    font-size: 20px;               
     cursor: url('../ui/cursor_hover.png'), pointer !important; 
     transition: all 0.3s ease;
     display: flex;
@@ -97,7 +92,6 @@
     justify-content: center;
 }
 
-/* Стили для активной кнопки */
 .settings-control__btn.active {
     border-color: #d4af37;        
     color: #d4af37;              
@@ -112,12 +106,12 @@
 
 .settings-select {
     cursor: url('../ui/cursor_hover.png'), pointer !important; 
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(10, 10, 10, 0.8);
     color: white;
     border: 1px solid #d4af37;
-    padding: 8px 12px;
+    padding: 8px 10px;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 13px;
     font-family: inherit;
     min-width: 150px;
 }

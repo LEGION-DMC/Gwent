@@ -1,5 +1,4 @@
 const skillSystem = {
-    // Типы способностей
     abilityTypes: {
         COMBAT: 'combat',
         WEATHER: 'weather', 
@@ -8,7 +7,6 @@ const skillSystem = {
         LEADER: 'leader'
     },
 
-    // Цели для способностей
     targets: {
         UNIT: 'unit',
         ROW: 'row',
@@ -17,7 +15,6 @@ const skillSystem = {
         DECK: 'deck'
     },
 
-    // Состояния карт
     cardStates: {
         ACTIVE: 'active',
         DAMAGED: 'damaged',
@@ -27,7 +24,6 @@ const skillSystem = {
     },
 
     abilities: {
-        // === ЛИДЕРСКИЕ СПОСОБНОСТИ ===
         'eredin_ability': {
             name: 'Власть Чудовищ',
             type: 'leader',
@@ -95,7 +91,6 @@ const skillSystem = {
             }
         },
 
-        // === СПЕЦИАЛЬНЫЕ СПОСОБНОСТИ ===
         'geralt': {
             name: 'Рвение',
             type: 'combat',
@@ -108,7 +103,6 @@ const skillSystem = {
             }
         },
 
-        // === ПОГОДНЫЕ СПОСОБНОСТИ ===
         'biting_frost': {
             name: 'Белый хлад',
             type: 'weather',
@@ -170,7 +164,6 @@ const skillSystem = {
             }
         },
 
-        // === ТАКТИЧЕСКИЕ СПОСОБНОСТИ ===
         'morale_boost': {
             name: 'Боевой дух',
             type: 'combat',
@@ -195,23 +188,16 @@ const skillSystem = {
         }
     },
 
-    // === ОСНОВНЫЕ МЕТОДЫ ===
-    
     activateAbility: function(abilityId, context) {
         const ability = this.abilities[abilityId];
         if (!ability) {
-            console.warn('Способность не найдена:', abilityId);
             return { success: false, message: 'Способность не найдена' };
         }
 
-        console.log('Активация способности:', ability.name);
-        
-        // Проверяем условия активации
         if (!this.canActivateAbility(ability, context)) {
             return { success: false, message: 'Невозможно активировать способность' };
         }
 
-        // Применяем эффект способности
         const result = this.applyEffect(ability.effect, context);
         
         if (result.success) {
@@ -222,12 +208,10 @@ const skillSystem = {
     },
 
     canActivateAbility: function(ability, context) {
-        // Проверяем доступность способности
         if (ability.type === 'leader' && context.leaderUsed) {
             return false;
         }
 
-        // Проверяем наличие целей
         const targets = this.findTargets(ability.effect, context);
         return targets.length > 0 || ability.effect.type === 'clear_weather';
     },
@@ -237,39 +221,28 @@ const skillSystem = {
             switch (effect.type) {
                 case 'boost':
                     return this.applyBoostEffect(effect, context);
-                    
                 case 'damage':
                     return this.applyDamageEffect(effect, context);
-                    
                 case 'conditional_damage':
                     return this.applyConditionalDamageEffect(effect, context);
-                    
                 case 'summon':
                     return this.applySummonEffect(effect, context);
-                    
                 case 'weather':
                     return this.applyWeatherEffect(effect, context);
-                    
                 case 'clear_weather':
                     return this.applyClearWeatherEffect(context);
-                    
                 case 'destroy':
                     return this.applyDestroyEffect(effect, context);
-                    
                 case 'reveal':
                     return this.applyRevealEffect(effect, context);
-                    
                 default:
                     return { success: false, message: 'Неизвестный тип эффекта' };
             }
         } catch (error) {
-            console.error('Ошибка применения эффекта:', error);
             return { success: false, message: 'Ошибка применения способности' };
         }
     },
 
-    // === КОНКРЕТНЫЕ РЕАЛИЗАЦИИ ЭФФЕКТОВ ===
-    
     applyBoostEffect: function(effect, context) {
         const targets = this.findTargets(effect, context);
         
@@ -280,8 +253,6 @@ const skillSystem = {
         targets.forEach(target => {
             const boostValue = effect.value || 1;
             this.boostCard(target, boostValue);
-            
-            // Визуальный эффект усиления
             this.createVisualEffect(target, 'boost', boostValue);
         });
 
@@ -302,8 +273,6 @@ const skillSystem = {
         targets.forEach(target => {
             const damageValue = effect.value || 1;
             this.damageCard(target, damageValue);
-            
-            // Визуальный эффект урона
             this.createVisualEffect(target, 'damage', damageValue);
         });
 
@@ -321,16 +290,14 @@ const skillSystem = {
             return { success: false, message: 'Нет подходящей цели' };
         }
 
-        // Базовая атака
         this.damageCard(target, effect.baseDamage);
         
-        // Проверка условия
         if (this.checkCondition(effect.condition, target)) {
             if (effect.bonusEffect === 'destroy') {
                 this.destroyCard(target);
                 return { 
                     success: true, 
-                    message: `Урон нанесен и цель уничтожена`,
+                    message: 'Урон нанесен и цель уничтожена',
                     destroyed: true
                 };
             }
@@ -338,7 +305,7 @@ const skillSystem = {
 
         return { 
             success: true, 
-            message: `Нанесен урон цели`,
+            message: 'Нанесен урон цели',
             conditionMet: false
         };
     },
@@ -406,7 +373,6 @@ const skillSystem = {
     },
 
     applyRevealEffect: function(effect, context) {
-        // Логика показа карт противника
         const revealedCards = this.revealOpponentCards(effect.count, context);
         
         return { 
@@ -416,8 +382,6 @@ const skillSystem = {
         };
     },
 
-    // === ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ===
-    
     findTargets: function(effect, context) {
         const { target, condition, row, count } = effect;
         let targets = [];
@@ -452,7 +416,6 @@ const skillSystem = {
     },
 
     findSummonableCards: function(effect, context) {
-        // Поиск карт в колоде по фильтрам
         const { filters, faction } = effect;
         return context.playerDeck.filter(card => {
             if (faction && card.faction !== faction) return false;
@@ -493,13 +456,9 @@ const skillSystem = {
         }
     },
 
-    // === ОСНОВНЫЕ ОПЕРАЦИИ С КАРТАМИ ===
-    
     boostCard: function(card, value) {
         card.currentStrength += value;
         card.state = this.cardStates.BOOSTED;
-        
-        // Обновляем отображение силы
         this.updateCardDisplay(card);
     },
 
@@ -507,10 +466,8 @@ const skillSystem = {
         card.currentStrength = Math.max(0, card.currentStrength - value);
         card.state = card.currentStrength === 0 ? this.cardStates.DESTROYED : this.cardStates.DAMAGED;
         
-        // Обновляем отображение силы
         this.updateCardDisplay(card);
         
-        // Если карта уничтожена
         if (card.currentStrength === 0) {
             this.onCardDestroyed(card);
         }
@@ -523,7 +480,6 @@ const skillSystem = {
     },
 
     summonCard: function(cardData, context) {
-        // Создаем новую карту на поле
         const summonedCard = {
             ...cardData,
             id: `${cardData.id}_summoned_${Date.now()}`,
@@ -532,7 +488,6 @@ const skillSystem = {
             state: this.cardStates.ACTIVE
         };
 
-        // Размещаем карту на поле
         if (context.gameBoard.placeCard(summonedCard, 'any', 'player')) {
             return summonedCard;
         }
@@ -541,11 +496,9 @@ const skillSystem = {
     },
 
     revealOpponentCards: function(count, context) {
-        // Логика показа карт противника
         const opponentHand = context.opponentHand || [];
         const revealedCards = opponentHand.slice(0, count);
         
-        // Помечаем карты как показанные
         revealedCards.forEach(card => {
             card.revealed = true;
         });
@@ -553,8 +506,6 @@ const skillSystem = {
         return revealedCards;
     },
 
-    // === ВИЗУАЛЬНЫЕ ЭФФЕКТЫ ===
-    
     createVisualEffect: function(card, effectType, value) {
         if (!window.gameModule) return;
         
@@ -569,14 +520,11 @@ const skillSystem = {
     },
 
     updateCardDisplay: function(card) {
-        // Обновляем отображение карты на поле
         const cardElement = document.querySelector(`[data-card-id="${card.id}"]`);
         if (cardElement) {
             const strengthElement = cardElement.querySelector('.card__strength');
             if (strengthElement) {
                 strengthElement.textContent = card.currentStrength;
-                
-                // Анимация изменения силы
                 strengthElement.classList.add('strength-update');
                 setTimeout(() => {
                     strengthElement.classList.remove('strength-update');
@@ -586,40 +534,29 @@ const skillSystem = {
     },
 
     onCardDestroyed: function(card) {
-        // Удаляем карту с поля
         if (window.gameModule) {
             window.gameModule.removeCardFromBoard(card);
         }
     },
 
     onAbilityActivated: function(ability, context) {
-        // Помечаем лидера как использованного
         if (ability.type === 'leader') {
             context.leaderUsed = true;
         }
-        
-        // Логируем активацию способности
-        console.log(`Способность "${ability.name}" активирована`);
     },
 
-    // === ИНИЦИАЛИЗАЦИЯ СИСТЕМЫ ===
-    
     initialize: function() {
         this.enhanceCardsWithAbilities();
-        console.log('Система способностей инициализирована');
     },
 
     enhanceCardsWithAbilities: function() {
         if (!window.cardsModule || !window.cardsModule.cardsData) {
-            console.warn('Модуль карт не загружен');
             return;
         }
 
         const cardsData = window.cardsModule.cardsData;
         
-        // Добавляем способности конкретным картам
         Object.values(cardsData).forEach(faction => {
-            // Обрабатываем юнитов
             if (faction.units) {
                 faction.units.forEach(unit => {
                     if (unit.tags && unit.tags.includes('witcher')) {
@@ -631,7 +568,6 @@ const skillSystem = {
                 });
             }
 
-            // Обрабатываем специальные карты
             if (faction.specials) {
                 faction.specials.forEach(special => {
                     if (special.tags && special.tags.includes('weather')) {
@@ -657,12 +593,9 @@ const skillSystem = {
                 });
             }
         });
-
-        console.log('Способности карт успешно назначены');
     }
 };
 
-// Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', function() {
     skillSystem.initialize();
 });

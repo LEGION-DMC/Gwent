@@ -1236,8 +1236,8 @@ startCoinTossAnimation: function() {
 				
 				<div class="coin-wrapper">
 					<div class="coin" id="coinElement">
-						<img src="gwent/coin_player.png" alt="Игрок ходит первым" class="coin-front">
-						<img src="gwent/coin_opponent.png" alt="Противник ходит первым" class="coin-back">
+						<img src="board/coin_player.png" alt="Игрок ходит первым" class="coin-front">
+						<img src="board/coin_opponent.png" alt="Противник ходит первым" class="coin-back">
 					</div>
 				</div>
 				
@@ -2411,7 +2411,7 @@ handleTurnEnd: function() {
 		
 		opponentScoreDisplay.innerHTML = `
 			<div class="score-background" style="
-				background: url('gwent/score.png') center/contain no-repeat;
+				background: url('board/score.png') center/contain no-repeat;
 				width: 120px;
 				height: 60px;
 				display: flex;
@@ -2444,7 +2444,7 @@ handleTurnEnd: function() {
 		
 		playerScoreDisplay.innerHTML = `
 			<div class="score-background" style="
-				background: url('gwent/score.png') center/contain no-repeat;
+				background: url('board/score.png') center/contain no-repeat;
 				width: 120px;
 				height: 60px;
 				display: flex;
@@ -2566,11 +2566,11 @@ completeCardPlay: function() {
 
     getWeatherEffectForCard: function(card) {
         const weatherEffects = {
-            'Трескучий мороз': { row: 'siege', image: 'gwent/frost.png', sound: 'frost' },
-            'Белый Хлад': { row: 'siege', image: 'gwent/frost.png', sound: 'frost' },
-            'Густой туман': { row: 'ranged', image: 'gwent/fog.png', sound: 'fog' },
-            'Проливной дождь': { row: 'close', image: 'gwent/rain.png', sound: 'rain' },
-            'Шторм Скеллиге': { row: 'close', image: 'gwent/rain.png', sound: 'rain' }
+            'Трескучий мороз': { row: 'siege', image: 'board/frost.png', sound: 'frost' },
+            'Белый Хлад': { row: 'siege', image: 'board/frost.png', sound: 'frost' },
+            'Густой туман': { row: 'ranged', image: 'board/fog.png', sound: 'fog' },
+            'Проливной дождь': { row: 'close', image: 'board/rain.png', sound: 'rain' },
+            'Шторм Скеллиге': { row: 'close', image: 'board/rain.png', sound: 'rain' }
         };
         return weatherEffects[card.name];
     },
@@ -3048,7 +3048,7 @@ completeCardPlay: function() {
 			
 			opponentScoreDisplay.innerHTML = `
 				<div class="score-background" style="
-					background: url('gwent/score.png') center/contain no-repeat;
+					background: url('board/score.png') center/contain no-repeat;
 					width: 120px;
 					height: 60px;
 					display: flex;
@@ -3086,7 +3086,7 @@ completeCardPlay: function() {
 			
 			playerScoreDisplay.innerHTML = `
 				<div class="score-background" style="
-					background: url('gwent/score.png') center/contain no-repeat;
+					background: url('board/score.png') center/contain no-repeat;
 					width: 120px;
 					height: 60px;
 					display: flex;
@@ -3139,12 +3139,12 @@ completeCardPlay: function() {
 		
 		// Обновляем изображение раунда
 		const roundImages = {
-			1: 'gwent/round1.png',
-			2: 'gwent/round2.png', 
-			3: 'gwent/round3.png'
+			1: 'board/round1.png',
+			2: 'board/round2.png', 
+			3: 'board/round3.png'
 		};
 		
-		roundImage.src = roundImages[this.gameState.currentRound] || 'gwent/round1.png';
+		roundImage.src = roundImages[this.gameState.currentRound] || 'board/round1.png';
 		roundImage.alt = `Раунд ${this.gameState.currentRound}`;
 		
 		// Добавляем анимацию при смене раунда
@@ -3468,12 +3468,12 @@ completeCardPlay: function() {
 		discardElement.className = 'discard-visual';
 		
 		const faction = this.gameState.player.faction;
-		const cardBackPath = `faction/${faction}/card.png`;
+		const cardBackPath = `board/discard.jpg`;
 		
 		discardElement.innerHTML = `
 			<div class="discard-stack">
 				<img src="${cardBackPath}" alt="Сброс игрока" class="discard-card-back"
-					 onerror="this.src='faction/neutral/card_neutral.png'">
+					 onerror="this.src='board/discard.jpg'">
 				<div class="discard-count">${this.gameState.player.discard.length}</div>
 			</div>
 		`;
@@ -3491,12 +3491,12 @@ completeCardPlay: function() {
 		discardElement.className = 'discard-visual opponent-discard';
 		
 		const faction = this.gameState.opponent.faction;
-		const cardBackPath = `faction/${faction}/card.png`;
+		const cardBackPath = `board/discard.jpg`;
 		
 		discardElement.innerHTML = `
 			<div class="discard-stack">
 				<img src="${cardBackPath}" alt="Сброс противника" class="discard-card-back opponent-discard-back"
-					 onerror="this.src='faction/neutral/card.png'">
+					 onerror="this.src='board/discard.jpg'">
 				<div class="discard-count opponent-discard-count">${this.gameState.opponent.discard.length}</div>
 			</div>
 		`;
@@ -4203,17 +4203,17 @@ completeCardPlay: function() {
 		let resultImage, resultText, resultColor, borderColor;
 		
 		if (winner === 'player') {
-			resultImage = 'gwent/win.png';
+			resultImage = 'board/win.png';
 			resultText = 'ПОБЕДА В РАУНДЕ';
 			resultColor = '#4CAF50';
 			borderColor = '#4CAF50';
 		} else if (winner === 'opponent') {
-			resultImage = 'gwent/lose.png';
+			resultImage = 'board/lose.png';
 			resultText = 'ПОРАЖЕНИЕ В РАУНДЕ';
 			resultColor = '#f44336';
 			borderColor = '#f44336';
 		} else {
-			resultImage = 'gwent/draw.png';
+			resultImage = 'board/draw.png';
 			resultText = 'НИЧЬЯ В РАУНДЕ';
 			resultColor = '#FFD700';
 			borderColor = '#FFD700';
@@ -4503,15 +4503,15 @@ completeCardPlay: function() {
 		const finalScore = `${this.gameState.roundsWon.player}-${this.gameState.roundsWon.opponent}`;
 		
 		if (winner === 'player') {
-			resultImage = 'gwent/win.png';
+			resultImage = 'board/win.png';
 			resultText = 'ПОБЕДА В МАТЧЕ!';
 			resultColor = '#4CAF50';
 		} else if (winner === 'opponent') {
-			resultImage = 'gwent/lose.png';
+			resultImage = 'board/lose.png';
 			resultText = 'ПОРАЖЕНИЕ В МАТЧЕ';
 			resultColor = '#f44336';
 		} else {
-			resultImage = 'gwent/draw.png';
+			resultImage = 'board/draw.png';
 			resultText = 'НИЧЬЯ В МАТЧЕ!';
 			resultColor = '#FFD700';
 		}

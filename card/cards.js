@@ -12,7 +12,7 @@ const cardsData = {
                 description: 'Ведьмак школы Волка',
 				descriptionfull: '---',
 				ability: 'geralt',
-                position: ['close-row', 'ranged-row', 'siege-row'],
+                position: 'any-row',
                 positionBanner: 'faction/neutral/banner_position.png',
                 rarity: 'gold',
                 tags: ['witcher'],
@@ -569,7 +569,7 @@ const cardsData = {
                 description: 'Король Каэдвена',
 				descriptionfull: '---',
 				ability: '---',
-                position: ['close-row', 'ranged-row', 'siege-row'],
+                position: 'any-row',
                 positionBanner: 'faction/realms/banner_position.png',
                 rarity: 'gold',
                 tags: ['king'],
@@ -1089,6 +1089,26 @@ const cardsData = {
 		]
     },
 };
+
+function normalizeCardPositions(cards) {
+    return cards.map(card => {
+        if (card.position && Array.isArray(card.position) && card.position.length > 1) {
+            return {
+                ...card,
+                position: ['any-row']
+            };
+        }
+        return card;
+    });
+}
+
+Object.keys(cardsData).forEach(faction => {
+    Object.keys(cardsData[faction]).forEach(type => {
+        if (Array.isArray(cardsData[faction][type])) {
+            cardsData[faction][type] = normalizeCardPositions(cardsData[faction][type]);
+        }
+    });
+});
 
 function getFactionCards(factionId) {
     const factionCards = {

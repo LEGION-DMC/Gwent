@@ -14,7 +14,6 @@ const localization = {
         artifact: 'Артефакт',
         tactic: 'Тактика',
         leader: 'Лидер',
-		spell: 'Заклинание',
     },
     rarities: {
         bronze: 'Бронзовая',
@@ -32,7 +31,7 @@ const localization = {
         soldier: 'Солдат',
         monster: 'Чудовище',
         weather: 'Погода',
-        tactic: 'Тактика'
+        tactic: 'Тактика',
     }
 };
 
@@ -277,14 +276,12 @@ let availableCards = {
 };
 
 let displayedCollectionCards = [];
-let lastClickTime = 0;
-let lastCardId = null;
-const CLICK_DELAY = 300;
 
 function initDeckBuilding(faction) {
     window.selectedFaction = faction;
     currentDeck.faction = faction.id;
-	currentDeck.ability = defaultAbilities[faction.id];
+    currentDeck.ability = defaultAbilities[faction.id];
+    currentDeck.cards = [];
     hideFactionSelection();
     createDeckBuildingHTML();
     loadFactionCards(faction);
@@ -367,12 +364,12 @@ function createDeckBuildingHTML() {
                     <img src="deck/bord_gold.png" alt="Рамка" class="leader__border">
                     <img src="faction/${faction.id}/banner_gold.png" alt="Баннер" class="leader__banner">
                     <div class="leader__name">${faction.leaderName.split(' ')[0]}</div>
-					<img src="faction/${faction.id}/logo_faction.png" alt="Лого" class="leader__logo" id="factionLogo">
+					<img src="deck/ability.png" alt="Лого" class="leader__logo" id="factionLogo">
                 </div>
 				
 				<div class="faction-ability">
                     <div class="faction-ability__header">
-                        <h3>УМЕНИЕ ФРАКЦИИ</h3>
+                        <h3>СПОСОБНОСТЬ ЛИДЕРА</h3>
                     </div>
                     <div class="faction-ability__content">
                         <div class="ability-icon">
@@ -485,7 +482,6 @@ function createDeckBuildingHTML() {
 }             
 
 function setupFactionAbilityControls(faction) {
-    // Обработчик клика на логотип фракции
     const factionLogo = document.getElementById('factionLogo');
     if (factionLogo) {
         factionLogo.style.cursor = 'pointer';
@@ -508,7 +504,7 @@ function showAbilitiesModal(faction) {
     modalOverlay.className = 'abilities-modal-overlay';
     modalOverlay.innerHTML = `
         <div class="abilities-modal">
-            <div class="abilities-modal__title">ВЫБЕРИТЕ УМЕНИЕ ФРАКЦИИ</div>
+            <div class="abilities-modal__title">ВЫБЕРИТЕ СПОСОБНОСТЬ ЛИДЕРА</div>
             <div class="abilities-list">
                 ${abilities.map(ability => `
                     <div class="ability-option ${ability.id === currentAbility ? 'selected' : ''}" 
@@ -520,7 +516,7 @@ function showAbilitiesModal(faction) {
                             <div class="ability-option__name">${ability.name}</div>
                             <div class="ability-option__description">${ability.description}</div>
                         </div>
-                        ${ability.id === currentAbility ? '<div class="ability-option__check">✓</div>' : ''}
+                        ${ability.id === currentAbility ? '<div class="ability-option__check"><img src="deck/activ.png" alt="Выбрано"></div>' : ''}
                     </div>
                 `).join('')}
             </div>
@@ -530,12 +526,10 @@ function showAbilitiesModal(faction) {
     
     document.body.appendChild(modalOverlay);
     
-    // Активируем модальное окно
     setTimeout(() => {
         modalOverlay.classList.add('active');
     }, 10);
     
-    // Обработчики для выбора умений
     setupAbilitiesModalEventListeners(modalOverlay, faction, abilities);
 }
 
@@ -545,9 +539,7 @@ function setupAbilitiesModalEventListeners(modalOverlay, faction, abilities) {
     
     abilityOptions.forEach(option => {
         option.addEventListener('click', () => {
-            // Снимаем выделение со всех опций
             abilityOptions.forEach(opt => opt.classList.remove('selected'));
-            // Выделяем выбранную опцию
             option.classList.add('selected');
             selectedAbility = option.dataset.abilityId;
             audioManager.playSound('touch');
@@ -558,7 +550,6 @@ function setupAbilitiesModalEventListeners(modalOverlay, faction, abilities) {
         });
     });
     
-    // Обработчик подтверждения выбора
     const confirmBtn = modalOverlay.querySelector('#confirmAbilityBtn');
     confirmBtn.addEventListener('click', () => {
         currentDeck.ability = selectedAbility;
@@ -571,14 +562,12 @@ function setupAbilitiesModalEventListeners(modalOverlay, faction, abilities) {
         audioManager.playSound('touch');
     });
     
-    // Закрытие по клику вне модального окна
     modalOverlay.addEventListener('click', (e) => {
         if (e.target === modalOverlay) {
             closeAbilitiesModal(modalOverlay);
         }
     });
     
-    // Закрытие по Escape
     const escapeHandler = (e) => {
         if (e.key === 'Escape') {
             closeAbilitiesModal(modalOverlay);
@@ -620,11 +609,21 @@ function setupLeaderVideoControls() {
     const leaderCard = document.querySelector('.leader-card');
     const video = leaderCard.querySelector('video');
     const factionLogo = document.getElementById('factionLogo');
+    const cardDisplayMode = window.settingsModule ? window.settingsModule.getCardDisplayMode() : 'animated';
     
-	if (factionLogo) {
+    if (cardDisplayMode === 'static' && video) {
+        const leaderImage = `faction/${window.selectedFaction.id}/leader.jpg`;
+        const imgElement = document.createElement('img');
+        imgElement.src = leaderImage;
+        imgElement.alt = `Лидер ${window.selectedFaction.name}`;
+        imgElement.className = 'leader-card__media';
+        
+        video.parentNode.replaceChild(imgElement, video);
+    }
+    if (factionLogo) {
         factionLogo.style.cursor = 'pointer';
         factionLogo.addEventListener('click', (e) => {
-            e.stopPropagation(); // Предотвращаем всплытие события
+            e.stopPropagation();
             const faction = window.selectedFaction;
             if (faction) {
                 showAbilitiesModal(faction);
@@ -636,8 +635,6 @@ function setupLeaderVideoControls() {
             audioManager.playSound('touch');
         });
     }
-	
-    // Обработчик клика для лидера
     leaderCard.addEventListener('click', () => {
         const faction = window.selectedFaction;
         if (faction) {
@@ -658,12 +655,11 @@ function setupLeaderVideoControls() {
             showCardModal(leaderCardData);
         }
     });
-    
-    if (!video) return;
-    
-    leaderCard.addEventListener('mouseenter', () => {
-        video.play().catch(e => console.log('Автовоспроизведение видео лидера:', e));
-    });
+    if (video) {
+        leaderCard.addEventListener('mouseenter', () => {
+            video.play().catch(e => {});
+        });
+    }
 }
 
 function setFactionBackground(faction) {
@@ -672,14 +668,12 @@ function setFactionBackground(faction) {
 }
 
 function setFactionHeadersBackground(factionId) {
-    // Устанавливаем фон для заголовка колоды
     const deckHeader = document.getElementById('deckHeader');
     if (deckHeader) {
         const backgroundImage = `faction/${factionId}/border_faction.png`;
         setHeaderBackground(deckHeader, backgroundImage);
     }
     
-    // Устанавливаем фон для заголовка коллекции
     const collectionHeader = document.getElementById('collectionHeader');
     if (collectionHeader) {
         const backgroundImage = `faction/${factionId}/border_faction.png`;
@@ -688,37 +682,62 @@ function setFactionHeadersBackground(factionId) {
 }
 
 function setHeaderBackground(headerElement, backgroundImage) {
-    // Устанавливаем фон с fallback на случай отсутствия изображения
     headerElement.style.background = `url('${backgroundImage}')`;
     const img = new Image();
     img.src = backgroundImage;
 }
 
 function loadFactionCards(faction) {
+    displayedCollectionCards = [];
     if (window.cardsModule && window.cardsModule.getFactionCards) {
         availableCards = window.cardsModule.getFactionCards(faction.id);
-        
         displayedCollectionCards = [
             ...availableCards.units,
             ...availableCards.specials,
             ...availableCards.artifacts,
             ...availableCards.tactics 
         ];
-    } else {
-        console.error('Модуль карт не загружен');
-        displayedCollectionCards = [...availableCards.units];
+        sortCollectionCards();
     }
-    
-    // После загрузки карт отображаем их с учетом активного фильтра
     setTimeout(() => {
         displayCollectionCards();
     }, 100);
 }
 
+function backToFactionSelection() {
+    const deckBuildingSection = document.querySelector('.deck-building');
+    if (deckBuildingSection) {
+        deckBuildingSection.style.opacity = '0';
+        deckBuildingSection.style.transform = 'translateY(50px)';
+        
+        setTimeout(() => {
+            deckBuildingSection.remove();
+            currentDeck = {
+                faction: null,
+                leader: null,
+                ability: null, 
+                cards: [],
+                stats: {
+                    total: 0,
+                    units: 0,
+                    specials: 0,
+                    totalStrength: 0
+                }
+            };
+            displayedCollectionCards = [];
+            document.body.style.background = "url('ui/fon.jpg') no-repeat center center fixed";
+            document.body.style.backgroundSize = 'cover';
+            
+            if (window.factionModule && window.factionModule.initFactionSelection) {
+                window.factionModule.initFactionSelection();
+            }
+        }, 800);
+    }
+}
+
+
 function displayCollectionCards() {
     const collectionGrid = document.getElementById('collectionGrid');
-    
-    // Определяем активный фильтр
     const activeFilter = document.querySelector('.cards-collection .sort-btn.active');
     let filterType = 'all';
     
@@ -726,7 +745,6 @@ function displayCollectionCards() {
         filterType = activeFilter.dataset.type;
     }
     
-    // Используем функцию сортировки для сохранения текущего фильтра
     sortCollection(filterType);
 }
 
@@ -737,13 +755,11 @@ function createCardElement(card, context) {
     cardElement.dataset.cardType = card.type;
     cardElement.dataset.cardPosition = card.position || 'any';
     
-    // ✅ ПОЛУЧАЕМ ТЕКУЩИЙ РЕЖИМ ОТОБРАЖЕНИЯ КАРТ
     const cardDisplayMode = window.settingsModule ? window.settingsModule.getCardDisplayMode() : 'animated';
     
     let mediaPath = `card/${card.faction}/${card.image}`;
     let isVideo = card.image.endsWith('.mp4');
     
-    // ✅ ЕСЛИ РЕЖИМ СТАТИЧЕСКИЙ - ЗАМЕНЯЕМ MP4 НА JPG
     if (cardDisplayMode === 'static' && isVideo) {
         mediaPath = mediaPath.replace('.mp4', '.jpg');
         isVideo = false;
@@ -797,12 +813,10 @@ function createCardElement(card, context) {
         </div>
     `;
     
-    // Обработчик клика для карты
     cardElement.addEventListener('click', (event) => {
         handleCardClick(card, context, event);
     });
     
-    // Обработчик правого клика
     cardElement.addEventListener('contextmenu', (event) => {
         event.preventDefault();
         handleCardClick(card, context, event);
@@ -814,7 +828,6 @@ function createCardElement(card, context) {
         setupCardHoverEffects(cardElement);
     }
     
-    // ✅ НАСТРАИВАЕМ ВИДЕО КОНТРОЛЫ ТОЛЬКО ДЛЯ АНИМИРОВАННЫХ КАРТ
     if (isVideo && cardDisplayMode === 'animated') {
         setupVideoControls(cardElement);
     }
@@ -822,26 +835,19 @@ function createCardElement(card, context) {
     return cardElement;
 }
 
-function updateCardDisplayMode() {
-    // Перерисовываем коллекцию карт
-    if (document.getElementById('collectionGrid')) {
-        displayCollectionCards();
-    }
-    
-    // Перерисовываем колоду
-    if (document.getElementById('deckGrid')) {
-        updateDeckDisplay();
-    }
-}
-
 function getPositionIconPath(position) {
     const positionIcons = {
-        'close-row': 'deck/close-row.png',     // Ближний бой
-        'ranged-row': 'deck/ranged-row.png',   // Дальний бой  
-        'siege-row': 'deck/siege-row.png'      // Осадный ряд
+        'close-row': 'deck/close-row.png',
+        'ranged-row': 'deck/ranged-row.png',  
+        'siege-row': 'deck/siege-row.png',
+        'any-row': 'deck/any-row.png',
+        'hidden-close-row': 'deck/hidden-close-row.png',
+        'hidden-ranged-row': 'deck/hidden-ranged-row.png',
+        'hidden-siege-row': 'deck/hidden-siege-row.png',
+        'hidden-any-row': 'deck/hidden-any-row.png'
     };
     
-    return positionIcons[position] || 'deck/any-row.png'; // Иконка по умолчанию
+    return positionIcons[position] || 'deck/any-row.png';
 }
 
 function getPositionName(position) {
@@ -849,27 +855,25 @@ function getPositionName(position) {
         'close-row': 'Ближний бой',
         'ranged-row': 'Дальний бой',
         'siege-row': 'Осадный ряд',
-		'close-row,ranged-row,siege-row': 'Все ряды',
-		'close-row,ranged-row': 'Все ряды',
-		'close-row,siege-row': 'Все ряды',
-		'ranged-row,siege-row': 'Все ряды'
+		'any-row': 'Все ряды',
+        'hidden-close-row': 'Ближний бой',
+        'hidden-ranged-row': 'Дальний бой',
+        'hidden-siege-row': 'Осадный ряд',
+		'hidden-any-row': 'Все ряды',
     };
     
     return positionNames[position] || position;
 }
 
 function handleCardClick(card, context, event) {
-    // Левый клик - добавляем/удаляем из колоды
-    if (event.button === 0) { // Левая кнопка мыши
+    if (event.button === 0) {
         if (context === 'collection') {
             addCardToDeck(card);
         } else if (context === 'deck') {
             removeCardFromDeck(card);
         }
         event.stopPropagation();
-    }
-    // Правый клик - открытие модального окна
-    else if (event.button === 2) { // Правая кнопка мыши
+    } else if (event.button === 2) {
         event.preventDefault();
         showCardModal(card);
         event.stopPropagation();
@@ -877,59 +881,24 @@ function handleCardClick(card, context, event) {
 }
 
 function showCardModal(card) {
-    // Создаем overlay модального окна
     const modalOverlay = document.createElement('div');
     modalOverlay.className = 'card-modal-overlay';
-    modalOverlay.innerHTML = `
-        <div class="card-modal">
-            <div class="card-modal__preview">
-                ${createCardPreviewHTML(card)}
-            </div>
-            <div class="card-modal__info">
-                ${createCardInfoHTML(card)}
-            </div>
-        </div>
-    `;
     
-    document.body.appendChild(modalOverlay);
+    const cardDisplayMode = window.settingsModule ? window.settingsModule.getCardDisplayMode() : 'animated';
     
-    // Обработчик закрытия по клику вне модального окна
-    modalOverlay.addEventListener('click', (event) => {
-        if (event.target === modalOverlay) {
-            closeCardModal(modalOverlay);
-        }
-    });
-    
-    // Обработчик Escape
-    const escapeHandler = (event) => {
-        if (event.key === 'Escape') {
-            closeCardModal(modalOverlay);
-            document.removeEventListener('keydown', escapeHandler);
-        }
-    };
-    document.addEventListener('keydown', escapeHandler);
-    
-    // Активируем модальное окно
-    setTimeout(() => {
-        modalOverlay.classList.add('active');
-        setupModalVideoControls(modalOverlay);
-    }, 10);
-    
-    // Звук открытия модального окна
-    audioManager.playSound('button');
-}
-
-function createCardPreviewHTML(card) {
     let mediaPath = '';
-    
-    // Особый путь для карт лидера
     if (card.type === 'leader') {
         mediaPath = `faction/${card.faction}/${card.image}`;
     } else {
         mediaPath = `card/${card.faction}/${card.image}`;
     }
     
-    const isVideo = card.image.endsWith('.mp4');
+    let isVideo = card.image.endsWith('.mp4');
+    
+    if (cardDisplayMode === 'static' && isVideo) {
+        mediaPath = mediaPath.replace('.mp4', '.jpg');
+        isVideo = false;
+    }
     
     let mediaElement = '';
     if (isVideo) {
@@ -946,7 +915,6 @@ function createCardPreviewHTML(card) {
     if (card.type === 'unit') {
         topRightElement = `<div class="card__strength">${card.strength}</div>`;
     } else if (card.type === 'leader') {
-        // Для лидера показываем иконку лидера вместо силы
         topRightElement = `
             <div class="card__type-icon">
                 <img src="deck/type_leader.png" alt="Лидер">
@@ -960,8 +928,8 @@ function createCardPreviewHTML(card) {
             </div>
         `;
     }
-    
-	let positionElement = '';
+	
+    let positionElement = '';
     if (card.type === 'unit' && card.position) {
         const positionIconPath = getPositionIconPath(card.position);
         positionElement = `
@@ -974,26 +942,53 @@ function createCardPreviewHTML(card) {
 	
     const displayName = card.name || 'Без имени';
     
-    return `
-        <div class="card__container">
-            ${mediaElement}
-            <img src="${card.border}" alt="Рамка" class="card__border">
-            <img src="${card.banner}" alt="Баннер" class="card__banner">
-            <div class="card__name">${displayName}</div>
-            ${topRightElement}
-			${positionElement}
+    modalOverlay.innerHTML = `
+        <div class="card-modal">
+            <div class="card-modal__preview">
+                <div class="card__container">
+                    ${mediaElement}
+                    <img src="${card.border}" alt="Рамка" class="card__border">
+                    <img src="${card.banner}" alt="Баннер" class="card__banner">
+                    ${topRightElement}
+                    ${positionElement}
+                </div>
+            </div>
+            <div class="card-modal__info">
+                ${createCardInfoHTML(card)}
+            </div>
         </div>
     `;
+    
+    document.body.appendChild(modalOverlay);
+    
+    modalOverlay.addEventListener('click', (event) => {
+        if (event.target === modalOverlay) {
+            closeCardModal(modalOverlay);
+        }
+    });
+    
+    const escapeHandler = (event) => {
+        if (event.key === 'Escape') {
+            closeCardModal(modalOverlay);
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    
+    setTimeout(() => {
+        modalOverlay.classList.add('active');
+        setupModalVideoControls(modalOverlay);
+    }, 10);
+    
+    audioManager.playSound('button');
 }
 
 function createCardInfoHTML(card) {
     const factionName = localizeFaction(card.faction);
     
-    // Используем полное имя и описание, если они есть
     const displayName = card.namefull || card.name || 'Без имени';
     const displayDescription = card.descriptionfull || card.description || 'Описание отсутствует';
     
-    // Получаем способность карты
     const ability = window.skillSystem ? window.skillSystem.abilities[card.ability] : null;
     
     return `
@@ -1069,7 +1064,6 @@ function setupModalVideoControls(modalOverlay) {
     const video = modalOverlay.querySelector('video');
     if (!video) return;
     
-    // Автовоспроизведение уже включено в HTML
     video.loop = true;
 }
 
@@ -1087,13 +1081,12 @@ function setupVideoControls(cardElement) {
     const video = cardElement.querySelector('video');
     if (!video) return;
     
-    // Убираем автовоспроизведение и loop из HTML
     video.removeAttribute('autoplay');
     video.removeAttribute('loop');
     
     cardElement.addEventListener('mouseenter', () => {
         video.currentTime = 0; 
-        video.play().catch(e => console.log('Воспроизведение видео при наведении:', e));
+        video.play().catch(e => {});
         video.loop = true; 
     });
     
@@ -1103,7 +1096,6 @@ function setupVideoControls(cardElement) {
         video.loop = false; 
     });
     
-    // Останавливаем видео при клике (чтобы не мешало)
     cardElement.addEventListener('click', () => {
         video.pause();
         video.currentTime = 0;
@@ -1129,53 +1121,56 @@ function setupCardHoverEffects(cardElement) {
         description.style.opacity = '0';
     });
     
-    // Добавляем обработчик контекстного меню (правый клик)
     card.addEventListener('contextmenu', (event) => {
         event.preventDefault();
-        // Звук при правом клике
         audioManager.playSound('button');
     });
 }
 
+function sortDeckCards() {
+    currentDeck.cards.sort((a, b) => {
+        const rarityOrder = { 'gold': 1, 'silver': 2, 'bronze': 3 };
+        const rarityA = rarityOrder[a.rarity] || 4;
+        const rarityB = rarityOrder[b.rarity] || 4;
+        if (rarityA !== rarityB) {
+            return rarityA - rarityB;
+        }
+        const typeOrder = { 'unit': 1, 'special': 2, 'artifact': 3, 'tactic': 4 };
+        const typeA = typeOrder[a.type] || 5;
+        const typeB = typeOrder[b.type] || 5;
+        if (typeA !== typeB) {
+            return typeA - typeB;
+        }
+        if (a.type === 'unit' && b.type === 'unit') {
+            return (b.strength || 0) - (a.strength || 0);
+        }
+        return a.name.localeCompare(b.name);
+    });
+}
+
 function addCardToDeck(card) {
-    console.log('Попытка добавить карту:', card.name);
-    
     if (currentDeck.cards.length >= 40) {
         showMessage('Максимальный размер колоды - 40 карт');
         return;
     }
-    
-    // Добавляем карту в колоду
     currentDeck.cards.push(card);
-    console.log('Карта добавлена. Всего карт:', currentDeck.cards.length);
-    
-    // Удаляем карту из отображаемой коллекции
+    sortDeckCards();
     removeCardFromCollection(card.id);
-    
     updateDeckStats();
     updateDeckDisplay();
     animateCardAddition(card);
-    
-    // Звук добавления карты
     audioManager.playSound('cardAdd');
 }
 
 function removeCardFromDeck(card) {
-    console.log('Попытка удалить карту:', card.name);
-    
     const index = currentDeck.cards.findIndex(c => c.id === card.id);
     if (index !== -1) {
         currentDeck.cards.splice(index, 1);
-        console.log('Карта удалена. Всего карт:', currentDeck.cards.length);
-        
-        // Возвращаем карту в коллекцию
+        sortDeckCards();
         addCardToCollection(card);
-        
         updateDeckStats();
         updateDeckDisplay();
         animateCardRemoval(card);
-        
-        // Звук удаления карты
         audioManager.playSound('cardRemove');
     }
 }
@@ -1192,8 +1187,36 @@ function addCardToCollection(card) {
     const existingIndex = displayedCollectionCards.findIndex(c => c.id === card.id);
     if (existingIndex === -1) {
         displayedCollectionCards.push(card);
-        displayCollectionCards();
+        sortCollectionCards();
+        const activeFilter = document.querySelector('.cards-collection .sort-btn.active');
+        if (activeFilter) {
+            const filterType = activeFilter.dataset.type;
+            sortCollection(filterType);
+        } else {
+            displayCollectionCards();
+        }
     }
+}
+
+function sortCollectionCards() {
+    displayedCollectionCards.sort((a, b) => {
+        const rarityOrder = { 'gold': 1, 'silver': 2, 'bronze': 3 };
+        const rarityA = rarityOrder[a.rarity] || 4;
+        const rarityB = rarityOrder[b.rarity] || 4;
+        if (rarityA !== rarityB) {
+            return rarityA - rarityB;
+        }
+        const typeOrder = { 'unit': 1, 'special': 2, 'artifact': 3, 'tactic': 4 };
+        const typeA = typeOrder[a.type] || 5;
+        const typeB = typeOrder[b.type] || 5;
+        if (typeA !== typeB) {
+            return typeA - typeB;
+        }
+        if (a.type === 'unit' && b.type === 'unit') {
+            return (b.strength || 0) - (a.strength || 0);
+        }
+        return a.name.localeCompare(b.name);
+    });
 }
 
 function animateCardAddition(card) {
@@ -1234,13 +1257,6 @@ function updateDeckStats() {
     document.getElementById('unitCards').textContent = stats.units;
     document.getElementById('specialCards').textContent = stats.specials;
     document.getElementById('totalStrength').textContent = stats.totalStrength;
-    
-    console.log('Статистика колоды:', {
-        total: stats.total,
-        units: stats.units,
-        specials: stats.specials,
-        totalStrength: stats.totalStrength
-    });
 }
 
 function updateDeckDisplay() {
@@ -1255,13 +1271,11 @@ function updateDeckDisplay() {
             </div>
         `;
     } else {
-        // При обновлении отображения колоды используем текущий активный фильтр
         const activeFilter = document.querySelector('.deck-cards .sort-btn.active');
         if (activeFilter) {
             const filterType = activeFilter.dataset.type;
             sortDeck(filterType);
         } else {
-            // Если нет активного фильтра, показываем все карты
             sortDeck('all');
         }
     }
@@ -1271,7 +1285,6 @@ function setupDeckBuildingEventListeners() {
     const collectionSortButtons = document.querySelectorAll('.cards-collection .sort-btn');
     const deckSortButtons = document.querySelectorAll('.deck-cards .sort-btn');
 	
-    // Инициализируем активное состояние кнопок
     collectionSortButtons.forEach(btn => {
         if (btn.dataset.type === 'all') {
             btn.classList.add('active');
@@ -1284,7 +1297,6 @@ function setupDeckBuildingEventListeners() {
         }
     });
     
-    // Обработчики для кнопок сортировки
     collectionSortButtons.forEach(button => {
         button.addEventListener('click', (e) => {
             audioManager.playSound('button');
@@ -1313,7 +1325,6 @@ function setupDeckBuildingEventListeners() {
         });
     });
     
-    // Обработчик для кнопки начала игры
     const startGameBtn = document.getElementById('startGameBtn');
     startGameBtn.addEventListener('click', () => {
         validateDeckAndStartGame();
@@ -1323,7 +1334,7 @@ function setupDeckBuildingEventListeners() {
         audioManager.playSound('touch');
     });
 
- const backToFactionBtn = document.getElementById('backToFactionBtn');
+    const backToFactionBtn = document.getElementById('backToFactionBtn');
     backToFactionBtn.addEventListener('click', () => {
         audioManager.playSound('button');
         backToFactionSelection();
@@ -1333,7 +1344,6 @@ function setupDeckBuildingEventListeners() {
         audioManager.playSound('touch');
     });
     
-    // Кнопки управления колодой
     const autoBuildBtn = document.getElementById('autoBuildBtn');
     const saveDeckBtn = document.getElementById('saveDeckBtn');
     const loadDeckBtn = document.getElementById('loadDeckBtn');
@@ -1359,7 +1369,6 @@ function setupDeckBuildingEventListeners() {
         clearDeck();
     });
     
-    // Добавляем обработчики наведения для кнопок управления
     [autoBuildBtn, saveDeckBtn, loadDeckBtn, clearDeckBtn].forEach(btn => {
         btn.addEventListener('mouseenter', () => {
             audioManager.playSound('touch');
@@ -1376,11 +1385,9 @@ function backToFactionSelection() {
         setTimeout(() => {
             deckBuildingSection.remove();
             
-            // Восстанавливаем фон главного меню
             document.body.style.background = "url('ui/fon.jpg') no-repeat center center fixed";
             document.body.style.backgroundSize = 'cover';
             
-            // Показываем выбор фракции
             if (window.factionModule && window.factionModule.initFactionSelection) {
                 window.factionModule.initFactionSelection();
             }
@@ -1391,11 +1398,7 @@ function backToFactionSelection() {
 function autoBuildDeck() {
     const faction = window.selectedFaction;
     if (!faction) return;
-
-    // Очищаем текущую колоду и возвращаем карты в коллекцию
-    clearDeckSilent(); // Тихая очистка без сообщения
-
-    // Получаем все доступные карты
+    clearDeckSilent();
     const factionCards = window.cardsModule.getFactionCards(faction.id);
     const allCards = [
         ...factionCards.units,
@@ -1403,76 +1406,57 @@ function autoBuildDeck() {
         ...factionCards.artifacts,
         ...factionCards.tactics
     ];
-
-    // Фильтруем дубликаты по ID
     const uniqueCards = allCards.filter((card, index, self) => 
         index === self.findIndex(c => c.id === card.id)
     );
-
-    // Сортируем карты по редкости и силе
     const sortedCards = uniqueCards.sort((a, b) => {
-        // Сначала золотые, потом бронзовые
         if (a.rarity === 'gold' && b.rarity !== 'gold') return -1;
         if (a.rarity !== 'gold' && b.rarity === 'gold') return 1;
-        
-        // Затем по силе (по убыванию)
         return (b.strength || 0) - (a.strength || 0);
     });
-
-    // Добавляем карты в колоду с учетом ограничений
     let unitsCount = 0;
-    let specialsCount = 0;
-    
+    let specialsCount = 0;  
     const cardsToAdd = [];
-
     for (const card of sortedCards) {
         if (cardsToAdd.length >= 40) break;
-        
-        // Проверяем ограничения по типам карт
         if (card.type === 'unit') {
-            if (unitsCount >= 32) continue; // Максимум 32 юнита
+            if (unitsCount >= 32) continue;
             unitsCount++;
         } else {
-            if (specialsCount >= 10) continue; // Максимум 10 спецкарт
+            if (specialsCount >= 10) continue;
             specialsCount++;
         }
-        
-        // Добавляем карту в список для добавления
         cardsToAdd.push(card);
     }
-
-    // Добавляем карты в колоду и удаляем из коллекции
     cardsToAdd.forEach(card => {
         currentDeck.cards.push(card);
-        removeCardFromCollection(card.id); // Удаляем из отображаемой коллекции
+        removeCardFromCollection(card.id);
     });
-
-    // Обновляем отображение
-    updateDeckStats();
-    updateDeckDisplay();
-    displayCollectionCards(); // Обновляем коллекцию
-    
-    showMessage(`Автосбор завершен! Добавлено ${currentDeck.cards.length} карт.`);
-}
-
-function clearDeckSilent() {
-    // Возвращаем все карты в коллекцию
-    currentDeck.cards.forEach(card => {
-        addCardToCollection(card);
-    });
-    
-    // Очищаем колоду
-    currentDeck.cards = [];
-    
-    // Обновляем отображение
+    sortDeckCards();
     updateDeckStats();
     updateDeckDisplay();
     displayCollectionCards();
 }
 
+function clearDeckSilent() {
+    currentDeck.cards.forEach(card => {
+        addCardToCollection(card);
+    });
+    currentDeck.cards = [];
+    sortCollectionCards();
+    updateDeckStats();
+    updateDeckDisplay();
+    const activeFilter = document.querySelector('.cards-collection .sort-btn.active');
+    if (activeFilter) {
+        const filterType = activeFilter.dataset.type;
+        sortCollection(filterType);
+    } else {
+        displayCollectionCards();
+    }
+}
+
 function saveDeckToFile() {
     if (currentDeck.cards.length === 0) {
-        showMessage('Колода пуста!');
         return;
     }
     
@@ -1494,8 +1478,6 @@ function saveDeckToFile() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
-    showMessage('Колода сохранена!');
 }
 
 function loadDeckFromFile() {
@@ -1512,25 +1494,20 @@ function loadDeckFromFile() {
             try {
                 const deckData = JSON.parse(event.target.result);
                 
-                // Проверяем совместимость фракции
                 if (deckData.faction !== currentDeck.faction) {
                     showMessage(`Колода предназначена для фракции "${localizeFaction(deckData.faction)}"!`);
                     return;
                 }
                 
-                // Проверяем версию
                 if (!deckData.version) {
                     showMessage('Неверный формат файла колоды!');
                     return;
                 }
                 
-                // Очищаем текущую колоду
                 clearDeckSilent();
                 
-                // Устанавливаем способность
                 currentDeck.ability = deckData.ability || defaultAbilities[currentDeck.faction];
                 
-                // Загружаем карты
                 const factionCards = window.cardsModule.getFactionCards(currentDeck.faction);
                 const allCards = [
                     ...factionCards.units,
@@ -1548,22 +1525,19 @@ function loadDeckFromFile() {
                     }
                 }
                 
-                // Добавляем карты в колоду и удаляем из коллекции
                 cardsToAdd.forEach(card => {
                     currentDeck.cards.push(card);
-                    removeCardFromCollection(card.id); // Удаляем из отображаемой коллекции
+                    removeCardFromCollection(card.id);
                 });
                 
-                // Обновляем отображение
                 updateDeckStats();
                 updateDeckDisplay();
-                displayCollectionCards(); // Обновляем коллекцию
+                displayCollectionCards();
                 updateFactionAbilityDisplay(window.selectedFaction);
                 
                 showMessage(`Колода загружена! ${currentDeck.cards.length} карт.`);
                 
             } catch (error) {
-                console.error('Ошибка загрузки колоды:', error);
                 showMessage('Неверный формат файла колоды!');
             }
         };
@@ -1576,24 +1550,23 @@ function loadDeckFromFile() {
 
 function clearDeck() {
     if (currentDeck.cards.length === 0) {
-        showMessage('Колода уже пуста!');
         return;
     }
-    
-    // Возвращаем все карты в коллекцию
     currentDeck.cards.forEach(card => {
         addCardToCollection(card);
     });
-    
-    // Очищаем колоду
     currentDeck.cards = [];
+    sortCollectionCards();
     
-    // Обновляем отображение
     updateDeckStats();
     updateDeckDisplay();
-    displayCollectionCards(); // Важно: обновляем коллекцию
-    
-    showMessage('Колода очищена!');
+    const activeFilter = document.querySelector('.cards-collection .sort-btn.active');
+    if (activeFilter) {
+        const filterType = activeFilter.dataset.type;
+        sortCollection(filterType);
+    } else {
+        displayCollectionCards();
+    }
 }
 
 function validateDeckAndStartGame() {
@@ -1605,21 +1578,18 @@ function validateDeckAndStartGame() {
     
     const errors = [];
     
-    // Проверяем общее количество карт
     if (totalCards < 15) {
-        errors.push(`Минимальный размер колоды - 15 карты`);
+        errors.push(`Минимальный размер колоды - 15 карт`);
     }
     
     if (totalCards > 25) {
         errors.push(`Максимальный размер колоды - 25 карт`);
     }
     
-    // Проверяем количество карт юнитов
     if (unitCardsCount < 10) {
         errors.push(`Минимальное количество карт отрядов - 10`);
     }
     
-    // Проверяем количество специальных карт
     if (specialCardsCount < 3) {
         errors.push(`Обязательное количество специальных карт - 3`);
     }
@@ -1628,19 +1598,16 @@ function validateDeckAndStartGame() {
         errors.push(`Максимальное количество специальных карт - 5`);
     }
     
-    // Если есть ошибки - показываем их
     if (errors.length > 0) {
         showMessage(errors.join('\n\n'));
         return;
     }
     
-    // Если все проверки пройдены - начинаем игру
     audioManager.playSound('button');
     startGame();
 }
 
 function showMessage(text) {
-    // Создаем overlay
     const overlay = document.createElement('div');
     overlay.className = 'message-overlay';
     overlay.style.cssText = `
@@ -1657,7 +1624,6 @@ function showMessage(text) {
         backdrop-filter: blur(2px);
     `;
     
-    // Создаем плашку сообщения
     const messageBox = document.createElement('div');
     messageBox.className = 'message-box';
     messageBox.style.cssText = `
@@ -1673,7 +1639,6 @@ function showMessage(text) {
         position: relative;
     `;
     
-    // Заголовок
     const title = document.createElement('h3');
     title.textContent = 'ВНИМАНИЕ';
     title.style.cssText = `
@@ -1685,7 +1650,6 @@ function showMessage(text) {
         text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
     `;
     
-    // Текст сообщения
     const messageText = document.createElement('div');
     messageText.innerHTML = text.replace(/\n\n/g, '<br><br>');
     messageText.style.cssText = `
@@ -1695,7 +1659,6 @@ function showMessage(text) {
         color: #ccc;
     `;
     
-    // Кнопка закрытия
     const closeButton = document.createElement('button');
     closeButton.textContent = 'ОК';
     closeButton.style.cssText = `
@@ -1711,7 +1674,6 @@ function showMessage(text) {
         transition: all 0.3s ease;
     `;
     
-    // Эффекты при наведении на кнопку
     closeButton.addEventListener('mouseenter', () => {
         closeButton.style.transform = 'translateY(-2px)';
         closeButton.style.boxShadow = '0 5px 15px rgba(212, 175, 55, 0.3)';
@@ -1732,25 +1694,20 @@ function showMessage(text) {
         audioManager.playSound('button');
     });
     
-    // Собираем сообщение
     messageBox.appendChild(title);
     messageBox.appendChild(messageText);
     messageBox.appendChild(closeButton);
     overlay.appendChild(messageBox);
     
-    // Добавляем на страницу
     document.body.appendChild(overlay);
     
-    // Анимация появления
     setTimeout(() => {
         messageBox.style.transform = 'scale(1)';
         messageBox.style.opacity = '1';
     }, 10);
     
-    // Звук появления сообщения
     audioManager.playSound('button');
     
-    // Автоматическое закрытие через 5 секунд
     setTimeout(() => {
         if (document.body.contains(overlay)) {
             document.body.removeChild(overlay);
@@ -1762,7 +1719,6 @@ function sortCollection(type) {
     const collectionGrid = document.getElementById('collectionGrid');
     let sortedCards = [];
     
-    // Фильтруем карты по типу
     switch (type) {
         case 'units':
             sortedCards = displayedCollectionCards.filter(card => card.type === 'unit');
@@ -1782,10 +1738,8 @@ function sortCollection(type) {
             break;
     }
     
-    // Очищаем сетку
     collectionGrid.innerHTML = '';
     
-    // Если карт нет - показываем сообщение
     if (sortedCards.length === 0) {
         collectionGrid.innerHTML = `
             <div class="empty-category-message">
@@ -1794,27 +1748,22 @@ function sortCollection(type) {
             </div>
         `;
     } else {
-        // Отображаем отсортированные карты
         sortedCards.forEach(card => {
             const cardElement = createCardElement(card, 'collection');
             collectionGrid.appendChild(cardElement);
         });
     }
-    
-    console.log(`Отсортировано карт: ${sortedCards.length} по типу: ${type}`);
 }
 
 function sortDeck(type) {
     const deckGrid = document.getElementById('deckGrid');
     
-    // Если колода пуста, не сортируем
     if (currentDeck.cards.length === 0) {
         return;
     }
     
     let sortedCards = [];
     
-    // Фильтруем карты по типу
     switch (type) {
         case 'units':
             sortedCards = currentDeck.cards.filter(card => card.type === 'unit');
@@ -1834,10 +1783,8 @@ function sortDeck(type) {
             break;
     }
     
-    // Очищаем сетку
     deckGrid.innerHTML = '';
     
-    // Если карт нет - показываем сообщение
     if (sortedCards.length === 0) {
         deckGrid.innerHTML = `
             <div class="empty-category-message">
@@ -1846,21 +1793,15 @@ function sortDeck(type) {
             </div>
         `;
     } else {
-        // Отображаем отсортированные карты
         sortedCards.forEach(card => {
             const cardElement = createCardElement(card, 'deck');
             deckGrid.appendChild(cardElement);
         });
     }
-    
-    console.log(`Отсортировано карт в колоде: ${sortedCards.length} по типу: ${type}`);
 }
 
 function startGame() {
-    console.log('Начало игры с колодой:', currentDeck);
-    
     if (window.boardModule && window.boardModule.initGameBoard) {
-        // Плавный переход к игровому полю
         const deckBuildingSection = document.querySelector('.deck-building');
         if (deckBuildingSection) {
             deckBuildingSection.style.opacity = '0';
@@ -1871,7 +1812,6 @@ function startGame() {
             }, 800);
         }
     } else {
-        console.error('Модуль игрового поля не загружен');
         showMessage('Ошибка загрузки игрового модуля');
     }
 }
