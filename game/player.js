@@ -49,7 +49,7 @@ const playerModule = {
 			cardElement.classList.add('card-selected');
 		}
 		
-		audioManager.playSound('button');
+		audioManager.playSound('card_selected');
 
 		if (this.isWeatherCard(card)) {
 			this.playWeatherCard(card);
@@ -240,6 +240,9 @@ const playerModule = {
             this.showMessage('В этом ряду уже есть карта тактики!');
             return;
         }
+if (window.audioManager && window.audioManager.playSound) {
+        audioManager.playSound('artefact');
+    }
 
         this.gameState.player.rows[row].tactic = card;
         this.removeCardFromHand(card);
@@ -256,7 +259,25 @@ const playerModule = {
             this.showMessage('В этом ряду уже максимальное количество карт!');
             return;
         }
-
+if (window.audioManager && window.audioManager.playSound) {
+        // Проверяем тип карты
+        if (card.type === 'artifact' || card.type === 'special' || card.type === 'tactic') {
+            // Для спец. карт используем специальный звук
+            audioManager.playSound('artefact');
+        } else {
+            // Для юнитов - звуки по рядам
+            switch(row) {
+                case 'close':
+                    audioManager.playSound('card_close');
+                    break;
+                case 'ranged':
+                    audioManager.playSound('card_range');
+                    break;
+                case 'siege':
+                    audioManager.playSound('card_siege');
+            }
+        }
+    }
         this.gameState.player.rows[row].cards.push(card);
         this.removeCardFromHand(card);
         

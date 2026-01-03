@@ -4,7 +4,10 @@ const audioManager = {
     backgroundMusic: null,
     sounds: {},
     isFirstInteractionHandled: false,
-    
+    debounceTimers: {},
+    soundCooldowns: {},
+    cooldownTime: 150, 
+	
     init: function() {
         this.createAudioElements();
         this.loadSettings();
@@ -18,15 +21,28 @@ const audioManager = {
         
         const soundFiles = {
             button: 'sfx/button.mp3',
-            transition: 'sfx/transition.mp3',
-            choice: 'sfx/choice.mp3',
             touch: 'sfx/touch.mp3',
+			
             cardAdd: 'sfx/card_add.mp3',
             cardRemove: 'sfx/card_remove.mp3',
+            card_selected: 'sfx/card-selected.mp3',
+			
             weatherFrost: 'sfx/frost.mp3',
             weatherFog: 'sfx/fog.mp3',
             weatherRain: 'sfx/rain.mp3',
-            weatherClear: 'sfx/clear.mp3'
+            weatherClear: 'sfx/clear.mp3',
+			
+			round_start: 'sfx/round_start.mp3',
+            win: 'sfx/win.mp3',
+            lose: 'sfx/lose.mp3',
+            draw: 'sfx/draw.mp3',
+			
+            draw: 'sfx/scorch.mp3',
+			
+            card_close: 'sfx/card_close.wav',
+            card_range: 'sfx/card_range.wav',
+            card_siege: 'sfx/card_siege.wav',
+            artefact: 'sfx/artefact.wav',
         };
         
         for (const [key, src] of Object.entries(soundFiles)) {
@@ -84,6 +100,12 @@ const audioManager = {
     
     playSound: function(soundName) {
         if (!this.soundEnabled || !this.sounds[soundName]) return;
+        const now = Date.now();
+        if (this.soundCooldowns[soundName] && 
+            now - this.soundCooldowns[soundName] < this.cooldownTime) {
+            return;
+        }
+        this.soundCooldowns[soundName] = now;
         const sound = this.sounds[soundName].cloneNode();
         sound.volume = this.sounds[soundName].volume;
         sound.play().catch(() => {});

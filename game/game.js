@@ -1163,7 +1163,9 @@ this.shuffleArray(currentDeck);
     
     // Сначала показываем сообщение о начале игры
     this.showGameMessage('ИГРА НАЧИНАЕТСЯ!', 'info');
-    
+    if (window.audioManager && window.audioManager.playSound) {
+        audioManager.playSound('round_start');
+    }
     // Через 2 секунды начинаем игру
     setTimeout(() => {
         if (this.gameState.currentPlayer === 'player') {
@@ -1777,7 +1779,6 @@ startPlayerTurn: function() {
         console.log('⏳ Ожидание завершения Мульганы...');
         return;
     }
-    
     console.log('🎯 Ход игрока');
     this.gameState.gamePhase = 'playerTurn';
     this.gameState.currentPlayer = 'player';
@@ -1980,12 +1981,12 @@ handleTurnEnd: function() {
 
 	startNewRound: function() {
 		this.gameState.currentRound++;
-		
-		// ✅ ОБРАБОТКА СПОСОБНОСТИ СКЕЛЛИГЕ В 3 РАУНДЕ
+		if (window.audioManager && window.audioManager.playSound) {
+        audioManager.playSound('round_start');
+    }
 		if (window.factionAbilitiesModule) {
 			window.factionAbilitiesModule.handleRound3ForSkellige(this.gameState);
 		}
-			
 			const mode = this.gameState.gameSettings.mode;
 			console.log(`🔄 Начало раунда ${this.gameState.currentRound} (${mode} режим)`);
 			
@@ -2014,7 +2015,7 @@ handleTurnEnd: function() {
     updateGameModeIndicator: function() {
         const mode = this.gameState.gameSettings.mode;
         const modeName = mode === 'classic' ? 'Классический' : 'CD Project Red';
-        const modeColor = mode === 'classic' ? '#4CAF50' : '#FF9800';
+        const modeColor = mode === 'classic' ? '#d4af37' : '#d4af37';
         
         let modeIndicator = document.getElementById('gameModeIndicator');
         if (!modeIndicator) {
@@ -2022,16 +2023,14 @@ handleTurnEnd: function() {
             modeIndicator.id = 'gameModeIndicator';
             modeIndicator.style.cssText = `
                 position: absolute;
-                top: 1%;
-                right: 3.2%;
-                background: rgba(0,0,0,0.8);
+                top: 0.5%;
+                right: 0.5%;
                 color: ${modeColor};
-                padding: 5px 5px;
+                padding: 2px 3px;
                 border-radius: 5px;
-                border: 2px solid ${modeColor};
+                border: 1px solid ${modeColor};
                 font-family: 'Gwent', sans-serif;
                 font-size: 10px;
-                font-weight: bold;
                 text-transform: uppercase;
                 letter-spacing: 1px;
                 z-index: 50;
@@ -3396,7 +3395,7 @@ completeCardPlay: function() {
 
 	startNewRound: function() {
 		this.gameState.currentRound++;
-		
+
 		console.log(`🔄 Начало раунда ${this.gameState.currentRound}`);
 		
 		// Анимируем смену раунда
@@ -4180,7 +4179,18 @@ completeCardPlay: function() {
     },
 	
 	showRoundResult: function(winner, playerScore, opponentScore) {
-		console.log(`🏆 Результат раунда: ${winner}, Счет: ${playerScore}-${opponentScore}`);
+    console.log(`🏆 Результат раунда: ${winner}, Счет: ${playerScore}-${opponentScore}`);
+    
+    // ✅ ДОБАВЛЯЕМ ЗВУК В ЗАВИСИМОСТИ ОТ РЕЗУЛЬТАТА
+    if (window.audioManager && window.audioManager.playSound) {
+        if (winner === 'player') {
+            audioManager.playSound('win'); // ../sfx/win.mp3
+        } else if (winner === 'opponent') {
+            audioManager.playSound('lose'); // ../sfx/lose.mp3
+        } else {
+            audioManager.playSound('draw'); // ../sfx/draw.mp3
+        }
+    }
 		
 		// Создаем оверлей для результата раунда в стиле игры
 		const resultOverlay = document.createElement('div');
@@ -4482,6 +4492,16 @@ completeCardPlay: function() {
 	},
 
 	showGameResult: function(winner) {
+    // ✅ ДОБАВЛЯЕМ ЗВУК В ЗАВИСИМОСТИ ОТ РЕЗУЛЬТАТА
+    if (window.audioManager && window.audioManager.playSound) {
+        if (winner === 'player') {
+            audioManager.playSound('win');
+        } else if (winner === 'opponent') {
+            audioManager.playSound('lose');
+        } else {
+            audioManager.playSound('draw');
+        }
+    }
 		const resultOverlay = document.createElement('div');
 		resultOverlay.className = 'game-result-overlay';
 		resultOverlay.style.cssText = `
@@ -4710,7 +4730,9 @@ completeCardPlay: function() {
 
 	startNewRound: function() {
 		this.gameState.currentRound++;
-		
+		if (window.audioManager && window.audioManager.playSound) {
+			audioManager.playSound('round_start'); // round_start.mp3
+		}
 		// Анимируем смену раунда
 		this.updateRoundCounter();
 		

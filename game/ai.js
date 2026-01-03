@@ -474,7 +474,9 @@ canPlayWeatherCard: function(card) {
         const bestRow = this.findBestTacticRow();
         if (bestRow) {
             this.gameState.opponent.rows[bestRow].tactic = card;
-            // ИСПРАВЛЕНО: вызываем метод из gameModule
+            if (window.audioManager && window.audioManager.playSound) {
+        audioManager.playSound('artefact');
+    }
             if (window.gameModule && window.gameModule.displayTacticCard) {
                 window.gameModule.displayTacticCard(bestRow, card, 'opponent');
             }
@@ -485,7 +487,29 @@ canPlayWeatherCard: function(card) {
         const bestRow = this.findBestRowForUnit(card);
         if (bestRow) {
             this.gameState.opponent.rows[bestRow].cards.push(card);
-            // ИСПРАВЛЕНО: вызываем методы из gameModule
+            if (window.audioManager && window.audioManager.playSound) {
+            // Проверяем тип карты
+            if (card.type === 'artifact' || card.type === 'special' || card.type === 'tactic') {
+                // Для артефактов и спец. карт используем специальный звук
+                audioManager.playSound('artefact');
+            } else {
+                // Для юнитов - звуки по рядам
+                switch(bestRow) {
+                    case 'close':
+                        audioManager.playSound('card_close');
+                        break;
+                    case 'ranged':
+                        audioManager.playSound('card_range');
+                        break;
+                    case 'siege':
+                        audioManager.playSound('card_siege');
+                        break;
+                    default:
+                        // Запасной звук
+                        audioManager.playSound('card_close');
+                }
+            }
+        }
             if (window.gameModule) {
                 if (window.gameModule.displayCardOnRow) {
                     window.gameModule.displayCardOnRow(bestRow, card, 'opponent');
