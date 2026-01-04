@@ -3930,57 +3930,83 @@ completeCardPlay: function() {
 		});
 	},
 
-    generateDeckCardsHTML: function(cards) {
-		return cards.map(card => {
-			const mediaPath = `card/${card.faction}/${card.image}`;
-			const isVideo = card.image && card.image.endsWith('.mp4');
-			
-			let mediaElement = isVideo ? 
-				`<video class="deck-card__media" muted playsinline preload="metadata"><source src="${mediaPath}" type="video/mp4"></video>` :
-				`<img src="${mediaPath}" alt="${card.name}" class="deck-card__media">`;
+    generateDeckCardsHTML: function(cards, isModal = false) {
+    return cards.map(card => {
+        // ✅ ОСОБАЯ ЛОГИКА ДЛЯ МОДАЛЬНЫХ ОКОН: в модалках используем статичный режим в классическом режиме
+        let mediaPath;
+        let isVideo;
+        
+        if (isModal) {
+            // Для модальных окон в классическом режиме используем статичные изображения
+            const isClassicMode = this.gameState.gameSettings.mode === 'classic';
+            const isStaticInModal = isClassicMode ? true : this.currentSettings.cardDisplayMode === 'static';
+            
+            // Проверяем, есть ли статичная версия карты
+            const hasStaticImage = card.image && card.image.includes('.mp4') && card.imageStatic;
+            
+            if (isStaticInModal && hasStaticImage) {
+                // Используем статичную версию
+                mediaPath = `card/${card.faction}/${card.imageStatic || card.image.replace('.mp4', '.jpg')}`;
+                isVideo = false;
+            } else {
+                // Используем обычную логику
+                const { mediaPath: normalPath, isVideo: normalIsVideo } = this.getCardMediaPath(card);
+                mediaPath = normalPath;
+                isVideo = normalIsVideo;
+            }
+        } else {
+            // Для обычного отображения используем стандартную логику
+            const { mediaPath: normalPath, isVideo: normalIsVideo } = this.getCardMediaPath(card);
+            mediaPath = normalPath;
+            isVideo = normalIsVideo;
+        }
+        
+        let mediaElement = isVideo ? 
+            `<video class="deck-card__media" muted playsinline preload="metadata"><source src="${mediaPath}" type="video/mp4"></video>` :
+            `<img src="${mediaPath}" alt="${card.name}" class="deck-card__media" onerror="this.onerror=null; this.src='card/placeholder.jpg'">`;
 
-			let strengthElement = card.strength ? 
-				`<div class="deck-card__strength">${card.strength}</div>` : '';
+        let strengthElement = card.strength ? 
+            `<div class="deck-card__strength">${card.strength}</div>` : '';
 
-			let typeIconElement = !card.strength ? 
-				`<div class="deck-card__type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>` : '';
+        let typeIconElement = !card.strength ? 
+            `<div class="deck-card__type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>` : '';
 
-			// ДОБАВЛЯЕМ ПОЗИЦИЮ ДЛЯ ЮНИТОВ
-			let positionElement = '';
-			if (card.type === 'unit' && card.position) {
-				let positions = [];
-				if (Array.isArray(card.position)) {
-					positions = card.position;
-				} else {
-					positions = [card.position];
-				}
-				
-				const displayPosition = positions.length > 1 ? 'any' : positions[0];
-				const positionIconPath = this.getPositionIconPath(displayPosition);
-				
-				positionElement = `
-					<div class="deck-card__position">
-						<img src="${card.positionBanner || 'deck/position_banner.png'}" alt="Позиция" class="deck-card__position-banner">
-						<img src="${positionIconPath}" alt="${displayPosition}" class="deck-card__position-icon">
-					</div>
-				`;
-			}
+        // ДОБАВЛЯЕМ ПОЗИЦИЮ ДЛЯ ЮНИТОВ
+        let positionElement = '';
+        if (card.type === 'unit' && card.position) {
+            let positions = [];
+            if (Array.isArray(card.position)) {
+                positions = card.position;
+            } else {
+                positions = [card.position];
+            }
+            
+            const displayPosition = positions.length > 1 ? 'any' : positions[0];
+            const positionIconPath = this.getPositionIconPath(displayPosition);
+            
+            positionElement = `
+                <div class="deck-card__position">
+                    <img src="${card.positionBanner || 'deck/position_banner.png'}" alt="Позиция" class="deck-card__position-banner">
+                    <img src="${positionIconPath}" alt="${displayPosition}" class="deck-card__position-icon">
+                </div>
+            `;
+        }
 
-			return `
-				<div class="deck-card" data-card-id="${card.id}">
-					<div class="deck-card__container">
-						${mediaElement}
-						<img src="${card.border || 'deck/bord_bronze.png'}" alt="Рамка" class="deck-card__border">
-						<img src="${card.banner || `faction/${card.faction}/banner_bronze.png`}" alt="Баннер" class="deck-card__banner">
-						<div class="deck-card__name">${card.name}</div>
-						${strengthElement}
-						${typeIconElement}
-						${positionElement} 
-					</div>
-				</div>
-			`;
-		}).join('');
-	},
+        return `
+            <div class="deck-card" data-card-id="${card.id}">
+                <div class="deck-card__container">
+                    ${mediaElement}
+                    <img src="${card.border || 'deck/bord_bronze.png'}" alt="Рамка" class="deck-card__border">
+                    <img src="${card.banner || `faction/${card.faction}/banner_bronze.png`}" alt="Баннер" class="deck-card__banner">
+                    <div class="deck-card__name">${card.name}</div>
+                    ${strengthElement}
+                    ${typeIconElement}
+                    ${positionElement} 
+                </div>
+            </div>
+        `;
+    }).join('');
+},
 
     updateDiscardDisplay: function(player) {
 		if (player === 'player') {
@@ -4130,115 +4156,124 @@ completeCardPlay: function() {
     // === МОДАЛЬНЫЕ ОКНА ===
 
     showDeckModal: function(player, deckType, title) {
-		const cards = this.gameState[player][deckType];
-		
-		if (cards.length === 0) {
-			return;
-		}
+    const cards = this.gameState[player][deckType];
+    
+    if (cards.length === 0) {
+        return;
+    }
 
-		// Получаем фракцию для фона
-		const faction = this.gameState[player].faction;
-		const factionBackground = `faction/${faction}/border_faction.png`;
-		
-		// Сортируем карты по силе
-		const sortedCards = this.sortDeckCards(cards);
+    // Получаем фракцию для фона
+    const faction = this.gameState[player].faction;
+    const factionBackground = `faction/${faction}/border_faction.png`;
+    
+    // Сортируем карты по силе
+    const sortedCards = this.sortDeckCards(cards);
 
-		const modalOverlay = document.createElement('div');
-		modalOverlay.className = 'deck-modal-overlay';
-		modalOverlay.innerHTML = `
-			<div class="deck-modal">
-				<div class="deck-modal__header" style="background: url('${factionBackground}') center/cover;">
-					<div class="deck-modal__title">${title}</div>
-					<div class="deck-modal__count">Карт: ${sortedCards.length}</div>
-					<button class="deck-modal__close">&times;</button>
-				</div>
-				<div class="deck-modal__content" id="deckModalContent">
-					${this.generateDeckCardsHTML(sortedCards)}
-				</div>
-			</div>
-		`;
+    const modalOverlay = document.createElement('div');
+    modalOverlay.className = 'deck-modal-overlay';
+    modalOverlay.innerHTML = `
+        <div class="deck-modal">
+            <div class="deck-modal__header" style="background: url('${factionBackground}') center/cover;">
+                <div class="deck-modal__title">${title}</div>
+                <div class="deck-modal__count">Карт: ${sortedCards.length}</div>
+                <button class="deck-modal__close">&times;</button>
+            </div>
+            <div class="deck-modal__content" id="deckModalContent">
+                ${this.generateDeckCardsHTML(sortedCards, true)} <!-- ✅ ПЕРЕДАЕМ true для модального окна -->
+            </div>
+        </div>
+    `;
 
-		document.body.appendChild(modalOverlay);
-		
-		// Обработчики для модального окна
-		this.setupDeckModalEventListeners(modalOverlay, sortedCards);
-		
-		// Активируем модальное окно
-		setTimeout(() => {
-			modalOverlay.classList.add('active');
-		}, 10);
-		
-		audioManager.playSound('button');
-	},
+    document.body.appendChild(modalOverlay);
+    
+    // Обработчики для модального окна
+    this.setupDeckModalEventListeners(modalOverlay, sortedCards);
+    
+    // Активируем модальное окно
+    setTimeout(() => {
+        modalOverlay.classList.add('active');
+    }, 10);
+    
+    audioManager.playSound('button');
+},
 
     setupDeckModalEventListeners: function(modalOverlay, cards) {
-        // Закрытие по кнопке
-        const closeBtn = modalOverlay.querySelector('.deck-modal__close');
-        closeBtn.addEventListener('click', () => {
+    // Закрытие по кнопке
+    const closeBtn = modalOverlay.querySelector('.deck-modal__close');
+    closeBtn.addEventListener('click', () => {
+        this.closeDeckModal(modalOverlay);
+    });
+
+    // Закрытие по клику вне модального окна
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
             this.closeDeckModal(modalOverlay);
-        });
+        }
+    });
 
-        // Закрытие по клику вне модального окна
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
-                this.closeDeckModal(modalOverlay);
-            }
-        });
+    // Закрытие по Escape
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            this.closeDeckModal(modalOverlay);
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
 
-        // Закрытие по Escape
-        const escapeHandler = (e) => {
-            if (e.key === 'Escape') {
-                this.closeDeckModal(modalOverlay);
-                document.removeEventListener('keydown', escapeHandler);
-            }
-        };
-        document.addEventListener('keydown', escapeHandler);
-
-        // Обработчики для карт в модальном окне
-        const cardElements = modalOverlay.querySelectorAll('.deck-card');
-        cardElements.forEach(cardElement => {
-            const cardId = cardElement.dataset.cardId;
-            const card = cards.find(c => c.id === cardId);
+    // Обработчики для карт в модальном окне
+    const cardElements = modalOverlay.querySelectorAll('.deck-card');
+    cardElements.forEach(cardElement => {
+        const cardId = cardElement.dataset.cardId;
+        const card = cards.find(c => c.id === cardId);
+        
+        if (card) {
+            // ✅ ОСОБАЯ ЛОГИКА ДЛЯ ВИДЕО В МОДАЛЬНЫХ ОКНАХ
+            // В модальных окнах видео должно воспроизводиться ТОЛЬКО в режиме CD Project Red
+            const isCDPRedMode = this.gameState.gameSettings.mode === 'cdpred';
+            const video = cardElement.querySelector('video');
             
-            if (card) {
-                // Левый клик - просмотр карты
-                cardElement.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.showCardModal(card);
-                });
-
-                // Правый клик - тоже просмотр карты
-                cardElement.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    this.showCardModal(card);
-                });
-
-                // Воспроизведение видео при наведении
-                const video = cardElement.querySelector('video');
-                if (video) {
-                    cardElement.addEventListener('mouseenter', () => {
-                        video.currentTime = 0;
-                        video.play().catch(e => console.log('Воспроизведение видео в модальном окне:', e));
-                        video.loop = true;
-                    });
-
-                    cardElement.addEventListener('mouseleave', () => {
-                        video.pause();
-                        video.currentTime = 0;
-                        video.loop = false;
-                    });
-                }
-
+            if (video && isCDPRedMode) {
+                // Только в режиме CD Project Red включаем воспроизведение видео при наведении
                 cardElement.addEventListener('mouseenter', () => {
-                    audioManager.playSound('touch');
+                    video.currentTime = 0;
+                    video.play().catch(e => console.log('Воспроизведение видео в модальном окне:', e));
+                    video.loop = true;
                 });
-            }
-        });
 
-        // Сохраняем обработчик для последующего удаления
-        modalOverlay.escapeHandler = escapeHandler;
-    },
+                cardElement.addEventListener('mouseleave', () => {
+                    video.pause();
+                    video.currentTime = 0;
+                    video.loop = false;
+                });
+            } else if (video) {
+                // В классическом режиме видео не воспроизводим
+                video.controls = false;
+                video.muted = true;
+                video.loop = false;
+            }
+            
+            // Левый клик - просмотр карты
+            cardElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.showCardModal(card);
+            });
+
+            // Правый клик - тоже просмотр карты
+            cardElement.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.showCardModal(card);
+            });
+
+            cardElement.addEventListener('mouseenter', () => {
+                audioManager.playSound('touch');
+            });
+        }
+    });
+
+    // Сохраняем обработчик для последующего удаления
+    modalOverlay.escapeHandler = escapeHandler;
+},
 
     closeDeckModal: function(modalOverlay) {
         modalOverlay.classList.remove('active');

@@ -3,74 +3,59 @@ const playerModule = {
     
     init: function(gameState) {
         this.gameState = gameState;
-        console.log('🎮 Player модуль инициализирован');
     },
     
-    // Обработка выбора карты из руки
-	handleCardSelection: function(card, cardElement) {
-		// ✅ ПРОВЕРЯЕМ НЕ НАХОДИТСЯ ЛИ ИГРА В ФАЗЕ МУЛЬГАНЫ
-		if (this.gameState.mulligan.phase === 'player') {
-			console.log('⏳ Включена фаза Мульганы - выбор карт для замены');
-			return;
-		}
-	
-		// ✅ ПРОВЕРЯЕМ не пасовал ли уже игрок
-		if (this.gameState.player.passed) {
-			console.log('❌ Игрок уже пасовал и не может играть карты');
-			this.showMessage('Вы уже пасовали в этом раунде!');
-			return;
-		}
-		
-		// Проверяем лимит карт за ход
-		if (this.gameState.cardsPlayedThisTurn >= this.gameState.maxCardsPerTurn) {
-			console.log(`❌ Лимит карт за ход достигнут (${this.gameState.cardsPlayedThisTurn}/${this.gameState.maxCardsPerTurn})`);
-			this.showMessage(`Вы уже разместили ${this.gameState.maxCardsPerTurn} карт за этот ход!`);
-			return;
-		}
-		
-		// Проверяем, может ли игрок сейчас ходить
-		if (this.gameState.gamePhase !== 'playerTurn') {
-			console.log('❌ Сейчас не ход игрока');
-			return;
-		}
-		
-		console.log('🎯 Игрок выбрал карту:', card.name, 'Тип:', card.type);
-		
-		if (this.gameState.selectingRow) {
-			this.cancelRowSelection();
-			return;
-		}
+    handleCardSelection: function(card, cardElement) {
+        if (this.gameState.mulligan.phase === 'player') {
+            return;
+        }
+    
+        if (this.gameState.player.passed) {
+            this.showMessage('Вы уже пасовали в этом раунде!');
+            return;
+        }
+        
+        if (this.gameState.cardsPlayedThisTurn >= this.gameState.maxCardsPerTurn) {
+            this.showMessage(`Вы уже разместили ${this.gameState.maxCardsPerTurn} карт за этот ход!`);
+            return;
+        }
+        
+        if (this.gameState.gamePhase !== 'playerTurn') {
+            return;
+        }
+        
+        if (this.gameState.selectingRow) {
+            this.cancelRowSelection();
+            return;
+        }
 
-		this.gameState.selectedCard = card;
-		this.gameState.selectedCardElement = cardElement;
-		
-		// Добавляем визуальное выделение выбранной карты
-		if (cardElement) {
-			cardElement.classList.add('card-selected');
-		}
-		
-		audioManager.playSound('card_selected');
+        this.gameState.selectedCard = card;
+        this.gameState.selectedCardElement = cardElement;
+        
+        if (cardElement) {
+            cardElement.classList.add('card-selected');
+        }
+        
+        audioManager.playSound('card_selected');
 
-		if (this.isWeatherCard(card)) {
-			this.playWeatherCard(card);
-		} else {
-			switch (card.type) {
-				case 'tactic':
-					this.startTacticCardPlacement(card);
-					break;
-				case 'unit':
-				case 'special':
-				case 'artifact':
-					this.startUnitCardPlacement(card);
-					break;
-				default:
-					console.warn('⚠️ Неизвестный тип карты:', card.type);
-					this.cancelCardSelection();
-			}
-		}
-	},
+        if (this.isWeatherCard(card)) {
+            this.playWeatherCard(card);
+        } else {
+            switch (card.type) {
+                case 'tactic':
+                    this.startTacticCardPlacement(card);
+                    break;
+                case 'unit':
+                case 'special':
+                case 'artifact':
+                    this.startUnitCardPlacement(card);
+                    break;
+                default:
+                    this.cancelCardSelection();
+            }
+        }
+    },
 
-    // Проверка карты погоды
     isWeatherCard: function(card) {
         return (card.tags && card.tags.includes('weather')) || 
                (card.type === 'special' && this.isWeatherCardByName(card.name));
@@ -84,7 +69,6 @@ const playerModule = {
         return weatherCardNames.includes(cardName);
     },
     
-    // Размещение карты погоды
     playWeatherCard: function(card) {
         const isClearWeather = this.isClearWeatherCard(card);
         
@@ -94,7 +78,6 @@ const playerModule = {
             return;
         }
 
-        // Помечаем карту как принадлежащую игроку
         card.owner = 'player';
 
         if (isClearWeather) {
@@ -105,7 +88,6 @@ const playerModule = {
 
         this.removeCardFromHand(card);
         
-        // Уведомляем gameModule об изменении погоды
         if (window.gameModule) {
             window.gameModule.displayWeatherCards();
             window.gameModule.completeCardPlay();
@@ -117,8 +99,6 @@ const playerModule = {
     },
     
     handleClearWeather: function(card) {
-        console.log('Игрок активировал Чистое небо');
-        
         if (window.gameModule) {
             window.gameModule.handleClearWeather(card);
         }
@@ -130,21 +110,18 @@ const playerModule = {
         }
     },
     
-    // Размещение тактики
     startTacticCardPlacement: function(card) {
         this.gameState.selectingRow = true;
         this.gameState.placementType = 'tactic';
         this.highlightAvailableTacticSlots();
     },
     
-    // Размещение юнита/спецкарты
     startUnitCardPlacement: function(card) {
         this.gameState.selectingRow = true;
         this.gameState.placementType = 'unit';
         this.highlightAvailableRows(card);
     },
     
-    // Подсветка доступных слотов тактики
     highlightAvailableTacticSlots: function() {
         const rows = ['close', 'ranged', 'siege'];
         
@@ -174,7 +151,6 @@ const playerModule = {
         this.gameState.tacticSlotSelectionHandlers.push({ element: tacticSlot, handler: clickHandler });
     },
     
-    // Подсветка доступных рядов
     highlightAvailableRows: function(card) {
         let availableRows = [];
         
@@ -225,7 +201,6 @@ const playerModule = {
         this.gameState.rowSelectionHandlers.push({ element: rowElement, handler: clickHandler });
     },
     
-    // Размещение карты на ряду
     placeCardOnRow: function(card, row) {
         if (this.gameState.placementType === 'tactic') {
             this.placeTacticCard(card, row);
@@ -234,15 +209,15 @@ const playerModule = {
         }
     },
     
-    // Размещение карты тактики
     placeTacticCard: function(card, row) {
         if (this.gameState.player.rows[row].tactic) {
             this.showMessage('В этом ряду уже есть карта тактики!');
             return;
         }
-if (window.audioManager && window.audioManager.playSound) {
-        audioManager.playSound('artefact');
-    }
+
+        if (window.audioManager && window.audioManager.playSound) {
+            audioManager.playSound('artefact');
+        }
 
         this.gameState.player.rows[row].tactic = card;
         this.removeCardFromHand(card);
@@ -253,31 +228,29 @@ if (window.audioManager && window.audioManager.playSound) {
         }
     },
     
-    // Размещение юнита/спецкарты
     placeUnitCard: function(card, row) {
         if (this.gameState.player.rows[row].cards.length >= 9) {
             this.showMessage('В этом ряду уже максимальное количество карт!');
             return;
         }
-if (window.audioManager && window.audioManager.playSound) {
-        // Проверяем тип карты
-        if (card.type === 'artifact' || card.type === 'special' || card.type === 'tactic') {
-            // Для спец. карт используем специальный звук
-            audioManager.playSound('artefact');
-        } else {
-            // Для юнитов - звуки по рядам
-            switch(row) {
-                case 'close':
-                    audioManager.playSound('card_close');
-                    break;
-                case 'ranged':
-                    audioManager.playSound('card_range');
-                    break;
-                case 'siege':
-                    audioManager.playSound('card_siege');
+
+        if (window.audioManager && window.audioManager.playSound) {
+            if (card.type === 'artifact' || card.type === 'special' || card.type === 'tactic') {
+                audioManager.playSound('artefact');
+            } else {
+                switch(row) {
+                    case 'close':
+                        audioManager.playSound('card_close');
+                        break;
+                    case 'ranged':
+                        audioManager.playSound('card_range');
+                        break;
+                    case 'siege':
+                        audioManager.playSound('card_siege');
+                }
             }
         }
-    }
+
         this.gameState.player.rows[row].cards.push(card);
         this.removeCardFromHand(card);
         
@@ -288,24 +261,20 @@ if (window.audioManager && window.audioManager.playSound) {
         }
     },
     
-    // Удаление карты из руки
-	removeCardFromHand: function(card) {
-		// ✅ ИСПОЛЬЗУЕМ метод gameModule вместо прямой работы с массивом
-		if (window.gameModule && window.gameModule.removeCardFromHand) {
-			window.gameModule.removeCardFromHand(card, 'player');
-		} else {
-			// Fallback
-			const cardIndex = this.gameState.player.hand.findIndex(c => c.id === card.id);
-			if (cardIndex !== -1) {
-				this.gameState.player.hand.splice(cardIndex, 1);
-				if (window.gameModule) {
-					window.gameModule.displayPlayerHand();
-				}
-			}
-		}
-	},
+    removeCardFromHand: function(card) {
+        if (window.gameModule && window.gameModule.removeCardFromHand) {
+            window.gameModule.removeCardFromHand(card, 'player');
+        } else {
+            const cardIndex = this.gameState.player.hand.findIndex(c => c.id === card.id);
+            if (cardIndex !== -1) {
+                this.gameState.player.hand.splice(cardIndex, 1);
+                if (window.gameModule) {
+                    window.gameModule.displayPlayerHand();
+                }
+            }
+        }
+    },
     
-    // Отмена выбора
     cancelCardSelection: function() {
         this.gameState.selectedCard = null;
         this.gameState.selectedCardElement = null;
@@ -356,71 +325,56 @@ if (window.audioManager && window.audioManager.playSound) {
         });
     },
     
-handlePass: function() {
-    // Проверяем, может ли игрок пасовать
-    if (this.gameState.gamePhase !== 'playerTurn' || this.gameState.player.passed) {
-        console.log('❌ Игрок не может пасовать сейчас');
-        return;
-    }
-    
-    // ✅ ПРОВЕРЯЕМ может ли игрок вообще играть карты (не достигнут ли лимит)
-    if (this.gameState.cardsPlayedThisTurn >= this.gameState.maxCardsPerTurn) {
-        console.log('❌ Игрок достиг лимита карт - должен завершить ход вместо паса');
-        this.showMessage('Вы достигли лимита карт! Завершите ход.');
-        return;
-    }
-    
-    audioManager.playSound('button');
-    console.log('⏸️ Игрок пасует');
-    
-    this.gameState.player.passed = true;
-    
-    // ✅ СБРАСЫВАЕМ СЧЕТЧИК БЕЗДЕЙСТВИЯ
-    if (window.gameModule && window.gameModule.resetTimeoutCounter) {
-        window.gameModule.resetTimeoutCounter();
-    }
-    
-    if (window.gameModule) {
-        window.gameModule.showGameMessage('Вы пасуете', 'info');
-        window.gameModule.updateControlButtons();
-        window.gameModule.handleTurnEnd();
-    }
-},
+    handlePass: function() {
+        if (this.gameState.gamePhase !== 'playerTurn' || this.gameState.player.passed) {
+            return;
+        }
+        
+        if (this.gameState.cardsPlayedThisTurn >= this.gameState.maxCardsPerTurn) {
+            this.showMessage('Вы достигли лимита карт! Завершите ход.');
+            return;
+        }
+        
+        audioManager.playSound('button');
+        
+        this.gameState.player.passed = true;
+        
+        if (window.gameModule && window.gameModule.resetTimeoutCounter) {
+            window.gameModule.resetTimeoutCounter();
+        }
+        
+        if (window.gameModule) {
+            window.gameModule.showGameMessage('Вы пасуете', 'info');
+            window.gameModule.updateControlButtons();
+            window.gameModule.handleTurnEnd();
+        }
+    },
 	
-	handleEndTurn: function() {
-    // Проверяем, может ли игрок завершать ход
-    if (this.gameState.gamePhase !== 'playerTurn') {
-        console.log('❌ Сейчас не ход игрока');
-        return;
-    }
-    
-    // ✅ ПРОВЕРЯЕМ не пасовал ли уже игрок
-    if (this.gameState.player.passed) {
-        console.log('❌ Игрок уже пасовал');
-        return;
-    }
-    
-    audioManager.playSound('button');
-    console.log('🔄 Игрок завершает ход');
-    
-    // ✅ СБРАСЫВАЕМ СЧЕТЧИК БЕЗДЕЙСТВИЯ
-    if (window.gameModule && window.gameModule.resetTimeoutCounter) {
-        window.gameModule.resetTimeoutCounter();
-    }
-    
-    if (window.gameModule) {
-        window.gameModule.handleTurnEnd();
-    }
-},
+    handleEndTurn: function() {
+        if (this.gameState.gamePhase !== 'playerTurn') {
+            return;
+        }
+        
+        if (this.gameState.player.passed) {
+            return;
+        }
+        
+        audioManager.playSound('button');
+        
+        if (window.gameModule && window.gameModule.resetTimeoutCounter) {
+            window.gameModule.resetTimeoutCounter();
+        }
+        
+        if (window.gameModule) {
+            window.gameModule.handleTurnEnd();
+        }
+    },
 
-    // Вспомогательные методы
     capitalizeFirst: function(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     },
     
     showMessage: function(text) {
-        console.log('💬 Сообщение:', text);
-        // Используем gameModule для показа сообщений
         if (window.gameModule && window.gameModule.showMessage) {
             window.gameModule.showMessage(text);
         } else {
