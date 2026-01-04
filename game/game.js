@@ -139,10 +139,8 @@ const gameModule = {
 startGameSequence: function() {
     console.log('🎮 Запуск правильной последовательности игры');
     
-    // Фаза 1: Монетка (определение первого хода)
-    setTimeout(() => {
-        this.startCoinToss();
-    }, 1000);
+    this.startCoinToss();
+
 },
 
     // === МОДУЛЬ ТАЙМЕРА ХОДА ===
@@ -490,10 +488,9 @@ addTimerStyles: function() {
         console.log('👑 Противник (Королевства Севера) получает 3 муллиганы');
     }
     
-    // Показываем введение в мульгану
-    setTimeout(() => {
-        this.showMulliganIntro();
-    }, 500);
+   
+        this.startPlayerMulligan();
+   
 },
 
     // ✅ МЕТОД ДЛЯ СБРОСА СОСТОЯНИЯ МУЛЬГАНЫ
@@ -509,95 +506,10 @@ addTimerStyles: function() {
 
     // ✅ МЕТОД ДЛЯ ПОКАЗА ВВЕДЕНИЯ В МУЛЬГАНУ
     showMulliganIntro: function() {
-        const introOverlay = document.createElement('div');
-        introOverlay.className = 'mulligan-intro-overlay';
-        introOverlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            font-family: 'Gwent', sans-serif;
-        `;
-
-        introOverlay.innerHTML = `
-            <div style="
-                background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
-                border: 2px solid #d4af37;
-                border-radius: 10px;
-                padding: 20px;
-                text-align: center;
-                max-width: 600px;
-                animation: mulliganIntroAppear 0.5s ease-out;
-            ">
-                <h2 style="
-                    color: #d4af37;
-                    margin: 0 0 20px 0;
-                    font-size: 35px;
-                    text-transform: uppercase;
-                    letter-spacing: 3px;
-                    text-shadow: 0 2px 10px rgba(212, 175, 55, 0.5);
-                ">МУЛЛИГАНА</h2>
-                
-                <div style="
-                    color: #ccc;
-                    font-size: 18px;
-                    line-height: 1.6;
-                    margin-bottom: 10px;
-                ">
-                    <p>Вы можете заменить до 2 карт из начальной руки.</p>
-                    <p>Нажмите на карту, чтобы отметить её для замены.</p>
-                    <p>Карты будут заменены случайными картами из вашей колоды.</p>
-                </div>         
-                
-                <button id="startMulliganBtn" style="
-                    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-                    color: #d4af37;
-                    border: 2px solid #d4af37;
-                    padding: 10px 30px;
-                    font-size: 20px;
-                    font-family: 'Gwent', sans-serif;
-                    text-transform: uppercase;
-                    letter-spacing: 2px;
-                    cursor: url('./ui/cursor_hover.png'), pointer;
-                    transition: all 0.3s ease;
-                    border-radius: 5px;
-                    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
-                    margin: 0 auto;
-                    display: block;
-                    bottom: 20px;
-                    overflow: hidden;
-                ">НАЧАТЬ</button>
-            </div>
-        `;
-
-        document.body.appendChild(introOverlay);
-        
-        // Обработчик кнопки начала Мульганы
-        const startBtn = document.getElementById('startMulliganBtn');
-        startBtn.addEventListener('click', () => {
-            audioManager.playSound('button');
-            document.body.removeChild(introOverlay);
-            this.startPlayerMulligan();
-        });
-        
-        startBtn.addEventListener('mouseenter', () => {
-            audioManager.playSound('touch');
-            startBtn.style.transform = 'scale(1.05)';
-            startBtn.style.boxShadow = '0 5px 15px rgba(212, 175, 55, 0.4)';
-        });
-        
-        startBtn.addEventListener('mouseleave', () => {
-            startBtn.style.transform = 'scale(1)';
-            startBtn.style.boxShadow = 'none';
-        });
-    },
+    // Пропускаем вступительное окно и сразу начинаем муллигану
+    console.log('🎯 Пропускаем вступление, сразу начинаем муллигану');
+    this.startPlayerMulligan();
+},
 
     // ✅ МЕТОД ДЛЯ НАЧАЛА МУЛЬГАНЫ ИГРОКА
     startPlayerMulligan: function() {
@@ -610,130 +522,219 @@ addTimerStyles: function() {
 
     // ✅ МЕТОД ДЛЯ ПОКАЗА ИНТЕРФЕЙСА МУЛЬГАНЫ
     showMulliganInterface: function() {
-        // Добавляем элементы управления Мульганой
-        this.createMulliganControls();
-        
-        // Модифицируем отображение руки для выбора карт
-        this.displayPlayerHandForMulligan();
-    },
+    // Скрываем игровое поле
+    this.hideGameBoardDuringMulligan();
+    
+    // Добавляем элементы управления Мульганы
+    this.createMulliganControls();
+    
+    // Модифицируем отображение руки для выбора карт
+    this.displayPlayerHandForMulligan();
+},
+
+hideGameBoardDuringMulligan: function() {
+    console.log('🎭 Скрытие игрового поля для мульганы');
+    
+    // Получаем элементы, которые нужно скрыть
+    const elementsToHide = [
+        'gameBoard', 'weatherSlot', 'playerLeader', 'opponentLeader',
+        'playerDeck', 'opponentDeck', 'playerDiscard', 'opponentDiscard',
+        'roundImage', 'winsIndicator', 'gameModeIndicator',
+        'playerCloseRow', 'playerRangedRow', 'playerSiegeRow',
+        'opponentCloseRow', 'opponentRangedRow', 'opponentSiegeRow',
+        'passBtn', 'endTurnBtn', 'turnTimerDisplay'
+    ];
+    
+    // Создаем оверлей для затемнения
+    const overlay = document.createElement('div');
+    overlay.id = 'mulliganOverlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 999;
+        pointer-events: none;
+    `;
+    document.body.appendChild(overlay);
+    
+    // Сохраняем исходные стили и скрываем элементы
+    this.mulliganHiddenElements = {};
+    elementsToHide.forEach(elementId => {
+        const element = document.getElementById(elementId);
+        if (element) {
+            // Сохраняем исходное состояние
+            this.mulliganHiddenElements[elementId] = {
+                display: element.style.display || '',
+                opacity: element.style.opacity || '',
+                visibility: element.style.visibility || ''
+            };
+            
+            // Скрываем элемент
+            element.style.opacity = '0.05';
+            element.style.pointerEvents = 'none';
+        }
+    });
+    
+    // Также скрываем ряды по классам
+    document.querySelectorAll('.row-strength').forEach(el => {
+        el.style.opacity = '0.05';
+    });
+    
+    document.querySelectorAll('.total-score-display').forEach(el => {
+        el.style.opacity = '0.05';
+    });
+},
+
+restoreGameBoardAfterMulligan: function() {
+    console.log('🎭 Восстановление игрового поля после мульганы');
+    
+    // Убираем оверлей
+    const overlay = document.getElementById('mulliganOverlay');
+    if (overlay) {
+        overlay.remove();
+    }
+    
+    // Восстанавливаем элементы
+    if (this.mulliganHiddenElements) {
+        Object.keys(this.mulliganHiddenElements).forEach(elementId => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                const original = this.mulliganHiddenElements[elementId];
+                element.style.display = original.display;
+                element.style.opacity = original.opacity;
+                element.style.visibility = original.visibility;
+                element.style.pointerEvents = '';
+            }
+        });
+    }
+    
+    // Восстанавливаем ряды
+    document.querySelectorAll('.row-strength').forEach(el => {
+        el.style.opacity = '';
+    });
+    
+    document.querySelectorAll('.total-score-display').forEach(el => {
+        el.style.opacity = '';
+    });
+    
+    // Очищаем сохраненные стили
+    this.mulliganHiddenElements = null;
+},
 
     // ✅ МЕТОД ДЛЯ СОЗДАНИЯ ЭЛЕМЕНТОВ УПРАВЛЕНИЯ МУЛЬГАНОЙ
     createMulliganControls: function() {
-		const playerHand = document.getElementById('playerHand');
-		if (!playerHand) return;
-		
-		// Удаляем старые элементы управления если они есть
-		const existingControls = document.getElementById('mulliganControls');
-		if (existingControls) {
-			existingControls.remove();
-		}
-		
-		// Создаем контейнер для элементов управления
-		const controlsContainer = document.createElement('div');
-		controlsContainer.id = 'mulliganControls';
-		controlsContainer.style.cssText = `
-			position: fixed;
-			bottom: 100px;
-			left: 50%;
-			transform: translateX(-50%);
-			display: flex;
-			gap: 10px;
-			z-index: 1000;
-			bottom: 1%;
-		`;
-		
-		// Кнопка "ОТМЕНИТЬ ВЫБОР"
-		const resetButton = document.createElement('button');
-		resetButton.id = 'mulliganResetBtn';
-		resetButton.textContent = 'ОТМЕНИТЬ ВЫБОР';
-		resetButton.style.cssText = `
-			background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-			color: #d4af37;
-			border: 2px solid #d4af37;
-			padding: 10px;
-			font-size: 20px;
-			font-family: 'Gwent', sans-serif;
-			text-transform: uppercase;
-			letter-spacing: 2px;
-			cursor: url('./ui/cursor_hover.png'), pointer;
-			transition: all 0.3s ease;
-			border-radius: 5px;
-			box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
-			margin: 0 auto;
-			display: block;
-			overflow: hidden;
-		`;
-		
-		// Информация о выбранных картах
-		const infoPanel = document.createElement('div');
-		infoPanel.id = 'mulliganInfo';
-		infoPanel.style.cssText = `
-			background: rgba(0,0,0,0.8);
-			color: #d4af37;
-			padding: 5px;
-			border-radius: 8px;
-			border: 2px solid #d4af37;
-			font-family: 'Gwent', sans-serif;
-			font-size: 16px;
-			text-align: center;
-			min-width: 200px;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-		`;
-		
-		// Создаем элементы внутри infoPanel
-		const infoText = document.createElement('div');
-		infoText.id = 'mulliganInfoText';
-		infoText.textContent = 'Выбрано: 0/2 карт';
-		
-		const subText = document.createElement('div');
-		subText.id = 'mulliganSubText';
-		subText.textContent = 'Нажмите на карту для выбора';
-		subText.style.cssText = `
-			font-size: 12px;
-			color: #888;
-			margin-top: 5px;
-		`;
-		
-		infoPanel.appendChild(infoText);
-		infoPanel.appendChild(subText);
-		
-		// Кнопка "ГОТОВО"
-		const doneButton = document.createElement('button');
-		doneButton.id = 'mulliganDoneBtn';
-		doneButton.textContent = 'ГОТОВО';
-		doneButton.style.cssText = `
-			background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-			color: #d4af37;
-			border: 2px solid #d4af37;
-			padding: 10px 30px;
-			font-size: 20px;
-			font-family: 'Gwent', sans-serif;
-			text-transform: uppercase;
-			letter-spacing: 2px;
-			cursor: url('./ui/cursor_hover.png'), pointer;
-			transition: all 0.3s ease;
-			border-radius: 5px;
-			box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
-			margin: 0 auto;
-			display: block;
-			overflow: hidden;
-		`;
-		
-		controlsContainer.appendChild(resetButton);
-		controlsContainer.appendChild(infoPanel);
-		controlsContainer.appendChild(doneButton);
-		
-		document.body.appendChild(controlsContainer);
-		
-		// ✅ НЕМЕДЛЕННО УСТАНАВЛИВАЕМ ОБРАБОТЧИКИ
-		this.setupMulliganControlsEventListeners();
-		
-		// ✅ ОБНОВЛЯЕМ ИНФОРМАЦИЮ СРАЗУ
-		this.updateMulliganInfo();
-	},
+    const playerHand = document.getElementById('playerHand');
+    if (!playerHand) return;
+    
+    // Удаляем старые элементы управления если они есть
+    const existingControls = document.getElementById('mulliganControls');
+    if (existingControls) {
+        existingControls.remove();
+    }
+    
+    // Создаем контейнер для элементов управления
+    const controlsContainer = document.createElement('div');
+    controlsContainer.id = 'mulliganControls';
+    controlsContainer.style.cssText = `
+        position: fixed;
+        bottom: 100px;
+        left: 54%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 1000;
+        bottom: 2.3%;
+    `;
+    
+    // Кнопка "ОТМЕНИТЬ ВЫБОР"
+    const resetButton = document.createElement('button');
+    resetButton.id = 'mulliganResetBtn';
+    resetButton.textContent = 'ОТМЕНИТЬ ВЫБОР';
+    resetButton.style.cssText = `
+        background: linear-gradient(145deg, rgb(42, 42, 42), rgb(26, 26, 26));
+        color: rgb(212, 175, 55);
+        border: 1px solid rgb(212, 175, 55);
+        padding: 8px;
+        font-size: 14px;
+        font-family: "Gwent", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        cursor: url("./ui/cursor_hover.png"), pointer;
+        transition: 0.3s;
+        border-radius: 4px;
+        box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 8px;
+        margin: 0px auto;
+        display: block;
+        overflow: hidden;
+        transform: scale(1);
+        width: 150px;
+    `;
+    
+    // Информация о выбранных картах - УПРОЩЕННАЯ ВЕРСИЯ
+    const infoPanel = document.createElement('div');
+    infoPanel.id = 'mulliganInfo';
+    infoPanel.style.cssText = `
+        background: rgba(0, 0, 0, 0.8);
+        color: rgb(212, 175, 55);
+        border-radius: 4px;
+        border: 1px solid rgb(212, 175, 55);
+        font-family: "Gwent", sans-serif;
+        font-size: 18px;
+        text-align: center;
+        min-width: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 20px;
+        font-weight: bold;
+    `;
+    
+    // ТОЛЬКО ОСНОВНОЙ ТЕКСТ, без подписи
+    const infoText = document.createElement('div');
+    infoText.id = 'mulliganInfoText';
+    infoText.textContent = 'Выбрано: 0/2 карт';
+    
+    infoPanel.appendChild(infoText);
+    
+    // Кнопка "ГОТОВО"
+    const doneButton = document.createElement('button');
+    doneButton.id = 'mulliganDoneBtn';
+    doneButton.textContent = 'ГОТОВО';
+    doneButton.style.cssText = `
+        background: linear-gradient(145deg, rgb(42, 42, 42), rgb(26, 26, 26));
+        color: rgb(212, 175, 55);
+        border: 1px solid rgb(212, 175, 55);
+        padding: 8px;
+        font-size: 14px;
+        font-family: "Gwent", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        cursor: url("./ui/cursor_hover.png"), pointer;
+        transition: 0.3s;
+        border-radius: 4px;
+        box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 8px;
+        margin: 0px auto;
+        display: block;
+        overflow: hidden;
+        transform: scale(1);
+        width: 150px;
+    `;
+    
+    controlsContainer.appendChild(resetButton);
+    controlsContainer.appendChild(infoPanel);
+    controlsContainer.appendChild(doneButton);
+    
+    document.body.appendChild(controlsContainer);
+    
+    // ✅ НЕМЕДЛЕННО УСТАНАВЛИВАЕМ ОБРАБОТЧИКИ
+    this.setupMulliganControlsEventListeners();
+    
+    // ✅ ОБНОВЛЯЕМ ИНФОРМАЦИЮ СРАЗУ
+    this.updateMulliganInfo();
+},
 
     // ✅ МЕТОД ДЛЯ НАСТРОЙКИ ОБРАБОТЧИКОВ МУЛЬГАНЫ
     setupMulliganControlsEventListeners: function() {
@@ -794,20 +795,88 @@ addTimerStyles: function() {
 	},
 
     // ✅ МЕТОД ДЛЯ ОТОБРАЖЕНИЯ РУКИ ДЛЯ МУЛЬГАНЫ
-    displayPlayerHandForMulligan: function() {
-        const handContainer = document.getElementById('playerHand');
-        if (!handContainer) return;
+displayPlayerHandForMulligan: function() {
+    const handContainer = document.getElementById('playerHand');
+    if (!handContainer) return;
 
-        handContainer.innerHTML = '';
-        
-        // Добавляем класс для индикации Мульганы
-        handContainer.classList.add('mulligan-active');
-        
-        this.gameState.player.hand.forEach((card, index) => {
-            const cardElement = this.createMulliganCardElement(card, index);
-            handContainer.appendChild(cardElement);
-        });
-    },
+    // Сохраняем текущие стили контейнера
+    const originalStyles = handContainer.style.cssText;
+    
+    // Очищаем контейнер
+    handContainer.innerHTML = '';
+    
+    // Добавляем класс для индикации Мульганы
+    handContainer.classList.add('mulligan-active');
+    
+    // Создаем обертку для рамки
+    const frameWrapper = document.createElement('div');
+    frameWrapper.id = 'mulligan-frame-wrapper';
+    frameWrapper.style.cssText = `
+        position: relative;
+        display: inline-block;
+    `;
+    
+    // Создаем надпись "Муллигана" над рамкой
+    const titleLabel = document.createElement('div');
+    titleLabel.id = 'mulligan-title';
+    titleLabel.textContent = 'Муллигана';
+    titleLabel.style.cssText = `
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(145deg, rgb(42, 42, 42), rgb(26, 26, 26));
+        color: #d4af37;
+        padding: 3px 15px;
+        border: 1px solid #d4af37;
+        border-radius: 4px;
+        font-family: "Gwent", sans-serif;
+        font-size: 16px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        z-index: 1000;
+        white-space: nowrap;
+    `;
+    
+    // Создаем контейнер для карт с рамкой
+    const cardsContainer = document.createElement('div');
+    cardsContainer.id = 'mulligan-cards-container';
+    cardsContainer.style.cssText = `
+        border: 1px solid #d4af37;
+        border-radius: 5px;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        display: inline-block;
+    `;
+    
+    // Создаем контейнер для карт внутри рамки
+    const innerCardsContainer = document.createElement('div');
+    innerCardsContainer.style.cssText = `
+        display: flex;
+        gap: 10px;
+    `;
+    
+    // Добавляем карты в контейнер
+    this.gameState.player.hand.forEach((card, index) => {
+        const cardElement = this.createMulliganCardElement(card, index);
+        innerCardsContainer.appendChild(cardElement);
+    });
+    
+    // Собираем структуру
+    cardsContainer.appendChild(innerCardsContainer);
+    frameWrapper.appendChild(titleLabel);
+    frameWrapper.appendChild(cardsContainer);
+    
+    // Добавляем в контейнер руки
+    handContainer.appendChild(frameWrapper);
+    
+    // Восстанавливаем оригинальные стили контейнера руки
+    handContainer.style.cssText = originalStyles;
+    handContainer.style.display = 'flex';
+    handContainer.style.justifyContent = 'center';
+    handContainer.style.alignItems = 'center';
+},
 
     // ✅ МЕТОД ДЛЯ СОЗДАНИЯ КАРТЫ ДЛЯ МУЛЬГАНЫ
     createMulliganCardElement: function(card, index) {
@@ -919,10 +988,8 @@ addTimerStyles: function() {
 	},
 
     // ✅ МЕТОД ДЛЯ ОБНОВЛЕНИЯ ИНФОРМАЦИИ МУЛЬГАНЫ
-    // === МЕТОД ДЛЯ ОБНОВЛЕНИЯ ИНФОРМАЦИИ МУЛЬГАНЫ ===
-updateMulliganInfo: function() {
+ updateMulliganInfo: function() {
     const infoText = document.getElementById('mulliganInfoText');
-    const subText = document.getElementById('mulliganSubText');
     const infoPanel = document.getElementById('mulliganInfo');
     
     if (!infoText || !infoPanel) {
@@ -932,30 +999,20 @@ updateMulliganInfo: function() {
     
     const mulliganState = this.gameState.mulligan.player;
     const selectedCount = mulliganState.cards.length;
-    const availableCount = mulliganState.available; // Доступное количество
+    const availableCount = mulliganState.available;
     
-    // ✅ ИСПРАВЛЯЕМ: показываем выбранное/доступное
+    // ✅ ТОЛЬКО ОСНОВНАЯ ИНФОРМАЦИЯ
     infoText.textContent = `Выбрано: ${selectedCount}/${availableCount} карт`;
-    
-    // Обновляем подсказку
-    if (selectedCount === 0) {
-        subText.textContent = 'Нажмите на карту для выбора';
-        subText.style.color = '#888';
-    } else if (selectedCount < availableCount) {
-        subText.textContent = `Можно выбрать еще ${availableCount - selectedCount} карт`;
-        subText.style.color = '#4CAF50';
-    } else {
-        subText.textContent = 'Достигнут лимит замен';
-        subText.style.color = '#f44336';
-    }
     
     // Обновляем стиль панели
     if (selectedCount > 0) {
         infoPanel.style.borderColor = '#4CAF50';
         infoPanel.style.color = '#4CAF50';
+        infoPanel.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.3)';
     } else {
         infoPanel.style.borderColor = '#d4af37';
         infoPanel.style.color = '#d4af37';
+        infoPanel.style.boxShadow = 'none';
     }
     
     console.log(`📊 Мульгана: выбрано ${selectedCount}/${availableCount} карт`);
@@ -1131,19 +1188,32 @@ this.shuffleArray(currentDeck);
     },
 
     // ✅ МЕТОД ДЛЯ УДАЛЕНИЯ ИНТЕРФЕЙСА МУЛЬГАНЫ
-    removeMulliganInterface: function() {
-        // Убираем элементы управления
-        const controls = document.getElementById('mulliganControls');
-        if (controls) {
-            controls.remove();
-        }
-        
-        // Убираем класс с руки
-        const handContainer = document.getElementById('playerHand');
-        if (handContainer) {
-            handContainer.classList.remove('mulligan-active');
-        }
-    },
+removeMulliganInterface: function() {
+    // Восстанавливаем игровое поле
+    this.restoreGameBoardAfterMulligan();
+    
+    // Убираем элементы управления
+    const controls = document.getElementById('mulliganControls');
+    if (controls) {
+        controls.remove();
+    }
+    
+    // Убираем рамку и надпись
+    const frameWrapper = document.getElementById('mulligan-frame-wrapper');
+    if (frameWrapper) {
+        frameWrapper.remove();
+    }
+    
+    // Убираем класс с руки
+    const handContainer = document.getElementById('playerHand');
+    if (handContainer) {
+        handContainer.classList.remove('mulligan-active');
+        // Очищаем контейнер для нормального отображения карт
+        handContainer.innerHTML = '';
+        // Восстанавливаем отображение руки
+        this.displayPlayerHand();
+    }
+},
 
     // ✅ МЕТОД ДЛЯ ЗАВЕРШЕНИЯ ФАЗЫ МУЛЬГАНЫ
   completeMulliganPhase: function() {
@@ -1175,7 +1245,7 @@ this.shuffleArray(currentDeck);
             console.log('🤖 Противник ходит первым');
             this.startOpponentTurn();
         }
-    }, 2000);
+    }, 1000);
 },
 	
      // === МОДУЛЬ ОПРЕДЕЛЕНИЯ ОЧЕРЁДНОСТИ ХОДА ===
@@ -1223,7 +1293,7 @@ startCoinTossAnimation: function() {
 			left: 0;
 			width: 100%;
 			height: 100%;
-			background: rgba(0, 0, 0, 0.95);
+			background: rgba(0, 0, 0, 1);
 			display: flex;
 			flex-direction: column;
 			align-items: center;
@@ -1255,7 +1325,7 @@ startCoinTossAnimation: function() {
 		// Запускаем анимацию подбрасывания монетки
 		setTimeout(() => {
 			this.animateCoinToss();
-		}, 1000);
+		}, 1500);
 	},
 
 	// ✅ МЕТОД ДЛЯ ДОБАВЛЕНИЯ CSS СТИЛЕЙ ДЛЯ АНИМАЦИИ МОНЕТКИ
@@ -1459,9 +1529,8 @@ startCoinTossAnimation: function() {
     console.log('🔄 Переход к фазе Мульганы...');
     
     // ✅ Фаза 2: Мульгана (после определения порядка хода)
-    setTimeout(() => {
         this.startMulliganPhase();
-    }, 1000);
+
 },
 	
     // === МОДУЛЬ ОЮНОВЛЕНИЯ ВИДА КАРТ ===
@@ -2194,28 +2263,24 @@ handleTurnEnd: function() {
     // === СИСТЕМА ПОГОДЫ ===
 
 	handleClearWeather: function(card) {
-		console.log('☀️ Активировано Чистое небо');
-		this.playWeatherSound('clear');
-		
-		// ✅ ПРАВИЛЬНО очищаем слот погоды перед добавлением новой карты
-		// Сначала отправляем все существующие карты погоды в сброс
-		this.gameState.weather.cards.forEach(weatherCard => {
-			const cardOwner = this.getWeatherCardOwner(weatherCard);
-			this.addCardToDiscard(weatherCard, cardOwner);
-		});
-		
-		// ✅ ПОЛНОСТЬЮ очищаем массив погоды
-		this.gameState.weather.cards = [];
-		
-		// ✅ ТОЛЬКО ПОСЛЕ этого добавляем "Чистое небо"
-		this.gameState.weather.cards.push(card);
-		
-		// Убираем все погодные эффекты
-		this.clearAllWeatherEffects();
-		this.restoreAllRowStrengths();
-		
-		this.displayWeatherCards();
-	},
+    console.log('☀️ Активировано Чистое небо');
+    this.playWeatherSound('clear');
+    
+    // ✅ ПОЛНОСТЬЮ очищаем массив погоды
+    this.gameState.weather.cards.forEach(weatherCard => {
+        const cardOwner = this.getWeatherCardOwner(weatherCard);
+        this.addCardToDiscard(weatherCard, cardOwner);
+    });
+    
+    this.gameState.weather.cards = [];
+    this.gameState.weather.cards.push(card);
+    
+    // Убираем все погодные эффекты
+    this.clearAllWeatherEffects();
+    this.restoreAllRowStrengths();
+    
+    this.displayWeatherCards();
+},
 
 	removeCardFromHand: function(card, player) {
 		const cardIndex = this.gameState[player].hand.findIndex(c => c.id === card.id);
@@ -2227,60 +2292,81 @@ handleTurnEnd: function() {
 		}
 	},
 
-    handleRegularWeather: function(card) {
-        // Проверяем "Чистое небо"
-        const clearWeatherIndex = this.gameState.weather.cards.findIndex(
-            weatherCard => this.isClearWeatherCard(weatherCard)
-        );
+ handleRegularWeather: function(card) {
+    console.log('🌧️ Обработка обычной погоды:', card.name, 'Владелец:', card.owner);
+    
+    // Проверяем "Чистое небо"
+    const clearWeatherIndex = this.gameState.weather.cards.findIndex(
+        weatherCard => this.isClearWeatherCard(weatherCard)
+    );
+    
+    if (clearWeatherIndex !== -1) {
+        const clearWeatherCard = this.gameState.weather.cards[clearWeatherIndex];
+        const clearWeatherOwner = this.getWeatherCardOwner(clearWeatherCard);
+        this.addCardToDiscard(clearWeatherCard, clearWeatherOwner);
+        this.gameState.weather.cards.splice(clearWeatherIndex, 1);
         
-        if (clearWeatherIndex !== -1) {
-            const clearWeatherCard = this.gameState.weather.cards[clearWeatherIndex];
-            const clearWeatherOwner = this.getWeatherCardOwner(clearWeatherCard);
-            this.addCardToDiscard(clearWeatherCard, clearWeatherOwner);
-            this.gameState.weather.cards.splice(clearWeatherIndex, 1);
-            
-            this.clearAllWeatherEffects();
-            this.restoreAllRowStrengths();
-        }
-        
-        // Добавляем новую карту погоды
-        this.gameState.weather.cards.push(card);
-        this.applyWeatherEffect(card);
-        this.displayWeatherCards();
-    },
+        this.clearAllWeatherEffects();
+        this.restoreAllRowStrengths();
+    }
+    
+    // ✅ УБЕДИТЕСЬ что карта имеет владельца
+    if (!card.owner) {
+        card.owner = this.gameState.currentPlayer === 'player' ? 'player' : 'opponent';
+    }
+    
+    // ✅ ДОБАВЛЯЕМ КАРТУ В МАССИВ ПОГОДЫ
+    this.gameState.weather.cards.push(card);
+    
+    // ✅ ПРИМЕНЯЕМ ЭФФЕКТ ПОГОДЫ
+    this.applyWeatherEffect(card);
+    
+    // ✅ ОБНОВЛЯЕМ ОТОБРАЖЕНИЕ
+    this.displayWeatherCards();
+    
+    console.log('✅ Обработана погода:', card.name);
+},
 
 	applyWeatherEffect: function(card) {
-		const weatherEffect = this.getWeatherEffectForCard(card);
-		if (!weatherEffect) return;
-		
-		const { row, image, sound } = weatherEffect;
-		
-		// Устанавливаем эффект
-		this.gameState.weather.effects[row] = {
-			card: card,
-			image: image
-		};
-		
-		// Применяем визуально и механически
-		this.applyVisualWeatherEffect(row, image);
-		this.reduceRowStrengthTo1(row, 'player');
-		this.reduceRowStrengthTo1(row, 'opponent');
-		this.playWeatherSound(sound);
-		
-		// ✅ ОБНОВЛЯЕМ общий счет после применения погоды
-		this.updateTotalScoreDisplays();
-		
-		console.log(`🌧️ Применен эффект погоды на ряд ${row}: ${card.name}`);
-	},
+    const weatherEffect = this.getWeatherEffectForCard(card);
+    if (!weatherEffect) return;
+    
+    const { rows, images, sounds } = weatherEffect;
+    
+    // Применяем эффект к каждому ряду
+    rows.forEach(row => {
+        // Устанавливаем эффект для ряда
+        this.gameState.weather.effects[row] = {
+            card: card,
+            image: images[row],
+            sound: sounds[row]
+        };
+        
+        // Применяем визуально и механически
+        this.applyVisualWeatherEffect(row, images[row]);
+        this.reduceRowStrengthTo1(row, 'player');
+        this.reduceRowStrengthTo1(row, 'opponent');
+        
+        // Воспроизводим звук для каждого ряда
+        if (sounds[row]) {
+            this.playWeatherSound(sounds[row]);
+        }
+        
+        console.log(`🌧️ Применен эффект погоды на ряд ${row}: ${card.name}`);
+    });
+    
+    // ✅ ОБНОВЛЯЕМ общий счет после применения погоды
+    this.updateTotalScoreDisplays();
+},
 
 	clearAllWeatherEffects: function() {
-		const rows = ['close', 'ranged', 'siege'];
-		
-		rows.forEach(row => {
-			this.gameState.weather.effects[row] = null;
-			this.removeVisualWeatherEffect(row);
-		});
-	},
+    const rows = ['close', 'ranged', 'siege'];
+    
+    rows.forEach(row => {
+        this.gameState.weather.effects[row] = null;
+        this.removeVisualWeatherEffect(row);
+    });
+},
 
 	restoreAllRowStrengths: function() {
 		const rows = ['close', 'ranged', 'siege'];
@@ -2564,15 +2650,40 @@ completeCardPlay: function() {
     },
 
     getWeatherEffectForCard: function(card) {
-        const weatherEffects = {
-            'Трескучий мороз': { row: 'siege', image: 'board/frost.png', sound: 'frost' },
-            'Белый Хлад': { row: 'siege', image: 'board/frost.png', sound: 'frost' },
-            'Густой туман': { row: 'ranged', image: 'board/fog.png', sound: 'fog' },
-            'Проливной дождь': { row: 'close', image: 'board/rain.png', sound: 'rain' },
-            'Шторм Скеллиге': { row: 'close', image: 'board/rain.png', sound: 'rain' }
-        };
-        return weatherEffects[card.name];
-    },
+    const weatherEffects = {
+        'Трескучий мороз': { 
+            rows: ['close'], 
+            images: {'close': 'board/frost.png'}, 
+            sounds: {'close': 'frost'} 
+        },
+        'Белый Хлад': { 
+            rows: ['close', 'ranged'], 
+            images: {'close': 'board/frost.png', 'ranged': 'board/fog.png'},
+            sounds: {'close': 'frost', 'ranged': 'fog'}
+        },
+        'Густой туман': { 
+            rows: ['ranged'], 
+            images: {'ranged': 'board/fog.png'},
+            sounds: {'ranged': 'fog'}
+        },
+        'Проливной дождь': { 
+            rows: ['siege'], 
+            images: {'siege': 'board/rain.png'},
+            sounds: {'siege': 'rain'}
+        },
+        'Шторм Скеллиге': { 
+            rows: ['ranged', 'siege'], 
+            images: {'ranged': 'board/fog.png', 'siege': 'board/rain.png'},
+            sounds: {'ranged': 'fog', 'siege': 'rain'}
+        },
+        'Чистое небо': { 
+            rows: [], 
+            images: {},
+            sounds: {'clear': 'clear'}
+        }
+    };
+    return weatherEffects[card.name];
+},
 
     playWeatherSound: function(soundType) {
         if (window.audioManager && window.audioManager.playWeatherSound) {
@@ -3894,48 +4005,33 @@ completeCardPlay: function() {
     },
 
     applyVisualWeatherEffect: function(row, image) {
-    const rowElement = document.getElementById(`player${this.capitalizeFirst(row)}Row`);
-    const opponentRowElement = document.getElementById(`opponent${this.capitalizeFirst(row)}Row`);
-    
+    // Убираем старый эффект на этом ряду
     this.removeVisualWeatherEffect(row);
     
-    if (rowElement) {
-        const weatherOverlay = document.createElement('div');
-        weatherOverlay.className = 'weather-effect-overlay';
-        weatherOverlay.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('${image}') center/cover;
-            pointer-events: none;
-            z-index: 5;
-        `;
-        weatherOverlay.dataset.weatherRow = row;
-        weatherOverlay.dataset.weatherSide = 'player';
-        rowElement.style.position = 'relative';
-        rowElement.appendChild(weatherOverlay);
-    }
+    // Применяем к обоим игрокам
+    const playerRowElement = document.getElementById(`player${this.capitalizeFirst(row)}Row`);
+    const opponentRowElement = document.getElementById(`opponent${this.capitalizeFirst(row)}Row`);
     
-    if (opponentRowElement) {
-        const weatherOverlay = document.createElement('div');
-        weatherOverlay.className = 'weather-effect-overlay';
-        weatherOverlay.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('${image}') center/cover;
-            pointer-events: none;
-            z-index: 5;
-        `;
-        weatherOverlay.dataset.weatherRow = row;
-        weatherOverlay.dataset.weatherSide = 'opponent';
-        opponentRowElement.style.position = 'relative';
-        opponentRowElement.appendChild(weatherOverlay);
-    }
+    [playerRowElement, opponentRowElement].forEach(rowElement => {
+        if (rowElement) {
+            const weatherOverlay = document.createElement('div');
+            weatherOverlay.className = 'weather-effect-overlay';
+            weatherOverlay.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: url('${image}') center/cover;
+                pointer-events: none;
+                z-index: 5;
+            `;
+            weatherOverlay.dataset.weatherRow = row;
+            weatherOverlay.dataset.weatherSide = rowElement.id.startsWith('player') ? 'player' : 'opponent';
+            rowElement.style.position = 'relative';
+            rowElement.appendChild(weatherOverlay);
+        }
+    });
 },
 
 	removeVisualWeatherEffect: function(row) {
@@ -4162,13 +4258,22 @@ completeCardPlay: function() {
     },
 	
     showCardModal: function(card) {
-        if (window.deckModule && typeof window.showCardModal === 'function') {
-            window.showCardModal(card);
-        } else {
-            this.showBasicCardModal(card);
+    if (window.deckModule && typeof window.showCardModal === 'function') {
+        // ✅ СОЗДАЕМ КОПИЮ КАРТЫ С ОРИГИНАЛЬНОЙ СИЛОЙ
+        const cardForModal = { ...card };
+        
+        // ✅ ЕСЛИ БЫЛА СОХРАНЕНА ОРИГИНАЛЬНАЯ СИЛА - ИСПОЛЬЗУЕМ ЕЕ
+        if (card.originalStrength !== undefined) {
+            cardForModal.strength = card.originalStrength;
+            cardForModal.showOriginalStrength = true;
         }
-        audioManager.playSound('button');
-    },
+        
+        window.showCardModal(cardForModal);
+    } else {
+        this.showBasicCardModal(card);
+    }
+    audioManager.playSound('button');
+},
 
     // === ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ИНТЕРФЕЙСА ===
 

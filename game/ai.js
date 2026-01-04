@@ -159,23 +159,68 @@ pass: function() {
     
 canPlayWeatherCard: function(card) {
     if (this.gameState.weather.cards.length >= this.gameState.weather.maxWeatherCards) {
+        console.log('❌ AI: Достигнут лимит карт погоды');
         return false;
     }
     
     if (this.isClearWeatherCard(card)) {
-        // ✅ Проверяем нет ли уже "Чистого неба"
-        const hasClearWeather = this.gameState.weather.cards.some(wc => this.isClearWeatherCard(wc));
-        return !hasClearWeather; // Можно играть только если нет уже "Чистого неба"
+        const hasClearWeather = this.gameState.weather.cards.some(wc => 
+            this.isClearWeatherCard(wc)
+        );
+        if (hasClearWeather) {
+            console.log('❌ AI: Уже есть "Чистое небо"');
+            return false;
+        }
+        return true;
     }
     
     const weatherEffect = this.getWeatherEffectForCard(card);
-    if (weatherEffect && this.gameState.weather.effects[weatherEffect.row]) {
-        return false; // Нельзя играть погоду на ряд где уже есть эффект
+    if (!weatherEffect || !weatherEffect.rows) {
+        console.log('❌ AI: Неизвестный эффект погоды');
+        return false;
     }
     
+    // ✅ Проверяем, влияет ли погода хоть на один ряд без погоды
+    const hasValidTargetRow = weatherEffect.rows.some(row => 
+        !this.gameState.weather.effects[row]
+    );
+    
+    if (!hasValidTargetRow) {
+        console.log('❌ AI: Все целевые ряды уже под погодой');
+        return false;
+    }
+    
+    // Проверяем дублирующую погоду
+    const hasSameWeather = this.gameState.weather.cards.some(wc => 
+        wc.name === card.name
+    );
+    
+    if (hasSameWeather) {
+        console.log('❌ AI: Такая погода уже есть');
+        return false;
+    }
+    
+    console.log('✅ AI: Может играть погоду:', card.name);
     return true;
 },
- 
+
+ hasDuplicateWeather: function(card) {
+    const weatherEffect = this.getWeatherEffectForCard(card);
+    if (!weatherEffect || !weatherEffect.rows) return false;
+    
+    // Проверяем, есть ли уже такая же карта погоды
+    const hasSameCard = this.gameState.weather.cards.some(wc => 
+        wc.name === card.name
+    );
+    
+    if (hasSameCard) return true;
+    
+    // Проверяем, есть ли погода на всех целевых рядах
+    return weatherEffect.rows.every(row => 
+        this.gameState.weather.effects[row]
+    );
+},
+
     canPlayTacticCard: function(card) {
         const rows = ['close', 'ranged', 'siege'];
         return rows.some(row => !this.gameState.opponent.rows[row].tactic);
@@ -244,46 +289,66 @@ canPlayWeatherCard: function(card) {
         return Math.max(0, baseScore);
     },
     
- evaluateWeatherCard: function(card) {
+evaluateWeatherCard: function(card) {
     let score = 10;
     
     if (this.isClearWeatherCard(card)) {
-        // ✅ ПРАВИЛЬНО оцениваем "Чистое небо" - только если есть активная погода
-        const activeWeatherCount = Object.values(this.gameState.weather.effects).filter(effect => effect !== null).length;
+        // Оцениваем "Чистое небо"
+        const activeWeatherCount = Object.values(this.gameState.weather.effects)
+            .filter(effect => effect !== null).length;
         if (activeWeatherCount > 0) {
-            score += activeWeatherCount * 20; // Высокий приоритет если есть погода
+            score += activeWeatherCount * 20;
         } else {
-            score = 0; // ❌ НИЗКИЙ приоритет если нет активной погоды
+            score = 0;
         }
         
-        // ✅ ДОПОЛНИТЕЛЬНО проверяем нет ли уже "Чистого неба" на поле
-        const hasClearWeather = this.gameState.weather.cards.some(wc => this.isClearWeatherCard(wc));
+        const hasClearWeather = this.gameState.weather.cards.some(wc => 
+            this.isClearWeatherCard(wc)
+        );
         if (hasClearWeather) {
-            score = -10; // ❌ ОЧЕНЬ НИЗКИЙ приоритет если уже есть "Чистое небо"
+            score = -10;
         }
     } else {
         const weatherEffect = this.getWeatherEffectForCard(card);
-        if (weatherEffect) {
-            const playerRowStrength = this.gameState.player.rows[weatherEffect.row].strength;
-            const opponentRowStrength = this.gameState.opponent.rows[weatherEffect.row].strength;
+        if (weatherEffect && weatherEffect.rows) {
+            let totalPlayerStrength = 0;
+            let totalOpponentStrength = 0;
+            let alreadyHasWeatherOnSomeRows = false;
             
-            // ✅ ПРАВИЛЬНО оцениваем обычную погоду
-            if (playerRowStrength > 3) {
-                score += Math.min(playerRowStrength, 15); // Бонус за сильный ряд противника
+            // ✅ ПРАВИЛЬНО СЧИТАЕМ СИЛУ ПО ВСЕМ ЦЕЛЕВЫМ РЯДАМ
+            weatherEffect.rows.forEach(row => {
+                totalPlayerStrength += this.gameState.player.rows[row].strength;
+                totalOpponentStrength += this.gameState.opponent.rows[row].strength;
+                
+                // Проверяем, есть ли уже погода на любом из целевых рядов
+                if (this.gameState.weather.effects[row]) {
+                    alreadyHasWeatherOnSomeRows = true;
+                }
+            });
+            
+            // Бонус за высокую силу противника
+            if (totalPlayerStrength > 0) {
+                score += Math.min(totalPlayerStrength * 0.7, 20);
             }
             
-            if (opponentRowStrength > 2) {
-                score -= Math.min(opponentRowStrength, 10); // Штраф за свой сильный ряд
+            // Штраф за свою силу под погодой
+            if (totalOpponentStrength > 0) {
+                score -= Math.min(totalOpponentStrength * 0.5, 10);
             }
             
-            // ✅ Штраф если уже есть такая же погода
-            if (this.gameState.weather.effects[weatherEffect.row]) {
-                score = 0; // Не играть одинаковую погоду
+            // Штраф за дублирование погоды
+            if (alreadyHasWeatherOnSomeRows) {
+                score -= 10;
+            }
+            
+            // ✅ ДОПОЛНИТЕЛЬНЫЙ БОНУС ЗА КАРТЫ, КОТОРЫЕ ВЛИЯЮТ НА БОЛЬШЕ РЯДОВ
+            if (weatherEffect.rows.length > 1) {
+                score += 5; // Бонус за карты, влияющие на несколько рядов
             }
         }
     }
     
-    return score;
+    return Math.max(0, score);
 },
 
 	evaluateTacticCard: function(card) {
@@ -413,46 +478,63 @@ canPlayWeatherCard: function(card) {
 	},
 
     playWeatherCard: function(card) {
-        console.log('🌧️ AI играет карту погоды:', card.name);
-        
-        card.owner = 'opponent';
-        
-        if (window.gameModule) {
-            if (this.isClearWeatherCard(card)) {
-                window.gameModule.handleClearWeather(card);
-            } else {
-                const clearWeatherIndex = this.gameState.weather.cards.findIndex(
-                    weatherCard => this.isClearWeatherCard(weatherCard)
-                );
-                
-                if (clearWeatherIndex !== -1) {
-                    const clearWeatherCard = this.gameState.weather.cards[clearWeatherIndex];
-                    const clearWeatherOwner = clearWeatherCard.owner || 'player';
-                    window.gameModule.addCardToDiscard(clearWeatherCard, clearWeatherOwner);
-                    this.gameState.weather.cards.splice(clearWeatherIndex, 1);
-                    window.gameModule.clearAllWeatherEffects();
-                    window.gameModule.restoreAllRowStrengths();
-                }
-                
-                const weatherEffect = this.getWeatherEffectForCard(card);
-                if (weatherEffect) {
-                    this.gameState.weather.effects[weatherEffect.row] = {
-                        card: card,
-                        image: weatherEffect.image,
+    console.log('🌧️ AI играет карту погоды:', card.name);
+    
+    // ✅ ЯВНО УСТАНАВЛИВАЕМ владельца карты
+    const weatherCardWithOwner = { ...card, owner: 'opponent' };
+    
+    // ✅ УДАЛЯЕМ оригинальную карту из руки
+    this.removeCardFromHand(card);
+    
+    if (window.gameModule) {
+        // ✅ ПЕРЕДАЕМ КАРТУ С ВЛАДЕЛЬЦЕМ В gameModule
+        if (this.isClearWeatherCard(card)) {
+            window.gameModule.handleClearWeather(weatherCardWithOwner);
+        } else {
+            // ✅ ДОБАВЛЯЕМ КАРТУ В МАССИВ ПОГОДЫ ПЕРЕД применением эффекта
+            this.gameState.weather.cards.push(weatherCardWithOwner);
+            
+            // ✅ ПРИМЕНЯЕМ ЭФФЕКТ ЧЕРЕЗ gameModule
+            window.gameModule.handleRegularWeather(weatherCardWithOwner);
+            
+            // ✅ ПРАВИЛЬНО ОБРАБАТЫВАЕМ ЭФФЕКТЫ ДЛЯ НЕСКОЛЬКИХ РЯДОВ
+            const weatherEffect = this.getWeatherEffectForCard(card);
+            if (weatherEffect && weatherEffect.rows) {
+                weatherEffect.rows.forEach(row => {
+                    // Устанавливаем эффект для ряда
+                    this.gameState.weather.effects[row] = {
+                        card: weatherCardWithOwner,
+                        image: weatherEffect.images[row],
                         owner: 'opponent'
                     };
                     
-                    window.gameModule.applyVisualWeatherEffect(weatherEffect.row, weatherEffect.image);
-                    window.gameModule.reduceRowStrengthTo1(weatherEffect.row, 'player');
-                    window.gameModule.reduceRowStrengthTo1(weatherEffect.row, 'opponent');
-                }
+                    // Применяем механический эффект (установка силы в 1)
+                    window.gameModule.reduceRowStrengthTo1(row, 'player');
+                    window.gameModule.reduceRowStrengthTo1(row, 'opponent');
+                });
             }
-            
-            this.gameState.weather.cards.push(card);
-            window.gameModule.displayWeatherCards();
         }
-    },
+        
+        // ✅ ОБНОВЛЯЕМ ВИЗУАЛЬНОЕ ОТОБРАЖЕНИЕ
+        window.gameModule.displayWeatherCards();
+        
+        console.log('✅ AI разместил карту погоды:', card.name, 'Владелец: opponent');
+    }
+},
+
+getRowsUnderWeather: function() {
+    const rowsUnderWeather = [];
+    const rows = ['close', 'ranged', 'siege'];
     
+    rows.forEach(row => {
+        if (this.gameState.weather.effects[row]) {
+            rowsUnderWeather.push(row);
+        }
+    });
+    
+    return rowsUnderWeather;
+},
+
 	findBestTacticRow: function() {
 		const rows = ['close', 'ranged', 'siege'];
 		const availableRows = rows.filter(row => !this.gameState.opponent.rows[row].tactic);
@@ -545,15 +627,40 @@ canPlayWeatherCard: function(card) {
     },
     
     getWeatherEffectForCard: function(card) {
-        const weatherEffects = {
-            'Трескучий мороз': { row: 'siege', image: 'gwent/frost.png' },
-            'Белый Хлад': { row: 'siege', image: 'gwent/frost.png' },
-            'Густой туман': { row: 'ranged', image: 'gwent/fog.png' },
-            'Проливной дождь': { row: 'close', image: 'gwent/rain.png' },
-            'Шторм Скеллиге': { row: 'close', image: 'gwent/rain.png' }
-        };
-        return weatherEffects[card.name];
-    },
+    const weatherEffects = {
+        'Трескучий мороз': { 
+            rows: ['close'], 
+            images: {'close': 'board/frost.png'}, 
+            sounds: {'close': 'frost'} 
+        },
+        'Белый Хлад': { 
+            rows: ['close', 'ranged'], 
+            images: {'close': 'board/frost.png', 'ranged': 'board/fog.png'},
+            sounds: {'close': 'frost', 'ranged': 'fog'}
+        },
+        'Густой туман': { 
+            rows: ['ranged'], 
+            images: {'ranged': 'board/fog.png'},
+            sounds: {'ranged': 'fog'}
+        },
+        'Проливной дождь': { 
+            rows: ['siege'], 
+            images: {'siege': 'board/rain.png'},
+            sounds: {'siege': 'rain'}
+        },
+        'Шторм Скеллиге': { 
+            rows: ['ranged', 'siege'], 
+            images: {'ranged': 'board/fog.png', 'siege': 'board/rain.png'},
+            sounds: {'ranged': 'fog', 'siege': 'rain'}
+        },
+        'Чистое небо': { 
+            rows: [], 
+            images: {},
+            sounds: {'clear': 'clear'}
+        }
+    };
+    return weatherEffects[card.name];
+},
     
 	 removeCardFromHand: function(card) {
 		// ✅ ИСПОЛЬЗУЕМ метод gameModule
