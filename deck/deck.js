@@ -1,68 +1,3 @@
-const localization = {
-    factions: {
-        neutral: 'Нейтралитет',
-        monsters: 'Чудовища',
-        nilfgaard: 'Нильфгаард',
-        realms: 'Королевства Севера',
-        scoiatael: 'Скоя\'таэли',
-        skellige: 'Скеллиге',
-		syndicate: 'Синдикат',
-    },
-    cardTypes: {
-        unit: 'Отряд',
-        special: 'Спец. карта',
-        artifact: 'Артефакт',
-        tactic: 'Тактика',
-        leader: 'Лидер',
-    },
-    rarities: {
-        bronze: 'Бронзовая',
-        silver: 'Серебренная',
-        gold: 'Золотая'
-    },
-    tags: {
-		leader: 'Лидер',
-		hero: 'Герой',
-		wild_hunt: 'Дикая Охота',
-		king: 'Правитель',
-		kingser: 'Знать',
-		mage: 'Чародей',
-		witcher: 'Ведьмак',
-		warrior: 'Воин',
-		monster: 'Чудовище',
-		weather: 'Погода',
-		tactic: 'Военное искуство',
-		spell: 'Заклятие',
-		hazard: 'Бедствие',
-		ritual: 'Ритуал',
-		execution: 'Наказание',
-		criminal: 'Преступник',
-		criminality: 'Преступление',
-		scavenger: 'Трупоед',
-		ghost: 'Призрак',
-		artifact: 'Артефакт',          
-		dragon: 'Драконид',             
-		specter: 'Дух',                 
-		dwarf: 'Краснолюд',             
-		mercenary: 'Наёмник',
-		elf: 'Ельф',
-		oak: 'Древень',
-		curse: 'Проклятие',
-		religy: 'Религия',
-		weapons: 'Оружие',
-		ogr: 'Огройд',
-		pirat: 'Пират',
-		alchimy: 'Алхимия',
-		scenary: 'Сценарий',
-		treasure: 'Сокровище',
-		relict: 'Реликт',
-		blood: 'Вампир',
-		mantikora: 'Мантикора',
-		animal: 'Животное', 
-		driada: 'Дриада'
-    }
-};
-
 const factionAbilities = {
     scoiatael: [
         {
@@ -293,22 +228,6 @@ let lastCollectionFilter = 'all';
 let lastDeckFilter = 'all';
 let factionSortEnabled = false;
 let deckFactionSortEnabled = false;
-
-function localizeFaction(factionId) {
-    return localization.factions[factionId] || factionId;
-}
-
-function localizeCardType(type) {
-    return localization.cardTypes[type] || type;
-}
-
-function localizeRarity(rarity) {
-    return localization.rarities[rarity] || rarity;
-}
-
-function localizeTags(tags) {
-    return tags ? tags.map(tag => localization.tags[tag] || tag) : [];
-}
 
 function initDeckBuilding(faction) {
     window.selectedFaction = faction;
@@ -1088,21 +1007,6 @@ function getPositionIconPath(position) {
     };
     
     return positionIcons[position] || 'deck/any-row.png';
-}
-
-function getPositionName(position) {
-    const positionNames = {
-        'close-row': 'Ближний бой',
-        'ranged-row': 'Дальний бой',
-        'siege-row': 'Осадный ряд',
-		'any-row': 'Все ряды',
-        'hidden-close-row': 'Ближний бой',
-        'hidden-ranged-row': 'Дальний бой',
-        'hidden-siege-row': 'Осадный ряд',
-		'hidden-any-row': 'Все ряды',
-    };
-    
-    return positionNames[position] || position;
 }
 
 function getTypeIconPath(cardType) {

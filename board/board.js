@@ -524,24 +524,28 @@ const boardModule = {
             abilityData = window.skillSystem.abilities[abilityId];
         }
         
-        if (abilityData) {
-            abilityName = abilityData.name || 'Способность';
-            abilityDesc = abilityData.description || 'Описание отсутствует';
-            
-            // Извлекаем hint-tooltip из description, если есть
-            const hintMatch = abilityDesc.match(/<span class="hint-tooltip">(.*?)<\/span>/);
-            if (hintMatch) {
-                abilityHint = hintMatch[1];
-                // Убираем hint-tooltip из основного описания
-                abilityDesc = abilityDesc.replace(/<span class="ability-hint">.*?<\/span>/, '');
-                // Убираем оставшиеся span-теги description-normal
-                abilityDesc = abilityDesc.replace(/<span class="description-normal">/g, '');
-                abilityDesc = abilityDesc.replace(/<\/span>/g, '');
-            }
-            
-            // Убираем все остальные HTML-теги
-            abilityDesc = abilityDesc.replace(/<[^>]*>/g, '');
-        } else {
+		if (abilityData) {
+			abilityName = abilityData.name || 'Способность';
+			abilityDesc = abilityData.description || 'Описание отсутствует';
+			
+			// Извлекаем hint-tooltip из description, если есть
+			const hintMatch = abilityDesc.match(/<span class="hint-tooltip">(.*?)<\/span>/);
+			if (hintMatch) {
+				abilityHint = hintMatch[1];
+				// Убираем только блок с tooltip, но сохраняем hint-trigger
+				abilityDesc = abilityDesc.replace(/<span class="ability-hint">[\s\S]*?<\/span>/, function(match) {
+					// Внутри ability-hint оставляем только содержимое hint-trigger
+					const triggerMatch = match.match(/<span class="hint-trigger">([\s\S]*?)<\/span>/);
+					return triggerMatch ? `<span class="hint-trigger">${triggerMatch[1]}</span>` : '';
+				});
+				// Убираем оставшиеся span-теги description-normal, но сохраняем hint-trigger
+				abilityDesc = abilityDesc.replace(/<span class="description-normal">([\s\S]*?)<\/span>/g, '$1');
+			}
+			
+			// НЕ удаляем все HTML-теги, оставляем hint-trigger
+			// Удаляем только нежелательные теги (кроме span с hint-trigger)
+			abilityDesc = abilityDesc.replace(/<(?!\/?span\b)[^>]*>/g, '');
+		} else {
             // Если способность не найдена в skillSystem, пробуем найти в factionAbilities
             let abilityInfo = null;
             

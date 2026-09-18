@@ -36,7 +36,7 @@ const skillSystem = {
         'biting_frost': {
             name: 'Белый хлад',
             type: 'weather',
-            description: 'Накладывает эффект мороза и тумана, снижая силу всех отрядов в дальнем и блежнем рядах до 1',
+            description: 'Накладывает эффект мороза и тумана, снижая силу всех отрядов в <span class="hint-trigger">Дальнем и Блежнем рядах</span> до 1',
             effect: {
                 type: 'weather',
                 weatherType: 'frost',
@@ -48,7 +48,7 @@ const skillSystem = {
 		'frost': {
             name: 'Трескучий мороз',
             type: 'weather',
-            description: 'Накладывает эффект мороза, снижая силу всех отрядов в блежнем ряду до 1',
+            description: 'Накладывает эффект мороза, снижая силу всех отрядов в <span class="hint-trigger">Блежнем ряду</span> до 1',
             effect: {
                 type: 'weather',
                 weatherType: 'frost',
@@ -60,7 +60,7 @@ const skillSystem = {
         'impenetrable_fog': {
             name: 'Густой туман',
             type: 'weather',
-            description: 'Накладывает эффект тумана, снижая силу всех отрядов в дальнем ряду до 1',
+            description: 'Накладывает эффект тумана, снижая силу всех отрядов в <span class="hint-trigger">Дальнем ряду</span> до 1',
             effect: {
                 type: 'weather',
                 weatherType: 'fog',
@@ -72,7 +72,7 @@ const skillSystem = {
         'torrential_rain': {
             name: 'Проливной дождь',
             type: 'weather',
-            description: 'Накладывает эффект дождя, снижая силу всех отрядов в осадном ряду до 1',
+            description: 'Накладывает эффект дождя, снижая силу всех отрядов в <span class="hint-trigger">Осадном ряду</span> до 1',
             effect: {
                 type: 'weather',
                 weatherType: 'rain',
@@ -84,7 +84,7 @@ const skillSystem = {
         'storm': {
             name: 'Гнев богов',
             type: 'weather',
-            description: 'Накладывает эффект дождя и тумана, снижая силу всех отрядов в дальнем и осадном рядах до 1',
+            description: 'Накладывает эффект дождя и тумана, снижая силу всех отрядов в <span class="hint-trigger">Дальнем и Осадном рядах</span> до 1',
             effect: {
                 type: 'weather',
                 weatherType: 'storm',
@@ -142,6 +142,11 @@ const skillSystem = {
 				target: 'self'
 			}
 		},
+		'spy': {
+			name: 'Шпион',
+			type: 'special',
+			description: 'Размещается на стороне противника. После размещения из Колоды в Руку добирается случайная карта',
+		},
 
 		'call_rat': {
 			name: 'Чумной мор',
@@ -155,7 +160,7 @@ const skillSystem = {
 		'call_driad': {
 			name: 'Зов Брокилона',
 			type: 'special',
-			description: '<span class="ability-hint"><span class="hint-trigger">Призывает</span><span class="hint-tooltip"><strong style="color:#0cbe38">Призыв:</strong> Автоматически размещает на поле указанные карты..</span></span><span class="description-normal"> на поле 2 дриад-охотниц.',
+			description: '<span class="ability-hint"><span class="hint-trigger">Призывает</span><span class="hint-tooltip"><strong style="color:#0cbe38">Призыв:</strong> Автоматически размещает на поле указанные карты.</span></span><span class="description-normal"> на поле 2 дриад-охотниц.',
 			effect: {
 				type: 'summon_named_card', 
 				target: 'self'

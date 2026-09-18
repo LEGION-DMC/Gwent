@@ -25,46 +25,7 @@ const collectionModule = (function() {
     function getCardDisplayMode() {
         return window.settingsModule?.getCardDisplayMode?.() ?? 'static';
     }
-    
-    const localizations = {
-        factions: {
-            neutral: 'Нейтралитет', monsters: 'Чудовища', nilfgaard: 'Нильфгаард',
-            realms: 'Королевства Севера', scoiatael: 'Скоя\'таэли', skellige: 'Скеллиге', syndicate: 'Синдикат'
-        },
-        types: { unit: 'Отряд', special: 'Спец. карта', artifact: 'Артефакт', tactic: 'Тактика', leader: 'Лидер' },
-        rarities: { bronze: 'Бронзовая', silver: 'Серебряная', gold: 'Золотая' },
-        positions: {
-            'close-row': 'Ближний бой', 'ranged-row': 'Дальний бой', 'siege-row': 'Осадный ряд',
-            'any-row': 'Все ряды', 'hidden-close-row': 'Ближний бой', 'hidden-ranged-row': 'Дальний бой',
-            'hidden-siege-row': 'Осадный ряд', 'hidden-any-row': 'Все ряды'
-        },
-        positionDisplay: {
-            'close-row': 'Ближний бой', 'ranged-row': 'Дальний бой', 'siege-row': 'Осадный ряд',
-            'any-row': 'Все ряды'
-        },
-        tags: {
-            leader: 'Лидер', hero: 'Герой', wild_hunt: 'Дикая Охота', king: 'Правитель',
-            kingser: 'Знать', mage: 'Чародей', witcher: 'Ведьмак', warrior: 'Воин',
-            monster: 'Чудовище', weather: 'Погода', tactic: 'Военное искуство', spell: 'Заклятие',
-            hazard: 'Бедствие', ritual: 'Ритуал', execution: 'Наказание', criminal: 'Преступник',
-            criminality: 'Преступление', scavenger: 'Трупоед', ghost: 'Призрак', artifact: 'Артефакт',
-            dragon: 'Драконид', specter: 'Дух', dwarf: 'Краснолюд', mercenary: 'Наёмник',
-            elf: 'Ельф', oak: 'Древень', curse: 'Проклятие', religy: 'Религия',
-            weapons: 'Оружие', ogr: 'Огройд', pirat: 'Пират', alchimy: 'Алхимия',
-            scenary: 'Сценарий', treasure: 'Сокровище', relict: 'Реликт', blood: 'Вампир',  mantikora: 'Мантикора', animal: 'Животное', driada: 'Дриада'
-        }
-    };
-    
-    function localizeFaction(factionId) { return localizations.factions[factionId] || factionId; }
-    function localizeCardType(type) { return localizations.types[type] || type; }
-    function localizeRarity(rarity) { return localizations.rarities[rarity] || rarity; }
-    function getPositionName(position) { return localizations.positions[position] || position; }
-    function getPositionDisplayName(position) { return localizations.positionDisplay[position] || position; }
-    
-    function localizeTags(tags) {
-        return tags?.map(tag => localizations.tags[tag] || tag) ?? [];
-    }
-    
+
 	function getAllCards() {
 		if (allCards.length > 0) return allCards;
 		
