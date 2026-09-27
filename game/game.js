@@ -345,278 +345,120 @@ const gameModule = {
         this.startPlayerMulligan();
     },
 
-    startPlayerMulligan: function() {
-        this.gameState.mulligan.phase = 'player';
-        this.showMulliganInterface();
-    },
-
-    showMulliganInterface: function() {
-        this.hideGameBoardDuringMulligan();
-        this.createMulliganControls();
-        this.displayPlayerHandForMulligan();
-    },
-
-    hideGameBoardDuringMulligan: function() {
-        const elementsToHide = [
-            'gameBoard', 'weatherSlot', 'playerLeader', 'opponentLeader',
-            'playerDeck', 'opponentDeck', 'playerDiscard', 'opponentDiscard',
-            'roundImage', 'winsIndicator', 'gameModeIndicator',
-            'playerCloseRow', 'playerRangedRow', 'playerSiegeRow',
-            'opponentCloseRow', 'opponentRangedRow', 'opponentSiegeRow',
-            'passBtn', 'endTurnBtn', 'turnTimerDisplay'
-        ];
-        
-        const overlay = document.createElement('div');
-        overlay.id = 'mulliganOverlay';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 999;
-            pointer-events: none;
-        `;
-        document.body.appendChild(overlay);
-        
-        this.mulliganHiddenElements = {};
-        elementsToHide.forEach(elementId => {
-            const element = document.getElementById(elementId);
-            if (element) {
-                this.mulliganHiddenElements[elementId] = {
-                    display: element.style.display || '',
-                    opacity: element.style.opacity || '',
-                    visibility: element.style.visibility || ''
-                };
-                
-                element.style.opacity = '0.01';
-                element.style.pointerEvents = 'none';
-            }
-        });
-        
-        document.querySelectorAll('.row-strength').forEach(el => {
-            el.style.opacity = '0.05';
-        });
-        
-        document.querySelectorAll('.total-score-display').forEach(el => {
-            el.style.opacity = '0.05';
-        });
-    },
-
-    restoreGameBoardAfterMulligan: function() {
-        const overlay = document.getElementById('mulliganOverlay');
-        if (overlay) {
-            overlay.remove();
-        }
-        
-        if (this.mulliganHiddenElements) {
-            Object.keys(this.mulliganHiddenElements).forEach(elementId => {
-                const element = document.getElementById(elementId);
-                if (element) {
-                    const original = this.mulliganHiddenElements[elementId];
-                    element.style.display = original.display;
-                    element.style.opacity = original.opacity;
-                    element.style.visibility = original.visibility;
-                    element.style.pointerEvents = '';
-                }
-            });
-        }
-        
-        document.querySelectorAll('.row-strength').forEach(el => {
-            el.style.opacity = '';
-        });
-        
-        document.querySelectorAll('.total-score-display').forEach(el => {
-            el.style.opacity = '';
-        });
-        
-        this.mulliganHiddenElements = null;
-    },
-
-	createMulliganControls: function() {
-		const existingControls = document.getElementById('mulliganControls');
-		if (existingControls) {
-			existingControls.remove();
-		}
-		
-		const controlsContainer = document.createElement('div');
-		controlsContainer.id = 'mulliganControls';
-		
-		const resetButton = document.createElement('button');
-		resetButton.id = 'mulliganResetBtn';
-		resetButton.textContent = 'ОТМЕНИТЬ ВЫБОР';
-		
-		const infoPanel = document.createElement('div');
-		infoPanel.id = 'mulliganInfo';
-		
-		const infoText = document.createElement('div');
-		infoText.id = 'mulliganInfoText';
-		
-		const availableMulligans = this.gameState.mulligan.player.available;
-		infoText.textContent = `Выбрано: 0/${availableMulligans} карт`;
-		
-		infoPanel.appendChild(infoText);
-		
-		const doneButton = document.createElement('button');
-		doneButton.id = 'mulliganDoneBtn';
-		doneButton.textContent = 'ЗАВЕРШИТЬ ЗАМЕНУ';
-		
-		controlsContainer.appendChild(resetButton);
-		controlsContainer.appendChild(infoPanel);
-		controlsContainer.appendChild(doneButton);
-		
-		document.body.appendChild(controlsContainer);
-		
-		this.setupMulliganControlsEventListeners();
-		this.updateMulliganInfo();
+	startPlayerMulligan: function() {
+		this.gameState.mulligan.phase = 'player';
+		this.showMulliganInterface();
 	},
 
-    setupMulliganControlsEventListeners: function() {
-        const doneBtn = document.getElementById('mulliganDoneBtn');
-        const resetBtn = document.getElementById('mulliganResetBtn');
-        
-        if (doneBtn) {
-            const newDoneBtn = doneBtn.cloneNode(true);
-            doneBtn.parentNode.replaceChild(newDoneBtn, doneBtn);
-            
-            newDoneBtn.addEventListener('click', (event) => {
-                event.stopPropagation();
-                this.completePlayerMulligan();
-                audioManager.playSound('button');
-            });
-            
-            newDoneBtn.addEventListener('mouseenter', () => {
-                newDoneBtn.style.transform = 'scale(1.05)';
-                newDoneBtn.style.boxShadow = '0 6px 12px rgba(0,0,0,0.4)';
-                audioManager.playSound('touch');
-            });
-            
-            newDoneBtn.addEventListener('mouseleave', () => {
-                newDoneBtn.style.transform = 'scale(1)';
-                newDoneBtn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
-            });
-        }
-        
-        if (resetBtn) {
-            const newResetBtn = resetBtn.cloneNode(true);
-            resetBtn.parentNode.replaceChild(newResetBtn, resetBtn);
-            
-            newResetBtn.addEventListener('click', (event) => {
-                event.stopPropagation();
-                this.resetPlayerMulliganSelection();
-                audioManager.playSound('button');
-            });
-            
-            newResetBtn.addEventListener('mouseenter', () => {
-                newResetBtn.style.transform = 'scale(1.05)';
-                newResetBtn.style.boxShadow = '0 6px 12px rgba(0,0,0,0.4)';
-                audioManager.playSound('touch');
-            });
-            
-            newResetBtn.addEventListener('mouseleave', () => {
-                newResetBtn.style.transform = 'scale(1)';
-                newResetBtn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
-            });
-        }
-    },
+	showMulliganInterface: function() {
+		this.createMulliganModal();
+	},
 
-	displayPlayerHandForMulligan: function() {
-		const handContainer = document.getElementById('playerHand');
-		if (!handContainer) return;
+	createMulliganModal: function() {
+		// Удаляем старое окно, если есть
+		const existing = document.getElementById('mulliganModal');
+		if (existing) existing.remove();
 
-		const originalStyles = handContainer.style.cssText;
-		handContainer.innerHTML = '';
-		handContainer.classList.add('mulligan-active');
-		
-		const playerMulliganCanceled = this.gameState.mulligan.player.available === 0;
-		
-		const isPlayerRealms = this.gameState.player.faction === 'realms';
-		const hasExtraMulligan = isPlayerRealms && this.gameState.mulligan.player.available === 3;
-		
-		if (playerMulliganCanceled) {
-			audioManager.playSound('lock');
-			
-			const overlay = document.createElement('div');
-			overlay.id = 'mulligan-overlay';
-			overlay.className = 'mulligan-overlay';
-			
-			const messageContainer = document.createElement('div');
-			messageContainer.className = 'mulligan-message-container';
-			
-			const lockImage = document.createElement('img');
-			lockImage.src = 'board/lock.png';
-			lockImage.alt = 'Заблокировано';
-			lockImage.className = 'mulligan-lock-image';
-			
-			const title = document.createElement('div');
-			title.className = 'mulligan-blocked-title';
-			title.textContent = 'МУЛЛИГАН ЗАБЛОКИРОВАН';
-			
-			const description = document.createElement('div');
-			description.className = 'mulligan-blocked-description';
-			description.textContent = 'Способность фракции Синдикат';
-			
-			messageContainer.appendChild(lockImage);
-			messageContainer.appendChild(title);
-			messageContainer.appendChild(description);
-			overlay.appendChild(messageContainer);
-			
-			document.body.appendChild(overlay);
-			setTimeout(() => {
-				audioManager.playSound('button');
-				const existingOverlay = document.getElementById('mulligan-overlay');
-				if (existingOverlay) {
-					existingOverlay.remove();
-				}
-				this.completePlayerMulligan();
-			}, 2500);
-			
-			return;
-		}
+		const availableMulligans = this.gameState.mulligan.player.available;
+		const isPlayerRealms = this.gameState.player.faction === 'syndicate';
+		const hasExtraMulligan = isPlayerRealms && availableMulligans === 3;
 
-		const frameWrapper = document.createElement('div');
-		frameWrapper.className = 'mulligan-frame-wrapper';
-		
+		// Оверлей
+		const modal = document.createElement('div');
+		modal.id = 'mulliganModal';
+		modal.className = 'mulligan-modal-overlay';
+
+		// Контейнер
+		const container = document.createElement('div');
+		container.className = 'mulligan-modal-container';
+
+		// ===== ЗАГОЛОВОК (С ПРИМЕЧАНИЕМ О ДОП. МУЛЛИГАНЕ) =====
+		const header = document.createElement('div');
+		header.className = 'mulligan-modal-header';
+		header.innerHTML = `
+			<div class="mulligan-modal-title">МУЛЛИГАНА</div>
+			<div class="mulligan-modal-subtitle">
+				Выберите до ${availableMulligans} карт для замены
+			</div>
+			${hasExtraMulligan ? `
+				<div class="mulligan-modal-note">
+					<img src="board/mulligan.png" alt="Муллиган" class="mulligan-modal-note__icon">
+					<span class="mulligan-modal-note__text">
+						Дополнительная муллигана — способность фракции Синдикат
+					</span>
+				</div>
+			` : ''}
+		`;
+
+		// Контейнер с картами
 		const cardsContainer = document.createElement('div');
-		cardsContainer.className = 'mulligan-cards-container';
-		
-		const innerCardsContainer = document.createElement('div');
-		innerCardsContainer.className = 'mulligan-inner-cards-container';
-		
+		cardsContainer.className = 'mulligan-modal-cards';
+		cardsContainer.id = 'mulliganCardsContainer';
+
 		this.gameState.player.hand.forEach((card, index) => {
 			const cardElement = this.createMulliganCardElement(card, index);
-			innerCardsContainer.appendChild(cardElement);
+			cardsContainer.appendChild(cardElement);
 		});
-		
-		cardsContainer.appendChild(innerCardsContainer);
-		frameWrapper.appendChild(cardsContainer);
-		handContainer.appendChild(frameWrapper);
-		
-		if (hasExtraMulligan) {
-			const existingInfo = document.querySelector('.mulligan-faction-info');
-			if (existingInfo) {
-				existingInfo.remove();
-			}
-			
-			const infoBanner = document.createElement('div');
-			infoBanner.className = 'mulligan-faction-info';
-			infoBanner.innerHTML = `
-				<div class="mulligan-faction-info__icon">
-					<img src="board/mulligan.png" alt="Муллиган">
-				</div>
-				<div class="mulligan-faction-info__title">ДОПОЛНИТЕЛЬНАЯ МУЛЛИГАНА</div>
-				<div class="mulligan-faction-info__description">Способность фракции Королевства Севера</div>
-			`;
-			
-			document.body.appendChild(infoBanner);
-		}
-		
-		handContainer.style.cssText = originalStyles;
-		handContainer.style.display = 'flex';
-		handContainer.style.justifyContent = 'center';
-		handContainer.style.alignItems = 'center';
-		handContainer.style.flexDirection = 'column';
+
+		// Футер с кнопками
+		const footer = document.createElement('div');
+		footer.className = 'mulligan-modal-footer';
+
+		const infoText = document.createElement('div');
+		infoText.id = 'mulliganInfoText';
+		infoText.className = 'mulligan-modal-info';
+		infoText.textContent = `Выбрано: 0/${availableMulligans} карт`;
+
+		const buttonsWrapper = document.createElement('div');
+		buttonsWrapper.className = 'mulligan-modal-buttons';
+
+		const resetBtn = document.createElement('button');
+		resetBtn.id = 'mulliganResetBtn';
+		resetBtn.className = 'mulligan-btn mulligan-btn-reset';
+		resetBtn.textContent = 'ОТМЕНИТЬ ВЫБОР';
+
+		const doneBtn = document.createElement('button');
+		doneBtn.id = 'mulliganDoneBtn';
+		doneBtn.className = 'mulligan-btn mulligan-btn-done';
+		doneBtn.textContent = 'БЕЗ ЗАМЕНЫ';
+
+		buttonsWrapper.appendChild(resetBtn);
+		buttonsWrapper.appendChild(doneBtn);
+
+		footer.appendChild(infoText);
+		footer.appendChild(buttonsWrapper);
+
+		container.appendChild(header);
+		container.appendChild(cardsContainer);
+		container.appendChild(footer);
+		modal.appendChild(container);
+		document.body.appendChild(modal);
+
+		// ===== ОБРАБОТЧИКИ КНОПОК =====
+		resetBtn.addEventListener('click', (event) => {
+			event.stopPropagation();
+			this.resetPlayerMulliganSelection();
+			if (window.audioManager) audioManager.playSound('button');
+		});
+		resetBtn.addEventListener('mouseenter', () => {
+			if (window.audioManager) audioManager.playSound('touch');
+		});
+
+		doneBtn.addEventListener('click', (event) => {
+			event.stopPropagation();
+			this.completePlayerMulligan();
+			if (window.audioManager) audioManager.playSound('button');
+		});
+		doneBtn.addEventListener('mouseenter', () => {
+			if (window.audioManager) audioManager.playSound('touch');
+		});
+
+		// Анимация появления
+		requestAnimationFrame(() => {
+			modal.classList.add('active');
+		});
+
+		this.updateMulliganInfo();
 	},
 
     createMulliganCardElement: function(card, index) {
@@ -689,12 +531,12 @@ const gameModule = {
 	handleMulliganCardSelection: function(card, cardElement) {
 		const mulliganState = this.gameState.mulligan.player;
 		const handIndex = parseInt(cardElement.dataset.handIndex);
-		
+
 		if (mulliganState.cards.length >= mulliganState.available && 
 			!mulliganState.cards.includes(handIndex)) {
 			return;
 		}
-		
+
 		const cardIndex = mulliganState.cards.indexOf(handIndex);
 		if (cardIndex === -1) {
 			mulliganState.cards.push(handIndex);
@@ -705,7 +547,7 @@ const gameModule = {
 			cardElement.classList.remove('mulligan-selected');
 			audioManager.playSound('cardRemove');
 		}
-		
+
 		this.updateMulliganInfo();
 	},
 
@@ -730,43 +572,46 @@ const gameModule = {
 
 	updateMulliganInfo: function() {
 		const infoText = document.getElementById('mulliganInfoText');
-		const infoPanel = document.getElementById('mulliganInfo');
-		
-		if (!infoText || !infoPanel) {
-			return;
-		}
+		const doneBtn = document.getElementById('mulliganDoneBtn');
 		
 		const mulliganState = this.gameState.mulligan.player;
 		const selectedCount = mulliganState.cards.length;
 		const availableCount = mulliganState.available;
 		
-		infoText.textContent = `Выбрано: ${selectedCount}/${availableCount} карт`;
+		// Инфо-текст
+		if (infoText) {
+			infoText.textContent = `Выбрано: ${selectedCount}/${availableCount} карт`;
+			
+			if (selectedCount > 0) {
+				infoText.classList.add('has-selection');
+			} else {
+				infoText.classList.remove('has-selection');
+			}
+		}
 		
-		if (selectedCount > 0) {
-			infoPanel.style.borderColor = '#4CAF50';
-			infoPanel.style.color = '#4CAF50';
-			infoPanel.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.3)';
-		} else {
-			infoPanel.style.borderColor = '#d4af37';
-			infoPanel.style.color = '#d4af37';
-			infoPanel.style.boxShadow = 'none';
+		// Текст кнопки завершения
+		if (doneBtn) {
+			if (selectedCount === 0) {
+				doneBtn.textContent = 'БЕЗ ЗАМЕНЫ';
+			} else {
+				doneBtn.textContent = `ЗАМЕНИТЬ`;
+			}
 		}
 	},
 
 	resetPlayerMulliganSelection: function() {
 		const mulliganState = this.gameState.mulligan.player;
-		
 		mulliganState.cards = [];
-		
-		const selectedCards = document.querySelectorAll('.mulligan-selected');
+
+		const selectedCards = document.querySelectorAll('#mulliganModal .mulligan-selected');
 		selectedCards.forEach(cardElement => {
 			cardElement.classList.remove('mulligan-selected');
 		});
-		
+
 		this.updateMulliganInfo();
 	},
 
-    completePlayerMulligan: function() {
+	completePlayerMulligan: function() {
 		const mulliganState = this.gameState.mulligan.player;
 		
 		if (mulliganState.available > 0 && mulliganState.cards.length !== 0) {
@@ -886,27 +731,27 @@ const gameModule = {
 	},
 
 	removeMulliganInterface: function() {
-		this.restoreGameBoardAfterMulligan();
-		
-		const controls = document.getElementById('mulliganControls');
-		if (controls) {
-			controls.remove();
+		const modal = document.getElementById('mulliganModal');
+		if (modal) {
+			modal.classList.remove('active');
+			setTimeout(() => {
+				if (modal.parentNode) modal.remove();
+			}, 300);
 		}
-		
-		const frameWrapper = document.querySelector('.mulligan-frame-wrapper');
-		if (frameWrapper) {
-			frameWrapper.remove();
-		}
-		
+
 		const factionInfo = document.querySelector('.mulligan-faction-info');
-		if (factionInfo) {
-			factionInfo.remove();
-		}
-		
+		if (factionInfo) factionInfo.remove();
+
+		const controls = document.getElementById('mulliganControls');
+		if (controls) controls.remove();
+
+		const frameWrapper = document.querySelector('.mulligan-frame-wrapper');
+		if (frameWrapper) frameWrapper.remove();
+
+		// Обновляем руку игрока после закрытия модалки
 		const handContainer = document.getElementById('playerHand');
 		if (handContainer) {
 			handContainer.classList.remove('mulligan-active');
-			handContainer.innerHTML = '';
 			handContainer.style.flexDirection = '';
 			this.displayPlayerHand();
 		}
@@ -1481,6 +1326,11 @@ const gameModule = {
 		
 		if (window.factionAbilitiesModule) {
 			window.factionAbilitiesModule.handleRoundEndForMonsters(this.gameState);
+			
+			// ===== НОВОЕ: Способность "Королевства Севера" — добор карты после выигранного раунда =====
+			if (roundWinner !== 'draw' && roundWinner !== null) {
+				window.factionAbilitiesModule.handleRoundWinForRealms(this.gameState, roundWinner);
+			}
 		}
 		
 		// Если игра закончена - показываем финальный результат
@@ -2844,54 +2694,58 @@ const gameModule = {
 
 	drawCardForSpy: function(spyCard, player) {
 		const playerState = this.gameState[player];
-		
-		if (playerState.deck.length === 0) {
-			this.showGameMessage('В колоде нет карт для добора!', 'warning');
-			return false;
-		}
+		const CARDS_TO_DRAW = 2;
+		let drawnCount = 0;
+		const drawnCards = [];
 		
 		const targetPosition = this.getSpyTargetPosition(spyCard);
 		
-		// Определяем, какие карты искать
-		let cardsToSearch = [];
-		
-		if (targetPosition === 'any-row' || (Array.isArray(targetPosition) && targetPosition.includes('any-row'))) {
-			// Для any-row ищем любую карту
-			cardsToSearch = [...playerState.deck];
-		} else {
-			// Ищем карты с соответствующей позицией
-			const targetPositions = Array.isArray(targetPosition) ? targetPosition : [targetPosition];
+		for (let i = 0; i < CARDS_TO_DRAW; i++) {
+			if (playerState.deck.length === 0) {
+				break;
+			}
 			
-			cardsToSearch = playerState.deck.filter(card => {
-				if (!card.position) return false;
-				
-				const cardPositions = Array.isArray(card.position) ? card.position : [card.position];
-				
-				// Проверяем, есть ли совпадение с целевыми позициями (не hidden)
-				return cardPositions.some(pos => 
-					targetPositions.includes(pos) && !pos.startsWith('hidden-')
-				);
-			});
-		}
-		
-		if (cardsToSearch.length === 0) {
-			// Если нет карт с нужной позицией, берем любую карту
-			this.showGameMessage('Нет карт с указанной позицией, берётся любая карта', 'info');
-			const randomIndex = Math.floor(Math.random() * playerState.deck.length);
-			const drawnCard = playerState.deck.splice(randomIndex, 1)[0];
-			playerState.hand.push(drawnCard);
-			this.showGameMessage(`Вы получили карту: ${drawnCard.name}`, 'info');
-		} else {
-			// Выбираем случайную карту из подходящих
-			const randomIndex = Math.floor(Math.random() * cardsToSearch.length);
-			const drawnCard = cardsToSearch[randomIndex];
+			// Определяем, какие карты искать
+			let cardsToSearch = [];
 			
-			// Удаляем её из колоды
-			const deckIndex = playerState.deck.findIndex(c => c.id === drawnCard.id);
-			if (deckIndex !== -1) {
-				playerState.deck.splice(deckIndex, 1);
+			if (targetPosition === 'any-row' || (Array.isArray(targetPosition) && targetPosition.includes('any-row'))) {
+				cardsToSearch = [...playerState.deck];
+			} else {
+				const targetPositions = Array.isArray(targetPosition) ? targetPosition : [targetPosition];
+				
+				cardsToSearch = playerState.deck.filter(card => {
+					if (!card.position) return false;
+					
+					const cardPositions = Array.isArray(card.position) ? card.position : [card.position];
+					
+					return cardPositions.some(pos => 
+						targetPositions.includes(pos) && !pos.startsWith('hidden-')
+					);
+				});
+			}
+			
+			let drawnCard = null;
+			
+			if (cardsToSearch.length === 0) {
+				// Если нет карт с нужной позицией, берем любую карту
+				const randomIndex = Math.floor(Math.random() * playerState.deck.length);
+				drawnCard = playerState.deck.splice(randomIndex, 1)[0];
+			} else {
+				// Выбираем случайную карту из подходящих
+				const randomIndex = Math.floor(Math.random() * cardsToSearch.length);
+				drawnCard = cardsToSearch[randomIndex];
+				
+				// Удаляем её из колоды
+				const deckIndex = playerState.deck.findIndex(c => c.id === drawnCard.id);
+				if (deckIndex !== -1) {
+					playerState.deck.splice(deckIndex, 1);
+				}
+			}
+			
+			if (drawnCard) {
 				playerState.hand.push(drawnCard);
-				this.showGameMessage(`Вы получили карту: ${drawnCard.name}`, 'info');
+				drawnCards.push(drawnCard);
+				drawnCount++;
 			}
 		}
 		
@@ -2901,6 +2755,13 @@ const gameModule = {
 		
 		if (window.audioManager && window.audioManager.playSound) {
 			audioManager.playSound('card_draw');
+		}
+		
+		if (drawnCount > 0) {
+			const names = drawnCards.map(c => c.name).join(', ');
+			this.showGameMessage(`Шпион: добор ${drawnCount} карт${drawnCount > 1 ? 'ы' : ''} — ${names}`, 'info');
+		} else {
+			this.showGameMessage('Шпион: в колоде нет карт для добора', 'warning');
 		}
 		
 		return true;
@@ -3246,10 +3107,10 @@ const gameModule = {
 		// Счётчики использованных карт
 		const usedCounts = {};
 		
-		const minDeckSize = 25;    
+		const minDeckSize = 22;    
 		const maxDeckSize = 40;    
-		const minUnits = 15;        
-		const minSpecials = 5;       
+		const minUnits = 22;        
+		const minSpecials = 8;       
 		const maxSpecials = 10;     
 		
 		const specialCount = minSpecials + Math.floor(Math.random() * (maxSpecials - minSpecials + 1));

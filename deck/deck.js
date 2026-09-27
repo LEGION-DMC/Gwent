@@ -1175,6 +1175,12 @@ function createCardInfoHTML(card) {
     
     const ability = window.skillSystem ? window.skillSystem.abilities[card.ability] : null;
     
+    // Для юнита со способностью "Казнь" — отдельное описание
+    let abilityDescription = ability ? ability.description : '';
+    if (ability && card.ability === 'destroy' && card.type === 'unit' && ability.unitDescription) {
+        abilityDescription = ability.unitDescription;
+    }
+    
     return `
         <div class="card-modal__title">${displayName}</div>
         <div class="card-modal__faction">${card.description}</div>
@@ -1216,7 +1222,7 @@ function createCardInfoHTML(card) {
             <div class="card-modal__abilities-title">Способность</div>
             <div class="card-modal__ability">
                 <div class="card-modal__ability-name">${ability.name}</div>
-                <div class="card-modal__ability-description">${ability.description}</div>
+                <div class="card-modal__ability-description">${abilityDescription}</div>
             </div>
         </div>
         ` : ''}
@@ -1398,9 +1404,9 @@ function autoBuildDeck() {
         return;
     }
     
-    const MIN_TOTAL_CARDS = 25;
+    const MIN_TOTAL_CARDS = 22;
     const MAX_TOTAL_CARDS = 40;
-    const MIN_UNIT_CARDS = 15;
+    const MIN_UNIT_CARDS = 22;
     const MIN_SPECIAL_CARDS = 5;
     const MAX_SPECIAL_CARDS = 10;
     
@@ -2279,20 +2285,16 @@ function validateDeckAndStartGame() {
     
     const errors = [];
     
-    if (totalCards < 25) {
-        errors.push(`Минимальный размер колоды: 25 карт`);
+    if (totalCards < 22) {
+        errors.push(`Минимальный размер колоды: 22 карт`);
     }
     
     if (totalCards > 40) {
         errors.push(`Максимальный размер колоды: 40 карт`);
     }
     
-    if (unitCardsCount < 15) {
-        errors.push(`Минимальное количество карт отрядов: 15`);
-    }
-    
-    if (specialCardsCount < 5) {
-        errors.push(`Обязательное количество специальных карт: 5`);
+    if (unitCardsCount < 22) {
+        errors.push(`Минимальное количество карт отрядов: 22`);
     }
     
     if (specialCardsCount > 10) {

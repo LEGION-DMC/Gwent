@@ -105,11 +105,14 @@ const skillSystem = {
 		'destroy': {
 			name: 'Пламя и пепел',
 			type: 'special',
-			description: '<span class="ability-hint"><span class="hint-trigger">Уничтожает</span><span class="hint-tooltip"><strong style="color:#0cbe38">Уничтожение:</strong> Перемещает карту в Сброс.</span></span><span class="description-normal"> самый сильный отряд противника',
+			// Основное описание (для спец.карты)
+			description: '<span class="ability-hint"><span class="hint-trigger">Уничтожает</span><span class="hint-tooltip"><strong style="color:#0cbe38">Уничтожение:</strong> Перемещает карту в Сброс.</span></span><span class="description-normal"> самую сильную карту (или карты) на поле у обоих игроков',
+			// Описание для юнита со способностью "Казнь"
+			unitDescription: '<span class="ability-hint"><span class="hint-trigger">Уничтожает</span><span class="hint-tooltip"><strong style="color:#0cbe38">Уничтожение:</strong> Перемещает карту в Сброс.</span></span><span class="description-normal"> самую сильную карту (или карты) противника в том же ряду',
 			effect: {
-				type: 'destroy_strongest_enemy',
+				type: 'destroy_strongest_on_board',
 				target: 'unit',
-				condition: 'enemy'
+				condition: 'all'
 			}
 		},
 		'destroy_artf': {
@@ -145,9 +148,19 @@ const skillSystem = {
 		'spy': {
 			name: 'Шпион',
 			type: 'special',
-			description: 'Размещается на стороне противника. После размещения из Колоды в Руку добирается случайная карта',
+			description: 'Размещается на стороне противника. После размещения из Колоды в Руку добирается 2 случайные карты',
 		},
-
+		'medic': {
+			name: 'Медик',
+			type: 'special',
+			description: 'Позволяет вернуть одну обычную карту отряда из Сброса в руку',
+			effect: {
+				type: 'return_from_discard',
+				target: 'unit',
+				condition: 'ally'
+			}
+		},
+		
 		'call_rat': {
 			name: 'Чумной мор',
 			type: 'special',
@@ -1861,6 +1874,28 @@ skillSystem.updateCallAbilityDescription = function(card) {
             }
             skillSystem.abilities['call'].description = description;
         }
+    }
+};
+
+skillSystem.updateDestroyAbilityDescription = function(card) {
+    if (card.ability !== 'destroy') return;
+    
+    const destroyAbility = skillSystem.abilities['destroy'];
+    if (!destroyAbility) return;
+    
+    // Сохраняем оригинальное описание один раз
+    if (!destroyAbility._originalDescription) {
+        destroyAbility._originalDescription = destroyAbility.description;
+    }
+    if (!destroyAbility._originalUnitDescription) {
+        destroyAbility._originalUnitDescription = destroyAbility.unitDescription;
+    }
+    
+    // В зависимости от типа карты — подставляем нужное описание
+    if (card.type === 'unit') {
+        destroyAbility.description = destroyAbility._originalUnitDescription;
+    } else {
+        destroyAbility.description = destroyAbility._originalDescription;
     }
 };
 

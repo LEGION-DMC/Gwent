@@ -91,8 +91,8 @@
     background: none;
     border: none;
     width: 40px;
-    height: 15px;
-    font-size: 31px;
+    height: 10px;
+    font-size: 25px;
     font-family: 'Gwent', 'Arial', sans-serif;
     cursor: url('../ui/cursor_hover.png'), pointer;
     display: flex;

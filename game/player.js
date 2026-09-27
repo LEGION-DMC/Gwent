@@ -116,57 +116,52 @@ const playerModule = {
 	},
 
 	startUnitDestroyPlacement: function(card) {
-		// Находим самую сильную карту противника
-		const strongestEnemyCard = this.findStrongestEnemyCard();
-		
-		if (!strongestEnemyCard) {
-			this.showMessage('У противника нет карт для уничтожения!');
-			this.cancelCardSelection();
-			return;
-		}
-		
-		// Сначала размещаем карту на поле, затем применяем Казнь
+		// Для юнита с Казнью цель определяется после выбора ряда —
+		// уничтожается сильнейшая карта противника в том же ряду.
+		// Здесь только запускаем выбор ряда.
 		this.gameState.selectingRow = true;
 		this.gameState.placementType = 'unit_destroy';
 		this.gameState.destroyUnitCard = card;
-		this.gameState.destroyTarget = strongestEnemyCard;
+		this.gameState.destroyTargets = null;
 		
 		this.highlightAvailableRows(card);
 	},
 
-	executeUnitDestroyAbility: function(destroyCard, targetData) {
-		const { card: targetCard, row: targetRow } = targetData;
+	executeUnitDestroyAbility: function(destroyCard, strongestCards) {
+		let destroyedCount = 0;
 		
-		// Проверяем, не уничтожена ли уже карта
-		const rowState = this.gameState.opponent.rows[targetRow];
-		const cardIndex = rowState.cards.findIndex(c => c.id === targetCard.id && c.uniqueId === targetCard.uniqueId);
-		
-		if (cardIndex === -1) {
-			// Карта уже была удалена
+		strongestCards.forEach(({ card: targetCard, row: targetRow, owner }) => {
+			const rowState = this.gameState[owner].rows[targetRow];
+			const cardIndex = rowState.cards.findIndex(c => 
+				c.id === targetCard.id && 
+				(c.uniqueId === undefined || c.uniqueId === targetCard.uniqueId)
+			);
+			
+			if (cardIndex === -1) return;
+			
+			// Визуальный эффект
+			this.createDestroyVisualEffectForOwner(targetCard, targetRow, owner);
+			
+			// Удаляем карту
+			const destroyedCard = { ...rowState.cards[cardIndex] };
+			rowState.cards.splice(cardIndex, 1);
+			this.gameState[owner].discard.push(destroyedCard);
+			destroyedCount++;
+			
 			if (window.gameModule) {
-				window.gameModule.completeCardPlay();
+				setTimeout(() => {
+					window.gameModule.removeCardFromBoardVisual(targetCard, targetRow, owner);
+					window.gameModule.updateRowStrength(targetRow, owner);
+				}, 500);
 			}
-			return;
-		}
+		});
 		
-		// Создаем визуальный эффект уничтожения
-		this.createDestroyVisualEffect(targetCard, targetRow);
-		
-		// Удаляем карту противника из ряда
-		const destroyedCard = { ...rowState.cards[cardIndex] };
-		rowState.cards.splice(cardIndex, 1);
-		this.gameState.opponent.discard.push(destroyedCard);
-		
-		// ===== ВАЖНО: Карта destroy НЕ уходит в сброс =====
-		// Она остается на поле, поэтому НЕ добавляем destroyCard в сброс
-		
-		// Обновляем отображение
+		// Обновляем сбросы и завершаем ход
 		if (window.gameModule) {
 			setTimeout(() => {
-				window.gameModule.removeCardFromBoardVisual(targetCard, targetRow, 'opponent');
-				window.gameModule.updateRowStrength(targetRow, 'opponent');
 				window.gameModule.displayOpponentDiscard();
 				window.gameModule.displayPlayerDiscard();
+				window.gameModule.updateTotalScoreDisplays();
 				
 				// Обновляем силу ряда, где стоит карта destroy
 				const destroyRow = destroyCard.row;
@@ -175,7 +170,7 @@ const playerModule = {
 				}
 				
 				window.gameModule.completeCardPlay();
-			}, 500);
+			}, 600);
 		}
 		
 		if (window.audioManager && window.audioManager.playSound) {
@@ -183,33 +178,60 @@ const playerModule = {
 		}
 	},
 
-	findStrongestEnemyCard: function() {
+	findStrongestCardsOnBoard: function() {
 		const rows = ['close', 'ranged', 'siege'];
-		let strongestCard = null;
+		const players = ['player', 'opponent'];
 		let maxStrength = -1;
-		let cardRow = null;
+		const allCandidates = [];
 		
-		rows.forEach(row => {
-			const rowCards = this.gameState.opponent.rows[row].cards;
-			rowCards.forEach(card => {
-				if (this.isHeroCard(card)) {
-					return;
-				}
-				if (card.type === 'unit') {
+		players.forEach(owner => {
+			rows.forEach(row => {
+				const rowCards = this.gameState[owner].rows[row].cards;
+				rowCards.forEach(card => {
+					if (this.isHeroCard(card)) return;
+					if (card.type !== 'unit') return;
+					
 					const strength = card.currentStrength !== undefined ? 
 						card.currentStrength : (card.strength || 0);
+					
+					allCandidates.push({ card, row, owner, strength });
+					
 					if (strength > maxStrength) {
 						maxStrength = strength;
-						strongestCard = card;
-						cardRow = row;
 					}
-				}
+				});
 			});
 		});
 		
-		return strongestCard ? { card: strongestCard, row: cardRow } : null;
+		if (maxStrength < 0) return [];
+		
+		return allCandidates.filter(c => c.strength === maxStrength);
 	},
 
+	findStrongestEnemyCardsInRow: function(row) {
+		const rowCards = this.gameState.opponent.rows[row].cards;
+		let maxStrength = -1;
+		const candidates = [];
+		
+		rowCards.forEach(card => {
+			if (this.isHeroCard(card)) return;
+			if (card.type !== 'unit') return;
+			
+			const strength = card.currentStrength !== undefined ? 
+				card.currentStrength : (card.strength || 0);
+			
+			candidates.push({ card, row, owner: 'opponent', strength });
+			
+			if (strength > maxStrength) {
+				maxStrength = strength;
+			}
+		});
+		
+		if (maxStrength < 0) return [];
+		
+		return candidates.filter(c => c.strength === maxStrength);
+	},
+	
 	createDestroyVisualEffect: function(card, row) {
 		const rowElement = document.getElementById(`opponent${this.capitalizeFirst(row)}Row`);
 		if (!rowElement) return;
@@ -709,6 +731,172 @@ const playerModule = {
 				window.gameModule.completeCardPlay();
 			}
 		}, 800);
+	},
+
+	activateMedicAbility: function(playedCard) {
+		// Собираем карты отрядов из сброса игрока
+		const discard = this.gameState.player.discard || [];
+		const validCards = discard
+			.map((card, index) => ({ card, index }))
+			.filter(item => {
+				if (item.card.type !== 'unit') return false;
+				if (this.isHeroCard(item.card)) return false;
+				return true;
+			});
+
+		if (validCards.length === 0) {
+			if (window.gameModule) {
+				window.gameModule.completeCardPlay();
+			}
+			return;
+		}
+
+		// Проверяем, есть ли место в руке
+		if (this.gameState.player.hand.length >= 10) {
+			this.showMessage('Нет места в руке для возврата карты');
+			if (window.gameModule) {
+				window.gameModule.completeCardPlay();
+			}
+			return;
+		}
+
+		// Открываем модальное окно (как в «Двойной игре», но с реальными картами)
+		this.showMedicSelectionModal(validCards).then((selectedItem) => {
+			if (selectedItem) {
+				this.returnCardFromDiscardToHand(selectedItem, playedCard);
+			} else {
+				if (window.gameModule) {
+					window.gameModule.completeCardPlay();
+				}
+			}
+		});
+	},
+
+	returnCardFromDiscardToHand: function(selectedItem, playedCard) {
+		const { card, index } = selectedItem;
+		const playerState = this.gameState.player;
+
+		// Удаляем из сброса
+		playerState.discard.splice(index, 1);
+		// Добавляем в руку
+		playerState.hand.push(card);
+
+		if (window.gameModule) {
+			window.gameModule.displayPlayerHand();
+			window.gameModule.displayPlayerDiscard();
+			window.gameModule.showGameMessage(
+				`Медик: карта «${card.name}» возвращена из сброса в руку`,
+				'info'
+			);
+		}
+		if (window.audioManager && window.audioManager.playSound) {
+			audioManager.playSound('cardAdd');
+		}
+
+		// Завершаем ход
+		if (window.gameModule && !playedCard.completeCalled) {
+			playedCard.completeCalled = true;
+			setTimeout(() => {
+				window.gameModule.completeCardPlay();
+			}, 400);
+		}
+	},
+
+	showMedicSelectionModal: function(validCards) {
+		return new Promise((resolve) => {
+			// Удаляем старые модалки
+			const existing = document.querySelectorAll('.deck-modal-overlay');
+			existing.forEach(m => m.remove());
+
+			// Берём фракцию игрока (сброс — его)
+			const faction = this.gameState.player.faction;
+			const factionBackground = `faction/${faction}/border_faction.png`;
+
+			const modalOverlay = document.createElement('div');
+			modalOverlay.className = 'deck-modal-overlay';
+			modalOverlay.innerHTML = `
+				<div class="deck-modal">
+					<div class="deck-modal__header" style="background: url('${factionBackground}') center/cover;">
+						<div class="deck-modal__title">ВЫБЕРИТЕ ОТРЯД ИЗ СБРОСА</div>
+						<div class="deck-modal__count">${validCards.length}</div>
+					</div>
+					<div class="deck-modal__content">
+						${validCards.map((item, idx) => `
+							<div class="deck-card" data-medic-index="${idx}" data-card-id="${item.card.id}">
+								<div class="deck-card__container">
+									<img src="card/${item.card.faction}/${item.card.imageStatic || (item.card.image ? item.card.image.replace('.mp4', '.jpg') : 'placeholder.jpg')}"
+										 class="deck-card__media" onerror="this.src='card/placeholder.jpg'">
+									<img src="${item.card.border || 'deck/bord_silver.png'}" class="deck-card__border">
+									<img src="${item.card.banner || 'faction/' + item.card.faction + '/banner_silver.png'}" class="deck-card__banner">
+									<div class="deck-card__name">${item.card.name}</div>
+									<div class="deck-card__strength">${item.card.strength || ''}</div>
+									${item.card.position ? `
+									<div class="deck-card__position">
+										<img src="${item.card.positionBanner || 'faction/' + item.card.faction + '/banner_position.png'}" class="deck-card__position-banner">
+										<img src="${window.gameModule?.getPositionIconPath ? window.gameModule.getPositionIconPath(item.card.position) : 'deck/any-row.png'}" class="deck-card__position-icon">
+									</div>
+									` : ''}
+								</div>
+							</div>
+						`).join('')}
+					</div>
+				</div>
+			`;
+
+			document.body.appendChild(modalOverlay);
+			setTimeout(() => modalOverlay.classList.add('active'), 10);
+
+			let resolved = false;
+			const resolveOnce = (value) => {
+				if (resolved) return;
+				resolved = true;
+				resolve(value);
+			};
+
+			// Клик по карте — выбор
+			modalOverlay.querySelectorAll('.deck-card').forEach(el => {
+				el.addEventListener('click', () => {
+					const idx = parseInt(el.dataset.medicIndex);
+					this.closeMedicModal(modalOverlay);
+					audioManager.playSound('button');
+					resolveOnce(validCards[idx]);
+				});
+				el.addEventListener('mouseenter', () => {
+					audioManager.playSound('touch');
+					el.style.transform = 'scale(1.05)';
+				});
+				el.addEventListener('mouseleave', () => {
+					el.style.transform = 'scale(1)';
+				});
+				// ПКМ — модалка карты
+				el.addEventListener('contextmenu', (e) => {
+					e.preventDefault();
+					const idx = parseInt(el.dataset.medicIndex);
+					if (window.gameModule && window.gameModule.showCardModal) {
+						window.gameModule.showCardModal(validCards[idx].card);
+					}
+				});
+			});
+
+			// Клик вне окна / Escape — отмена
+			const closeHandler = (e) => {
+				if ((e.type === 'keydown' && e.key === 'Escape') || e.target === modalOverlay) {
+					document.removeEventListener('keydown', closeHandler);
+					this.closeMedicModal(modalOverlay);
+					resolveOnce(null);
+				}
+			};
+			modalOverlay.addEventListener('click', closeHandler);
+			document.addEventListener('keydown', closeHandler);
+		});
+	},
+
+	closeMedicModal: function(modal) {
+		if (!modal) return;
+		modal.classList.remove('active');
+		setTimeout(() => {
+			if (modal.parentNode) modal.remove();
+		}, 300);
 	},
 
 	getCardDeclension: function(count, cardName) {
@@ -3098,17 +3286,17 @@ const playerModule = {
 	},
 
 	startDestroyCardPlacement: function(card) {
-		// Находим самую сильную карту противника
-		const strongestEnemyCard = this.findStrongestEnemyCard();
+		// Находим самые сильные карты на поле у обоих игроков
+		const strongestCards = this.findStrongestCardsOnBoard();
 		
-		if (!strongestEnemyCard) {
-			this.showMessage('У противника нет карт для уничтожения!');
+		if (strongestCards.length === 0) {
+			this.showMessage('На поле нет карт для уничтожения!');
 			this.cancelCardSelection();
 			return;
 		}
 		
 		// Применяем Казнь
-		this.executeDestroyCard(card, strongestEnemyCard);
+		this.executeDestroyCard(card, strongestCards);
 	},
 
 	findStrongestEnemyCard: function() {
@@ -3141,9 +3329,7 @@ const playerModule = {
 		return strongestCard ? { card: strongestCard, row: cardRow } : null;
 	},
 
-	executeDestroyCard: function(destroyCard, targetData) {
-		const { card: targetCard, row: targetRow } = targetData;
-		
+	executeDestroyCard: function(destroyCard, strongestCards) {
 		// Удаляем Казнь из руки
 		this.removeCardFromHand(destroyCard);
 		
@@ -3151,45 +3337,48 @@ const playerModule = {
 		const destroyCardCopy = { ...destroyCard };
 		this.gameState.player.discard.push(destroyCardCopy);
 		
-		// Создаем визуальный эффект уничтожения
-		this.createDestroyVisualEffect(targetCard, targetRow);
+		let destroyedCount = 0;
 		
-		// Удаляем карту противника из ряда
-		const rowState = this.gameState.opponent.rows[targetRow];
-		const cardIndex = rowState.cards.findIndex(c => c.id === targetCard.id);
+		// Уничтожаем все карты-цели (у обоих игроков)
+		strongestCards.forEach(({ card: targetCard, row: targetRow, owner }) => {
+			// Создаем визуальный эффект уничтожения
+			this.createDestroyVisualEffectForOwner(targetCard, targetRow, owner);
+			
+			// Удаляем карту из ряда
+			const rowState = this.gameState[owner].rows[targetRow];
+			const cardIndex = rowState.cards.findIndex(c => 
+				c.id === targetCard.id && 
+				(c.uniqueId === undefined || c.uniqueId === targetCard.uniqueId)
+			);
+			
+			if (cardIndex !== -1) {
+				const destroyedCard = { ...rowState.cards[cardIndex] };
+				rowState.cards.splice(cardIndex, 1);
+				this.gameState[owner].discard.push(destroyedCard);
+				destroyedCount++;
+				
+				if (window.gameModule) {
+					setTimeout(() => {
+						window.gameModule.removeCardFromBoardVisual(targetCard, targetRow, owner);
+						window.gameModule.updateRowStrength(targetRow, owner);
+					}, 500);
+				}
+			}
+		});
 		
-		if (cardIndex !== -1) {
-			// Создаем копию для сброса
-			const destroyedCard = { ...rowState.cards[cardIndex] };
-			
-			// Удаляем из ряда
-			rowState.cards.splice(cardIndex, 1);
-			
-			// Добавляем в сброс противника
-			this.gameState.opponent.discard.push(destroyedCard);
-			
-			// Обновляем отображение
-			if (window.gameModule) {
-				// Удаляем карту с поля
-				setTimeout(() => {
-					window.gameModule.removeCardFromBoardVisual(targetCard, targetRow, 'opponent');
-				}, 500);
-				
-				// Обновляем силу ряда
-				window.gameModule.updateRowStrength(targetRow, 'opponent');
-				
-				// Обновляем сбросы
+		// Обновляем сбросы и завершаем ход
+		if (window.gameModule) {
+			setTimeout(() => {
 				window.gameModule.displayPlayerDiscard();
 				window.gameModule.displayOpponentDiscard();
-				
-				// Завершаем ход
+				window.gameModule.updateTotalScoreDisplays();
 				window.gameModule.completeCardPlay();
-			}
-			
-			// Воспроизводим звук
-			if (window.audioManager && window.audioManager.playSound) {
-				audioManager.playSound('scorch');
-			}
+			}, 600);
+		}
+		
+		// Воспроизводим звук
+		if (window.audioManager && window.audioManager.playSound) {
+			audioManager.playSound('scorch');
 		}
 		
 		// Сбрасываем состояние
@@ -3227,6 +3416,37 @@ const playerModule = {
 		}
 	},
 
+	createDestroyVisualEffectForOwner: function(card, row, owner) {
+		const rowElement = document.getElementById(`${owner}${this.capitalizeFirst(row)}Row`);
+		if (!rowElement) return;
+		
+		let cardElement = null;
+		if (card.uniqueId) {
+			cardElement = rowElement.querySelector(`[data-unique-id="${card.uniqueId}"]`);
+		}
+		if (!cardElement) {
+			cardElement = rowElement.querySelector(`[data-card-id="${card.id}"]`);
+		}
+		if (!cardElement) return;
+		
+		const destroyOverlay = document.createElement('div');
+		destroyOverlay.className = 'card-destroy-overlay';
+		destroyOverlay.style.cssText = `
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: url('card/neutral/scorch.jpg') center/cover no-repeat;
+			z-index: 100;
+			border-radius: 5px;
+			pointer-events: none;
+			animation: destroyCardAnimation 1s ease-out forwards;
+		`;
+		
+		cardElement.appendChild(destroyOverlay);
+	},
+	
 	startDecoyCardPlacement: function(card) {
 		this.gameState.selectingRow = true;
 		this.gameState.placementType = 'decoy';
@@ -3784,17 +4004,16 @@ const playerModule = {
 			window.gameModule.updateRowStrength(row, 'player');
 
         if (card.ability === 'destroy' && card.type === 'unit') {
-            // Находим самую сильную карту противника
-            const strongestEnemy = this.findStrongestEnemyCard();
+            // Ищем сильнейшую карту противника в том же ряду
+            const strongestCards = this.findStrongestEnemyCardsInRow(row);
             
-            if (strongestEnemy) {
-                // Есть цель - применяем Казнь
+            if (strongestCards.length > 0) {
                 setTimeout(() => {
-                    this.executeUnitDestroyAbility(cardCopy, strongestEnemy);
+                    this.executeUnitDestroyAbility(cardCopy, strongestCards);
                 }, 300);
-                return; // Не вызываем completeCardPlay здесь
+                return;
             } else {
-                // Нет цели - просто размещаем карту
+                // В этом ряду нет целей — просто завершаем ход
                 if (window.gameModule) {
                     window.gameModule.completeCardPlay();
                 }
@@ -3816,6 +4035,7 @@ const playerModule = {
 					window.gameModule.completeCardPlay();
 				}
 			} 
+
 			else if (card.ability === 'call_rat' || card.ability === 'call_driad') {
 				if (card.summon) {
 					setTimeout(() => {
@@ -3825,6 +4045,11 @@ const playerModule = {
 					console.warn(`Карта ${card.name} имеет способность 'call', но не указано поле 'summon'.`);
 					window.gameModule.completeCardPlay();
 				}
+			}
+			else if (card.ability === 'medic') {      
+				setTimeout(() => {
+					this.activateMedicAbility(cardCopy);
+				}, 300);
 			}
 			else {
 				window.gameModule.completeCardPlay();

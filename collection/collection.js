@@ -333,12 +333,19 @@ const collectionModule = (function() {
         let abilityHtml = '';
         if (card.ability && window.skillSystem?.abilities?.[card.ability]) {
             const ability = window.skillSystem.abilities[card.ability];
+            
+            // Для юнита со способностью "Казнь" — отдельное описание
+            let abilityDescription = ability.description;
+            if (card.ability === 'destroy' && card.type === 'unit' && ability.unitDescription) {
+                abilityDescription = ability.unitDescription;
+            }
+            
             abilityHtml = `
                 <div class="card-modal__abilities">
                     <div class="card-modal__abilities-title">Способность</div>
                     <div class="card-modal__ability">
                         <div class="card-modal__ability-name">${ability.name}</div>
-                        <div class="card-modal__ability-description">${ability.description}</div>
+                        <div class="card-modal__ability-description">${abilityDescription}</div>
                     </div>
                 </div>
             `;
