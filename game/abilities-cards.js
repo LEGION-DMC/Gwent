@@ -179,7 +179,17 @@ const skillSystem = {
 				target: 'self'
 			}
 		},
-		
+		'call_warrior': {
+			name: 'Зов щита',
+			type: 'special',
+			description: '<span class="ability-hint"><span class="hint-trigger">Призывает</span><span class="hint-tooltip"><strong style="color:#0cbe38">Призыв:</strong> Автоматически размещает на поле указанные карты.</span></span><span class="description-normal"> из колоды и руки все копии отрядов «Воительниц».</span>',
+			effect: {
+				type: 'call_named_card',
+				target: 'self',
+				summonName: 'Воительница'
+			}
+		},
+
 		'damage_1': {
 			name: 'Атака I',
 			type: 'special',
@@ -1131,6 +1141,73 @@ const skillSystem = {
 		return targets.length > 0 || ability.effect.type === 'clear_weather';
 	},
 
+	applyCallNamedEffect: function(effect, context) {
+		const summonName = effect.summonName;
+		if (!summonName) {
+			return { success: false, message: 'Не указано имя карты для призыва' };
+		}
+
+		// Ищем все копии карты с нужным именем в колоде игрока
+		const matchingCards = context.playerDeck.filter(card =>
+			card.name === summonName && card.type === 'unit'
+		);
+
+		// Если в колоде нет — способность не срабатывает
+		if (matchingCards.length === 0) {
+			return {
+				success: false,
+				message: `В колоде нет карты «${summonName}» — призыв не сработал`
+			};
+		}
+
+		let summonedCount = 0;
+		const summonedCards = [];
+
+		// Важно: проходим по копиям в обратном порядке,
+		// чтобы splice по индексу не сбивал порядок
+		for (let i = matchingCards.length - 1; i >= 0; i--) {
+			const card = matchingCards[i];
+
+			const targetRow = this.getBestRowForCard(card, context);
+			if (!targetRow) continue;
+
+			const cardIndex = context.playerDeck.findIndex(c => c === card);
+			if (cardIndex === -1) continue;
+
+			context.playerDeck.splice(cardIndex, 1);
+
+			const placedCard = this.placeSummonedCard(card, targetRow, context);
+			if (placedCard) {
+				summonedCards.push(placedCard);
+				summonedCount++;
+			}
+		}
+
+		if (summonedCount === 0) {
+			return { success: false, message: 'Не удалось разместить призванные карты' };
+		}
+
+		// Обновляем интерфейс
+		if (window.gameModule) {
+			if (window.gameModule.displayPlayerDeck) {
+				window.gameModule.displayPlayerDeck();
+			}
+			const rows = ['close', 'ranged', 'siege'];
+			rows.forEach(row => {
+				if (window.gameModule.updateRowStrength) {
+					window.gameModule.updateRowStrength(row, 'player');
+				}
+			});
+		}
+
+		return {
+			success: true,
+			message: `Призвано ${summonedCount} копий карты «${summonName}»`,
+			summonedCount: summonedCount,
+			summonedCards: summonedCards
+		};
+	},
+
 	applyEffect: function(effect, context) {
 		try {
 			switch (effect.type) {
@@ -1150,6 +1227,8 @@ const skillSystem = {
 					return this.applyDestroyStrongestEnemyEffect(effect, context);
 				case 'destroy_artifact':
 					return this.applyDestroyArtifactEffect(effect, context);
+				case 'call_named_card':
+					return this.applyCallNamedEffect(effect, context);
 				case 'reveal':
 					return this.applyRevealEffect(effect, context);
 				case 'swap_with_hand':

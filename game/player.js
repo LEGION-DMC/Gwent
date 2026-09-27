@@ -4046,6 +4046,11 @@ const playerModule = {
 					window.gameModule.completeCardPlay();
 				}
 			}
+			else if (card.ability === 'call_warrior') {
+				setTimeout(() => {
+					this.activateCallFromDeckAbility(cardCopy, 'Воительница');
+				}, 300);
+			}
 			else if (card.ability === 'medic') {      
 				setTimeout(() => {
 					this.activateMedicAbility(cardCopy);
@@ -4054,6 +4059,110 @@ const playerModule = {
 			else {
 				window.gameModule.completeCardPlay();
 			}
+		}
+	},
+
+	activateCallFromDeckAbility: function(playedCard, summonName) {
+		if (!summonName) {
+			this.returnCardToHand(playedCard);
+			return;
+		}
+
+		const player = this.gameState.player;
+
+		// Собираем кандидатов из колоды и из руки.
+		// playedCard уже убран из руки, поэтому он не попадёт в выборку.
+		const candidates = [];
+
+		// Колода
+		player.deck.forEach(card => {
+			if (card.name === summonName && card.type === 'unit') {
+				candidates.push({ card, source: 'deck' });
+			}
+		});
+
+		// Рука
+		player.hand.forEach(card => {
+			if (card.name === summonName && card.type === 'unit') {
+				candidates.push({ card, source: 'hand' });
+			}
+		});
+
+		// Ничего не нашли — способность не срабатывает
+		if (candidates.length === 0) {
+			this.returnCardToHand(playedCard);
+			return;
+		}
+
+		let summonedCount = 0;
+
+		// Идём с конца, чтобы splice не сбивал индексы
+		for (let i = candidates.length - 1; i >= 0; i--) {
+			const { card, source } = candidates[i];
+
+			const targetRow = this.getBestRowForSummon(card);
+			if (!targetRow) continue;
+
+			// Удаляем из источника
+			if (source === 'deck') {
+				const idx = player.deck.findIndex(c => c === card);
+				if (idx === -1) continue;
+				player.deck.splice(idx, 1);
+			} else {
+				const idx = player.hand.findIndex(c => c === card);
+				if (idx === -1) continue;
+				player.hand.splice(idx, 1);
+			}
+
+			// Создаём копию и размещаем на поле
+			const summonCopy = {
+				...card,
+				uniqueId: `${card.id}_call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+				baseStrength: card.strength,
+				currentStrength: card.strength,
+				modifiedStrength: card.strength,
+				underWeather: false,
+				owner: 'player',
+				row: targetRow,
+				summonedByCall: true,
+				originalCallerId: playedCard.id
+			};
+
+			player.rows[targetRow].cards.push(summonCopy);
+
+			if (window.gameModule) {
+				window.gameModule.displayCardOnRow(
+					targetRow,
+					summonCopy,
+					'player',
+					player.rows[targetRow].cards.length - 1
+				);
+				window.gameModule.updateRowStrength(targetRow, 'player');
+			}
+
+			summonedCount++;
+		}
+
+		if (summonedCount === 0) {
+			this.returnCardToHand(playedCard);
+			return;
+		}
+
+		if (window.gameModule) {
+			window.gameModule.displayPlayerHand();
+			window.gameModule.displayPlayerDeck();
+			window.gameModule.updateTotalScoreDisplays();
+		}
+
+		if (window.audioManager && window.audioManager.playSound) {
+			audioManager.playSound('card_close');
+		}
+
+		if (window.gameModule && !playedCard.completeCalled) {
+			playedCard.completeCalled = true;
+			setTimeout(() => {
+				window.gameModule.completeCardPlay();
+			}, 500);
 		}
 	},
 
