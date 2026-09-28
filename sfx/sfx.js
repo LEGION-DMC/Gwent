@@ -8,13 +8,22 @@ const audioManager = {
     cooldownTime: 150,
     _musicPlaying: false,
     _wasMusicPlaying: false,
-    _savedMusicTrack: 'seadogs',
+    _savedMusicTrack: 'fieldsOfVelens',
 
-    musicTracks: {
-        northern: 'sfx/northern.mp3',
-        seadogs: 'sfx/seadogs.mp3',
-        glory: 'sfx/glory.mp3'
-    },
+	musicTracks: {
+		northern: 'sfx/northern.mp3',
+		seadogs: 'sfx/seadogs.mp3',
+		glory: 'sfx/glory.mp3',
+		wartales: 'sfx/wartales.mp3',
+		gosenberg: 'sfx/gosenberg.mp3',
+		fieldsOfVelens: 'sfx/fields_of_velens.mp3',
+		galvanization: 'sfx/galvanization.mp3',
+		arena: 'sfx/arena.mp3'
+	},
+
+	battleTracks: ['glory', 'galvanization', 'arena'],
+	defaultBattleTrack: 'glory',
+	altBattleTracks: ['galvanization', 'arena'],
 
     init() {
         this.loadSettings();
@@ -112,17 +121,21 @@ const audioManager = {
 
     changeMusicTrack(trackId) { this._switchTrack(trackId, true); },
     
-    setBattleMusic() {
-        if (this.musicEnabled && this.currentMusicTrack !== 'glory') {
-            this._switchTrack('glory', false);
-        }
-    },
-    
-    restoreSavedMusic() {
-        if (this.musicEnabled && this.currentMusicTrack === 'glory') {
-            this._switchTrack(this._savedMusicTrack, false);
-        }
-    },
+	setBattleMusic() {
+		if (!this.musicEnabled || this.battleTracks.includes(this.currentMusicTrack)) return;
+
+		const pool = this.currentMusicTrack === 'seadogs'
+			? [this.defaultBattleTrack]
+			: this.altBattleTracks;
+		const battleTrack = pool[Math.floor(Math.random() * pool.length)];
+		this._switchTrack(battleTrack, false);
+	},
+
+	restoreSavedMusic() {
+		if (this.musicEnabled && this.battleTracks.includes(this.currentMusicTrack)) {
+			this._switchTrack(this._savedMusicTrack, false);
+		}
+	},
 
     setupEventListeners() {
         ['click', 'touchstart', 'keydown'].forEach(event => {
@@ -209,10 +222,19 @@ const audioManager = {
 
     getCurrentMusicTrack() { return this.currentMusicTrack; },
 
-    getMusicTrackDisplayName() {
-        return this.currentMusicTrack === 'northern' ? 'Northern Realms' :
-               this.currentMusicTrack === 'glory' ? 'Battle Theme' : 'Sea Dogs';
-    }
+	getMusicTrackDisplayName() {
+		const names = {
+			northern: 'Northern Realms',
+			seadogs: 'Sea Dogs',
+			glory: 'Battle Theme',
+			wartales: 'Wartales',
+			gosenberg: 'Gosenberg',
+			fieldsOfVelens: 'Fields of Velens',
+			galvanization: 'Galvanization',
+			arena: 'Arena'
+		};
+		return names[this.currentMusicTrack] || 'Sea Dogs';
+	},
 };
 
 window.addEventListener('load', () => audioManager.init());

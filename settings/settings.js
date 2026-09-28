@@ -39,28 +39,29 @@ const settingsModule = {
         } catch {}
     },
 
-    applyAudioSettings() {
-        const am = window.audioManager;
-        if (!am) return;
+	applyAudioSettings() {
+		const am = window.audioManager;
+		if (!am) return;
 
-        am.soundEnabled = this.settings.soundEnabled;
-        am.musicEnabled = this.settings.musicEnabled;
+		am.soundEnabled = this.settings.soundEnabled;
+		am.musicEnabled = this.settings.musicEnabled;
 
-        if (am.currentMusicTrack !== this.settings.musicTrack && am.currentMusicTrack !== 'glory') {
-            am.changeMusicTrack(this.settings.musicTrack);
-        }
+		const battleTracks = am.battleTracks || ['glory'];
+		if (am.currentMusicTrack !== this.settings.musicTrack && !battleTracks.includes(am.currentMusicTrack)) {
+			am.changeMusicTrack(this.settings.musicTrack);
+		}
 
-        if (this.settings.musicEnabled) {
-            if (this._musicFirstInit) {
-                am.playBackgroundMusic();
-            } else if (!am._wasMusicPlaying && !am._musicPlaying) {
-                am.resumeBackgroundMusic?.();
-            }
-        } else {
-            am._wasMusicPlaying = am.isMusicPlaying?.() ?? false;
-            am.stopBackgroundMusic();
-        }
-    },
+		if (this.settings.musicEnabled) {
+			if (this._musicFirstInit) {
+				am.playBackgroundMusic();
+			} else if (!am._wasMusicPlaying && !am._musicPlaying) {
+				am.resumeBackgroundMusic?.();
+			}
+		} else {
+			am._wasMusicPlaying = am.isMusicPlaying?.() ?? false;
+			am.stopBackgroundMusic();
+		}
+	},
 
     notifySettingsChange() {
         window.gameModule?.onSettingsChange?.(this.settings);
@@ -103,7 +104,13 @@ function showSettingsModal() {
     const { cardDisplayMode, gameMode, musicTrack } = settingsModule.settings;
     const isFullscreen = fullscreenAPI.isActive();
 
-    const trackNames = { northern: 'Northern Realms', seadogs: 'Sea Dogs' };
+	const trackNames = {
+		northern: 'Northern Realms',
+		seadogs: 'Sea Dogs',
+		wartales: 'Wartales',
+		gosenberg: 'Gosenberg',
+		fieldsOfVelens: 'Fields of Velens'
+	};
 
     overlay.innerHTML = `
         <div class="settings-modal">
@@ -172,8 +179,14 @@ function showSettingsModal() {
 }
 
 function setupModalEvents(overlay) {
-    const tracks = ['seadogs', 'northern'];
-    const trackNames = { northern: 'Northern Realms', seadogs: 'Sea Dogs' };
+	const tracks = ['fieldsOfVelens', 'gosenberg', 'wartales', 'northern', 'seadogs',];
+	const trackNames = {
+		northern: 'Northern Realms',
+		seadogs: 'Sea Dogs',
+		wartales: 'Wartales',
+		gosenberg: 'Gosenberg',
+		fieldsOfVelens: 'Fields of Velens'
+	};
     let currentTrackIndex = Math.max(0, tracks.indexOf(settingsModule.settings.musicTrack));
 
     const closeModal = () => {
