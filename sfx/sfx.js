@@ -2,7 +2,7 @@ const audioManager = {
     soundEnabled: true,
     musicEnabled: true,
     backgroundMusic: null,
-    currentMusicTrack: 'seadogs',
+    currentMusicTrack: 'fieldsOfVelens',
     sounds: {},
     soundCooldowns: {},
     cooldownTime: 150,
@@ -32,15 +32,18 @@ const audioManager = {
         if (this.musicEnabled) this.playBackgroundMusic();
     },
 
-    loadSettings() {
-        try {
-            const saved = JSON.parse(localStorage.getItem('gwentSettings') || '{}');
-            this.soundEnabled = saved.soundEnabled ?? true;
-            this.musicEnabled = saved.musicEnabled ?? true;
-            this.currentMusicTrack = saved.musicTrack ?? 'seadogs';
-            this._savedMusicTrack = this.currentMusicTrack;
-        } catch {}
-    },
+	loadSettings() {
+		try {
+			const saved = JSON.parse(localStorage.getItem('gwentSettings') || '{}');
+			this.soundEnabled = saved.soundEnabled ?? true;
+			this.musicEnabled = saved.musicEnabled ?? true;
+			this.currentMusicTrack = saved.musicTrack ?? 'fieldsOfVelens';
+			this._savedMusicTrack = this.currentMusicTrack;
+		} catch {
+			this.currentMusicTrack = 'fieldsOfVelens';
+			this._savedMusicTrack = 'fieldsOfVelens';
+		}
+	},
 
     saveAudioSettings() {
         try {
