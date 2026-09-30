@@ -13,7 +13,7 @@ const settingsModule = {
         musicEnabled: true,
         cardDisplayMode: 'static',
         gameMode: 'cdpred',
-        musicTrack: 'seadogs'
+        musicTrack: 'fieldsOfVelens'
     },
     _musicFirstInit: true,
     _storageKey: 'gwentSettings',
@@ -179,7 +179,7 @@ function showSettingsModal() {
 }
 
 function setupModalEvents(overlay) {
-	const tracks = ['fieldsOfVelens', 'gosenberg', 'wartales', 'northern', 'seadogs',];
+	const tracks = ['fieldsOfVelens', 'gosenberg', 'wartales', 'northern', 'seadogs'];
 	const trackNames = {
 		northern: 'Northern Realms',
 		seadogs: 'Sea Dogs',

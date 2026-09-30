@@ -1,8 +1,6 @@
 .rules-page {
     position: fixed;
     inset: 0;
-    background: url('../ui/fon.jpg') no-repeat center center fixed;
-    background-size: cover;
     display: none;
     flex-direction: column;
     align-items: center;

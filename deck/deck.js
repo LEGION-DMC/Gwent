@@ -743,6 +743,9 @@ function backToFactionSelection() {
             
             window.selectedFaction = null;
             
+            // Возобновляем частицы
+            window.FireParticles?.start();
+            
             if (window.factionModule && window.factionModule.initFactionSelection) {
                 window.factionModule.initFactionSelection();
             }

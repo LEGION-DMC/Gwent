@@ -266,6 +266,7 @@ function hideFactionDescription() {
 
 function proceedToDeckBuilding(faction) {
     window.selectedFaction = faction;
+    window.FireParticles?.stop();  
     cleanupFactionSelection();
     window.deckModule?.initDeckBuilding?.(faction);
 }

@@ -787,55 +787,71 @@ const gameModule = {
         }
     },
 
-    startScoiataelTurnChoice: async function() {
-        if (window.factionAbilitiesModule) {
-            const firstTurn = await window.factionAbilitiesModule.determineFirstTurn(this.gameState);
-            this.startGameAfterCoinToss(firstTurn);
-        } else {
-            this.startCoinTossAnimation();
-        }
-    },
+	startScoiataelTurnChoice: async function() {
+		// Поднимаем canvas, чтобы частицы были видны поверх фона модалки
+		const fireCanvas = document.querySelector('.fire-canvas');
+		if (fireCanvas) {
+			fireCanvas.dataset.prevZIndex = fireCanvas.style.zIndex || '';
+			fireCanvas.style.zIndex = '10001';
+		}
+		window.FireParticles?.start();
 
-    startCoinTossAnimation: function() {
-        const coinOverlay = document.createElement('div');
-        coinOverlay.id = 'coinTossOverlay';
-        coinOverlay.className = 'coin-toss-overlay';
-        coinOverlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('ui/fon.jpg') center/cover no-repeat;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            font-family: 'Gwent', sans-serif;
-        `;
+		if (window.factionAbilitiesModule) {
+			const firstTurn = await window.factionAbilitiesModule.determineFirstTurn(this.gameState);
+			this.startGameAfterCoinToss(firstTurn);
+		} else {
+			this.startCoinTossAnimation();
+		}
+	},
 
-        coinOverlay.innerHTML = `
-            <div class="coin-toss-container">
-                <div class="coin-toss-title">ОПРЕДЕЛЕНИЕ ОЧЕРЁДНОСТИ ХОДА</div>
-                
-                <div class="coin-wrapper">
-                    <div class="coin" id="coinElement">
-                        <img src="board/coin_player.png" alt="Игрок ходит первым" class="coin-front">
-                        <img src="board/coin_opponent.png" alt="Противник ходит первым" class="coin-back">
-                    </div>
-                </div>
-                
-                <div class="coin-result" id="coinResult"></div>
-            </div>
-        `;
+	startCoinTossAnimation: function() {
+		// Поднимаем canvas поверх фона оверлея
+		const fireCanvas = document.querySelector('.fire-canvas');
+		if (fireCanvas) {
+			fireCanvas.dataset.prevZIndex = fireCanvas.style.zIndex || '';
+			fireCanvas.style.zIndex = '10001';
+		}
+		window.FireParticles?.start();
 
-        document.body.appendChild(coinOverlay);
-        
-        setTimeout(() => {
-            this.animateCoinToss();
-        }, 1500);
-    },
+		const coinOverlay = document.createElement('div');
+		coinOverlay.id = 'coinTossOverlay';
+		coinOverlay.className = 'coin-toss-overlay';
+		coinOverlay.style.cssText = `
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: url('ui/fon.jpg') center/cover no-repeat;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			z-index: 10000;
+			font-family: 'Gwent', sans-serif;
+		`;
+
+		coinOverlay.innerHTML = `
+			<div class="coin-toss-container" style="position: relative; z-index: 10002;">
+				<div class="coin-toss-title">ОПРЕДЕЛЕНИЕ ОЧЕРЁДНОСТИ ХОДА</div>
+				
+				<div class="coin-wrapper">
+					<div class="coin" id="coinElement">
+						<img src="board/coin_player.png" alt="Игрок ходит первым" class="coin-front">
+						<img src="board/coin_opponent.png" alt="Противник ходит первым" class="coin-back">
+					</div>
+				</div>
+				
+				<div class="coin-result" id="coinResult"></div>
+			</div>
+		`;
+
+		document.body.appendChild(coinOverlay);
+		
+		setTimeout(() => {
+			this.animateCoinToss();
+		}, 1500);
+	},
 
     animateCoinToss: function() {
 		const coinElement = document.getElementById('coinElement');
@@ -904,11 +920,18 @@ const gameModule = {
 				}
 			}, 500);
 		}
-		
+
+		// Останавливаем частицы и возвращаем z-index
+		window.FireParticles?.stop();
+		const fireCanvas = document.querySelector('.fire-canvas');
+		if (fireCanvas) {
+			fireCanvas.style.zIndex = fireCanvas.dataset.prevZIndex || '';
+			delete fireCanvas.dataset.prevZIndex;
+		}
+
 		this.stopTurnTimer();
 		this.gameState.currentPlayer = firstPlayer;
 		this.startMulliganPhase();
-		
 		this.isFirstRoundStart = true;
 	},
 
@@ -4378,7 +4401,15 @@ const gameModule = {
 				audioManager.playSound('draw');
 			}
 		}
-		
+
+		// Поднимаем canvas поверх фона оверлея
+		const fireCanvas = document.querySelector('.fire-canvas');
+		if (fireCanvas) {
+			fireCanvas.dataset.prevZIndex = fireCanvas.style.zIndex || '';
+			fireCanvas.style.zIndex = '10001';
+		}
+		window.FireParticles?.start();
+
 		const resultOverlay = document.createElement('div');
 		resultOverlay.className = 'game-result-overlay';
 		
@@ -4393,8 +4424,9 @@ const gameModule = {
 			resultImage = 'board/draw.png';
 		}
 		
+		// Оборачиваем содержимое в контейнер с z-index выше canvas
 		resultOverlay.innerHTML = `
-			<div class="game-result-container">
+			<div class="game-result-container" style="position: relative; z-index: 10002;">
 				<img src="${resultImage}" alt="Результат игры" class="game-result-image">
 				<div class="final-score">${finalScore}</div>
 				<div class="action-buttons">
@@ -4411,17 +4443,28 @@ const gameModule = {
 		
 		restartBtn.addEventListener('click', () => {
 			audioManager.playSound('button');
+			this.stopParticlesForResult();
 			document.body.removeChild(resultOverlay);
 			this.returnToMainMenu();
 		});
 		
 		redeckBtn.addEventListener('click', () => {
 			audioManager.playSound('button');
+			this.stopParticlesForResult();
 			document.body.removeChild(resultOverlay);
 			this.redeckGame();
 		});
 	},
 
+	stopParticlesForResult: function() {
+		window.FireParticles?.stop();
+		const fireCanvas = document.querySelector('.fire-canvas');
+		if (fireCanvas) {
+			fireCanvas.style.zIndex = fireCanvas.dataset.prevZIndex || '';
+			delete fireCanvas.dataset.prevZIndex;
+		}
+	},
+	
 	returnToMainMenu: function() {
 		if (window.audioManager) {
 			window.audioManager.restoreSavedMusic();
