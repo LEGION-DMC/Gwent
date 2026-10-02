@@ -821,24 +821,32 @@ const playerModule = {
 						<div class="deck-modal__count">${validCards.length}</div>
 					</div>
 					<div class="deck-modal__content">
-						${validCards.map((item, idx) => `
-							<div class="deck-card" data-medic-index="${idx}" data-card-id="${item.card.id}">
-								<div class="deck-card__container">
-									<img src="card/${item.card.faction}/${item.card.imageStatic || (item.card.image ? item.card.image.replace('.mp4', '.jpg') : 'placeholder.jpg')}"
-										 class="deck-card__media" onerror="this.src='card/placeholder.jpg'">
-									<img src="${item.card.border || 'deck/bord_silver.png'}" class="deck-card__border">
-									<img src="${item.card.banner || 'faction/' + item.card.faction + '/banner_silver.png'}" class="deck-card__banner">
-									<div class="deck-card__name">${item.card.name}</div>
-									<div class="deck-card__strength">${item.card.strength || ''}</div>
-									${item.card.position ? `
-									<div class="deck-card__position">
-										<img src="${item.card.positionBanner || 'faction/' + item.card.faction + '/banner_position.png'}" class="deck-card__position-banner">
-										<img src="${window.gameModule?.getPositionIconPath ? window.gameModule.getPositionIconPath(item.card.position) : 'deck/any-row.png'}" class="deck-card__position-icon">
-									</div>
-									` : ''}
+					${validCards.map((item, idx) => `
+						<div class="deck-card" data-medic-index="${idx}" data-card-id="${item.card.id}">
+							<div class="deck-card__container">
+								<img src="card/${item.card.faction}/${item.card.imageStatic || (item.card.image ? item.card.image.replace('.mp4', '.jpg') : 'placeholder.jpg')}"
+									 class="deck-card__media" onerror="this.src='card/placeholder.jpg'">
+								<img src="${item.card.border || 'deck/bord_silver.png'}" class="deck-card__border">
+								<img src="${item.card.banner || 'faction/' + item.card.faction + '/banner_silver.png'}" class="deck-card__banner">
+								<div class="deck-card__name">${item.card.name}</div>
+								${item.card.type === 'unit' && item.card.ability && item.card.ability.trim() !== ''
+									? `<div class="card__ability-icon">
+										   <img src="${window.cardsModule?.getAbilityIconPath?.(item.card.ability) || `deck/${item.card.ability}.webp`}"
+												alt="${item.card.ability}"
+												onerror="this.parentElement.style.display='none'">
+									   </div>`
+									: ''
+								}
+								<div class="deck-card__strength">${item.card.strength || ''}</div>
+								${item.card.position ? `
+								<div class="deck-card__position">
+									<img src="${item.card.positionBanner || 'faction/' + item.card.faction + '/banner_position.png'}" class="deck-card__position-banner">
+									<img src="${window.gameModule?.getPositionIconPath ? window.gameModule.getPositionIconPath(item.card.position) : 'deck/any-row.png'}" class="deck-card__position-icon">
 								</div>
+								` : ''}
 							</div>
-						`).join('')}
+						</div>
+					`).join('')}
 					</div>
 				</div>
 			`;
@@ -4003,9 +4011,15 @@ const playerModule = {
 			window.gameModule.displayCardOnRow(row, cardCopy, 'player', insertIndex);
 			window.gameModule.updateRowStrength(row, 'player');
 
-        if (card.ability === 'destroy' && card.type === 'unit') {
-            // Ищем сильнейшую карту противника в том же ряду
-            const strongestCards = this.findStrongestEnemyCardsInRow(row);
+			if (card.ability === 'double_row_strength_unit') {
+				setTimeout(() => {
+					this.activateDoubleRowStrengthUnitAbility(cardCopy, row);
+				}, 300);
+				return;
+			}
+
+			if (card.ability === 'destroy' && card.type === 'unit') {
+				const strongestCards = this.findStrongestEnemyCardsInRow(row);
             
             if (strongestCards.length > 0) {
                 setTimeout(() => {
@@ -4059,6 +4073,76 @@ const playerModule = {
 			else {
 				window.gameModule.completeCardPlay();
 			}
+		}
+	},
+
+	activateDoubleRowStrengthUnitAbility: function(playedCard, row) {
+		const rowState = this.gameState.player.rows[row];
+		let boostedCards = 0;
+		
+		// Удваиваем силу всех карт в ряду (кроме самого командира и героев)
+		rowState.cards.forEach(unitCard => {
+			if (unitCard.type === 'unit' && 
+				!this.isHeroCard(unitCard) && 
+				unitCard.uniqueId !== playedCard.uniqueId) {
+				
+				this.initializeCardFields(unitCard);
+				
+				// Удваиваем modifiedStrength (базовую силу)
+				const boostValue = unitCard.modifiedStrength;
+				unitCard.modifiedStrength += boostValue;
+				
+				// Обновляем currentStrength
+				if (!unitCard.underWeather) {
+					unitCard.currentStrength = unitCard.modifiedStrength;
+					unitCard.strength = unitCard.modifiedStrength;
+				}
+				
+				boostedCards++;
+				
+				// Визуальный эффект [X2]
+				this.createDoubleStrengthVisualEffect(unitCard, row);
+			}
+		});
+		
+		// Также удваиваем силу самого командира
+		this.initializeCardFields(playedCard);
+		const commanderBoost = playedCard.modifiedStrength;
+		playedCard.modifiedStrength += commanderBoost;
+		
+		if (!playedCard.underWeather) {
+			playedCard.currentStrength = playedCard.modifiedStrength;
+			playedCard.strength = playedCard.modifiedStrength;
+		}
+		
+		this.createDoubleStrengthVisualEffect(playedCard, row);
+		
+		if (window.gameModule) {
+			// Обновляем все карты в ряду
+			rowState.cards.forEach(unitCard => {
+				if (unitCard.type === 'unit') {
+					window.gameModule.updateCardStrengthDisplay(unitCard, row, 'player');
+				}
+			});
+			
+			window.gameModule.updateRowStrength(row, 'player');
+			window.gameModule.updateTotalScoreDisplays();
+			
+			setTimeout(() => {
+				window.gameModule.completeCardPlay();
+			}, 800);
+		}
+		
+		if (window.audioManager && window.audioManager.playSound) {
+			audioManager.playSound('card_boost');
+		}
+		
+		// Показываем сообщение
+		if (window.gameModule && boostedCards > 0) {
+			window.gameModule.showGameMessage(
+				`Командир удвоил силу ${boostedCards + 1} отрядов в ряду!`, 
+				'info'
+			);
 		}
 	},
 

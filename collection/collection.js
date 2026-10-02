@@ -1,11 +1,13 @@
 const collectionModule = (function() {
     let allCards = [];
-    let currentFilters = {
-        faction: 'all',
-        type: 'all',
-        rarity: 'all',
-        position: 'all'
-    };
+	let currentFilters = {
+		faction: 'all',
+		type: 'all',
+		rarity: 'all',
+		position: 'all',
+		ability: 'all',
+		onlyWithAbility: false
+	};
     let escapeHandler = null;
     let showCopies = false;
     let showHidden = false;
@@ -72,12 +74,33 @@ const collectionModule = (function() {
             filtered = filtered.filter(card => card.rarity === currentFilters.rarity);
         }
         
-        if (currentFilters.position !== 'all') {
-            filtered = filtered.filter(card => {
-                if (card.type !== 'unit') return false;
-                return card.position === currentFilters.position;
-            });
-        }
+		if (currentFilters.position !== 'all') {
+			filtered = filtered.filter(card => {
+				if (card.type !== 'unit') return false;
+				return card.position === currentFilters.position;
+			});
+		}
+
+		// Фильтр "только со способностями"
+		if (currentFilters.onlyWithAbility) {
+			filtered = filtered.filter(card => {
+				if (card.type !== 'unit') return false;
+				return card.ability && card.ability.trim() !== '';
+			});
+		}
+
+		// Фильтр по конкретной способности
+		if (currentFilters.ability !== 'all') {
+			filtered = filtered.filter(card => {
+				if (card.type !== 'unit') return false;
+
+				if (currentFilters.ability === 'call') {
+					return card.ability && card.ability.startsWith('call_');
+				}
+
+				return card.ability === currentFilters.ability;
+			});
+		}
 
 		if (!showHidden) {
 			filtered = filtered.filter(card => !card.hidden);
@@ -216,9 +239,23 @@ const collectionModule = (function() {
 			? `<video class="card__media" muted playsinline preload="metadata"><source src="${mediaPath}" type="video/mp4"></video>`
 			: `<img src="${mediaPath}" alt="${card.name}" class="card__media" onerror="this.src='card/placeholder.jpg'">`;
 		
-		let topRightElement = card.type === 'unit'
-			? `<div class="card__strength">${card.strength}</div>`
-			: `<div class="card__type-icon"><img src="${getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+		let topRightElement = '';
+		if (card.type === 'unit') {
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<div class="card__ability-icon">
+					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+							alt="${card.ability}"
+							onerror="this.parentElement.style.display='none'">
+				   </div>`
+				: '';
+
+			topRightElement = `
+				<div class="card__strength">${card.strength}</div>
+				${abilityIcon}
+			`;
+		} else {
+			topRightElement = `<div class="card__type-icon"><img src="${getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+		}
 		
 		let positionElement = '';
 		if (card.type === 'unit' && card.position) {
@@ -316,9 +353,23 @@ const collectionModule = (function() {
             ? `<video class="card__media" autoplay loop muted playsinline><source src="${mediaPath}" type="video/mp4"></video>`
             : `<img src="${mediaPath}" alt="${card.name}" class="card__media">`;
         
-        let topRightElement = card.type === 'unit'
-            ? `<div class="card__strength">${card.strength}</div>`
-            : `<div class="card__type-icon"><img src="${getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+		let topRightElement = '';
+		if (card.type === 'unit') {
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<div class="card__ability-icon">
+					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+							alt="${card.ability}"
+							onerror="this.parentElement.style.display='none'">
+				   </div>`
+				: '';
+
+			topRightElement = `
+				<div class="card__strength">${card.strength}</div>
+				${abilityIcon}
+			`;
+		} else {
+			topRightElement = `<div class="card__type-icon"><img src="${getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+		}
         
         let positionElement = '';
         if (card.type === 'unit' && card.position) {
@@ -431,7 +482,14 @@ const collectionModule = (function() {
     }
     
 	function resetFilters() {
-		currentFilters = { faction: 'all', type: 'all', rarity: 'all', position: 'all' };
+		currentFilters = {
+			faction: 'all',
+			type: 'all',
+			rarity: 'all',
+			position: 'all',
+			ability: 'all',
+			onlyWithAbility: false
+		};
 		showCopies = false;
 		
 		const showCopiesCheckbox = document.getElementById('showCopiesCheckbox');
@@ -449,7 +507,31 @@ const collectionModule = (function() {
 		document.querySelectorAll('.filter-faction-all, .filter-btn-all').forEach(btn => {
 			btn.classList.add('active');
 		});
-		
+
+		document.querySelectorAll('.filter-ability-btn').forEach(btn => {
+			btn.classList.remove('active');
+		});
+		document.querySelectorAll('.filter-ability-all').forEach(btn => {
+			btn.classList.add('active');
+		});
+
+		const toggle = document.getElementById('onlyWithAbilityToggle');
+		if (toggle) toggle.classList.remove('active');
+
+		// Сброс выпадающего списка
+		const label = document.getElementById('abilityDropdownLabel');
+		if (label) label.textContent = 'Все способности';
+
+		const headerIcon = document.querySelector('#abilityDropdownSelected .ability-selected-icon');
+		if (headerIcon) {
+			headerIcon.src = 'deck/ability.webp';
+			headerIcon.style.display = '';
+		}
+
+		document.querySelectorAll('.ability-dropdown-option').forEach(opt => {
+			opt.classList.toggle('active', opt.dataset.ability === 'all');
+		});
+
 		displayCards();
 		audioManager?.playSound('button');
 	}
@@ -472,7 +554,147 @@ const collectionModule = (function() {
 			rarity: '.filter-rarity-btn',
 			position: '.filter-position-btn'
 		};
-		
+
+		// ===== Переключатель "Только со способностями" =====
+		const onlyWithAbilityToggle = document.getElementById('onlyWithAbilityToggle');
+
+		if (onlyWithAbilityToggle) {
+			// начальное состояние
+			if (currentFilters.onlyWithAbility) {
+				onlyWithAbilityToggle.classList.add('active');
+			}
+
+			onlyWithAbilityToggle.addEventListener('click', () => {
+				currentFilters.onlyWithAbility = !currentFilters.onlyWithAbility;
+
+				if (currentFilters.onlyWithAbility) {
+					onlyWithAbilityToggle.classList.add('active');
+
+					// Принудительно ставим Тип = Отряды
+					currentFilters.type = 'unit';
+					document.querySelectorAll('.filter-type-btn').forEach(b => {
+						b.classList.toggle('active', b.dataset.type === 'unit');
+					});
+
+					// Сбрасываем позицию
+					currentFilters.position = 'all';
+					document.querySelectorAll('.filter-position-btn').forEach(b => {
+						b.classList.toggle('active', b.dataset.position === 'all');
+					});
+
+					// Сбрасываем выпадающий список на "Все способности"
+					currentFilters.ability = 'all';
+
+					const label = document.getElementById('abilityDropdownLabel');
+					if (label) label.textContent = 'Все способности';
+
+					const headerIcon = document.querySelector('#abilityDropdownSelected .ability-selected-icon');
+					if (headerIcon) {
+						headerIcon.src = 'deck/ability.webp';
+						headerIcon.style.display = '';
+					}
+
+					document.querySelectorAll('.ability-dropdown-option').forEach(opt => {
+						opt.classList.toggle('active', opt.dataset.ability === 'all');
+					});
+				} else {
+					onlyWithAbilityToggle.classList.remove('active');
+				}
+
+				displayCards();
+				audioManager?.playSound('button');
+			});
+
+			onlyWithAbilityToggle.addEventListener('mouseenter', () => audioManager?.playSound('touch'));
+		}
+
+		// ===== Кастомный выпадающий список способностей =====
+		const dropdown = document.getElementById('abilityDropdown');
+		const dropdownSelected = document.getElementById('abilityDropdownSelected');
+		const dropdownList = document.getElementById('abilityDropdownList');
+		const dropdownLabel = document.getElementById('abilityDropdownLabel');
+
+		function setAbilityValue(abilityId) {
+			currentFilters.ability = abilityId;
+
+		const selectedOption = dropdownList.querySelector(`.ability-dropdown-option[data-ability="${abilityId}"]`);
+		if (selectedOption) {
+			const icon = selectedOption.querySelector('.ability-option-icon');
+			const name = selectedOption.querySelector('.ability-option-name')?.textContent || 'Все способности';
+
+			const headerIcon = dropdownSelected.querySelector('.ability-selected-icon');
+			if (headerIcon) {
+				if (icon && icon.src) {
+					headerIcon.src = icon.src;
+					headerIcon.style.display = '';
+				} else {
+					headerIcon.style.display = 'none';
+				}
+			}
+
+			dropdownLabel.textContent = name;
+		}
+
+			// Активность опций
+			dropdownList.querySelectorAll('.ability-dropdown-option').forEach(opt => {
+				opt.classList.toggle('active', opt.dataset.ability === abilityId);
+			});
+
+			if (abilityId !== 'all') {
+				currentFilters.type = 'unit';
+				document.querySelectorAll('.filter-type-btn').forEach(b => {
+					b.classList.toggle('active', b.dataset.type === 'unit');
+				});
+
+				currentFilters.position = 'all';
+				document.querySelectorAll('.filter-position-btn').forEach(b => {
+					b.classList.toggle('active', b.dataset.position === 'all');
+				});
+
+				// Снимаем "Только со способностями" — режимы взаимоисключающие
+				currentFilters.onlyWithAbility = false;
+				const toggle = document.getElementById('onlyWithAbilityToggle');
+				if (toggle) toggle.classList.remove('active');
+			} else {
+				// "Все способности" — тоже снимаем "Только со способностями"
+				currentFilters.onlyWithAbility = false;
+				const toggle = document.getElementById('onlyWithAbilityToggle');
+				if (toggle) toggle.classList.remove('active');
+			}
+		}
+
+		if (dropdown && dropdownSelected && dropdownList && dropdownLabel) {
+			// Открытие/закрытие
+			dropdownSelected.addEventListener('click', (e) => {
+				e.stopPropagation();
+				dropdown.classList.toggle('open');
+				audioManager?.playSound('button');
+			});
+
+			dropdownSelected.addEventListener('mouseenter', () => audioManager?.playSound('touch'));
+
+			// Клик по опции
+			dropdownList.querySelectorAll('.ability-dropdown-option').forEach(opt => {
+				opt.addEventListener('click', (e) => {
+					e.stopPropagation();
+					const abilityId = opt.dataset.ability;
+					setAbilityValue(abilityId);
+					dropdown.classList.remove('open');
+					displayCards();
+					audioManager?.playSound('button');
+				});
+
+				opt.addEventListener('mouseenter', () => audioManager?.playSound('touch'));
+			});
+
+			// Клик вне — закрыть
+			document.addEventListener('click', (e) => {
+				if (!dropdown.contains(e.target)) {
+					dropdown.classList.remove('open');
+				}
+			});
+		}
+
 		const updateFilter = (type, value, btn) => {
 			document.querySelectorAll(filters[type]).forEach(b => b.classList.remove('active'));
 			btn.classList.add('active');
@@ -484,6 +706,29 @@ const collectionModule = (function() {
 					b.classList.toggle('active', b.dataset.type === 'unit');
 				});
 			}
+
+			if (type === 'type' && value !== 'unit') {
+				currentFilters.ability = 'all';
+				currentFilters.onlyWithAbility = false;
+
+				const toggle = document.getElementById('onlyWithAbilityToggle');
+				if (toggle) toggle.classList.remove('active');
+
+				// Сбросить выпадающий список на "Все способности"
+				const label = document.getElementById('abilityDropdownLabel');
+				if (label) label.textContent = 'Все способности';
+
+				const headerIcon = document.querySelector('#abilityDropdownSelected .ability-selected-icon');
+				if (headerIcon) {
+					headerIcon.src = 'deck/ability.webp';
+					headerIcon.style.display = '';
+				}
+
+				document.querySelectorAll('.ability-dropdown-option').forEach(opt => {
+					opt.classList.toggle('active', opt.dataset.ability === 'all');
+				});
+			}
+
 			if (type === 'type' && value !== 'unit' && value !== 'all') {
 				currentFilters.position = 'all';
 				document.querySelectorAll('.filter-position-btn').forEach(b => {
@@ -608,7 +853,14 @@ const collectionModule = (function() {
 		const existingCollection = document.querySelector('.collection-page');
 		if (existingCollection) existingCollection.remove();
 		
-		currentFilters = { faction: 'all', type: 'all', rarity: 'all', position: 'all' };
+		currentFilters = {
+			faction: 'all',
+			type: 'all',
+			rarity: 'all',
+			position: 'all',
+			ability: 'all',
+			onlyWithAbility: false
+		};
 		allCards = [];
 		showCopies = false;
 		showHidden = false;
@@ -704,7 +956,100 @@ const collectionModule = (function() {
 			}
 		}
 	}
-   
+
+	function generateAbilityOptions() {
+		const abilities = getUniqueUnitAbilities();
+
+		const options = [
+			`<div class="ability-dropdown-option" data-ability="all">
+				<img src="deck/ability.webp"
+					 alt="Все способности"
+					 class="ability-option-icon"
+					 onerror="this.style.display='none'">
+				<span class="ability-option-name">Все способности</span>
+			</div>`
+		];
+
+		abilities.forEach(a => {
+			options.push(`
+				<div class="ability-dropdown-option" data-ability="${a.id}">
+					<img src="${window.cardsModule?.getAbilityIconPath?.(a.id) || `deck/${a.id}.webp`}"
+						 alt="${a.name}"
+						 class="ability-option-icon"
+						 onerror="this.style.display='none'">
+					<span class="ability-option-name">${a.name}</span>
+				</div>
+			`);
+		});
+
+		return options.join('');
+	}
+
+	function getAbilityDisplayName(abilityId) {
+		if (!abilityId) return abilityId;
+
+		// Ищем в skillSystem
+		if (window.skillSystem?.abilities?.[abilityId]) {
+			return window.skillSystem.abilities[abilityId].name || abilityId;
+		}
+
+		// Ищем в factionAbilities
+		if (window.factionAbilities) {
+			for (const factionId in window.factionAbilities) {
+				const abilities = window.factionAbilities[factionId];
+				const found = abilities.find(a => a.id === abilityId);
+				if (found) return found.name || abilityId;
+			}
+		}
+
+		return abilityId;
+	}
+
+	function getUniqueUnitAbilities() {
+		const abilityMap = new Map();
+
+		allCards.forEach(card => {
+			if (card.type !== 'unit') return;
+			if (card.hidden) return;
+			if (!card.ability || card.ability.trim() === '') return;
+
+			let key = card.ability;
+			let name;
+
+			if (key.startsWith('call_')) {
+				key = 'call';
+				name = 'Призыв';
+			} else {
+				name = getAbilityDisplayName(card.ability);
+			}
+
+			if (!abilityMap.has(key)) {
+				abilityMap.set(key, { id: key, name });
+			}
+		});
+
+		return Array.from(abilityMap.values())
+			.sort((a, b) => a.name.localeCompare(b.name));
+	}
+
+	function generateAbilityButtons() {
+		const abilities = getUniqueUnitAbilities();
+
+		const abilitiesList = abilities.length === 0
+			? `<div class="ability-empty">Нет способностей</div>`
+			: abilities.map(a => `
+				<button class="filter-ability-btn" data-ability="${a.id}">
+					<img src="${window.cardsModule?.getAbilityIconPath?.(a.id) || `deck/${a.id}.webp`}"
+						 alt="${a.name}"
+						 class="filter-ability-icon"
+						 onerror="this.style.display='none'">
+					<span>${a.name}</span>
+				</button>
+			`).join('');
+
+		return abilitiesList;
+	}
+
     function generateFiltersHTML() {
         return `
             <div class="filter-section">
@@ -727,6 +1072,29 @@ const collectionModule = (function() {
                     </div>
                 </div>
             </div>
+			<div class="filter-section">
+				<div class="filter-title">Способности отрядов</div>
+				<div class="section-divider"></div>
+				<div class="filter-buttons ability-buttons">
+					<button class="filter-ability-toggle" id="onlyWithAbilityToggle">
+						<span>Только со способностями</span>
+					</button>
+					<div class="ability-dropdown" id="abilityDropdown">
+						<div class="ability-dropdown-selected" id="abilityDropdownSelected">
+							<img src="deck/ability.webp"
+								 alt="Способности"
+								 class="ability-selected-icon"
+								 onerror="this.style.display='none'">
+							<span class="ability-selected-name" id="abilityDropdownLabel">Все способности</span>
+							<span class="ability-dropdown-arrow">▾</span>
+						</div>
+						<div class="ability-dropdown-list" id="abilityDropdownList">
+							${generateAbilityOptions()}
+						</div>
+					</div>
+
+				</div>
+			</div>
             <div class="filter-section">
                 <div class="filter-title">Редкость</div>
                 <div class="section-divider"></div>

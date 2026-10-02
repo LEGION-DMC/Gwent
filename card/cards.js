@@ -227,8 +227,8 @@ const minimalCardsData = {
                 strength: 4,
                 image: 'lutik.mp4',
                 description: 'Лютик',
-                descriptionfull: 'Лучший друг и неизменный спутник Геральта, известнейший на весь Север трубадур и поэт, драматург и писатель, автор многочисленных произведений и завсегдатай королевских дворов. <br><br><i>При свете радужной зари,<br>Крылами хлопая, летят<br>На токовище глухари,<br>Подруг себе найти хотят.<br>Вот так и мы самой судьбой<br>Любовью связаны с тобой…<br>Я так хочу лобзать тебя,<br>Златые кудри теребя.</i>',
-                ability: ' ',
+                descriptionfull: 'Лютик, он же Юлиан Альфред Панкрац, виконт де Леттенхоф - странствующий бард. Лучший друг и неизменный спутник Геральта, известнейший на весь Север трубадур и поэт, драматург и писатель, автор многочисленных произведений и завсегдатай королевских дворов. <br><br><i>При свете радужной зари,<br>Крылами хлопая, летят<br>На токовище глухари,<br>Подруг себе найти хотят.<br>Вот так и мы самой судьбой<br>Любовью связаны с тобой…<br>Я так хочу лобзать тебя,<br>Златые кудри теребя.</i>',
+                ability: 'double_row_strength_unit',
                 position: 'close-row',
                 rarity: 'silver',
                 tags: ['kingser'],
@@ -1261,7 +1261,7 @@ const minimalCardsData = {
                 image: 'pristsilla.mp4',
                 description: 'Цираночка',
                 descriptionfull: 'Поэтесса, бард и возлюбленная Лютика. <br><br><i>Путь пальцем проложи средь шрамов, ран суровых,<br>Чтоб наши слить пути судьбе наперекор.<br>Открой те раны, вылечи их снова,<br>Пусть сложатся они в судьбы узор.<br><br>Из снов моих с утра бежишь проворно.<br>Крыжовник терпкий, сладкая сирень.<br>Хочу во сне твой видеть локон чёрный,<br>Фиалки глаз твоих, что слёз туманит тень.</i>',
-                ability: '',
+                ability: 'double_row_strength_unit',
                 position: 'close-row',
                 rarity: 'silver',
                 tags: ['kingser'],
@@ -2494,6 +2494,14 @@ const cardsCache = {
     allCardsByTag: null
 };
 
+function getAbilityIconPath(ability) {
+    if (!ability) return '';
+    const trimmed = ability.trim();
+    if (trimmed === '') return '';
+    if (trimmed.startsWith('call_')) return 'deck/call.webp';
+    return `deck/${trimmed}.webp`;
+}
+
 function getVisibleCardsForDeckBuilding(factionId) {
     const factionCards = getFactionCardsOnly(factionId);
     
@@ -2895,7 +2903,7 @@ window.cardsModule = {
     getCardsByPosition,
     getFactionStats,
     invalidateCardsCache,
-    // Новые функции:
+    getAbilityIconPath,
     getAllCardsForCollection,
     getCardsForDeckBuilding,
     getCardByIdIncludingHidden,

@@ -109,7 +109,8 @@ function showSettingsModal() {
 		seadogs: 'Sea Dogs',
 		wartales: 'Wartales',
 		gosenberg: 'Gosenberg',
-		fieldsOfVelens: 'Fields of Velens'
+		fieldsOfVelens: 'Fields of Velens',
+		KaerMorhen: 'Kaer Morhen',
 	};
 
     overlay.innerHTML = `
@@ -124,24 +125,24 @@ function showSettingsModal() {
                         <button class="settings-control__btn ${!soundEnabled ? 'active' : ''}" data-action="soundOff">✖</button>
                     </div>
                 </div>
-                <div class="settings-control">
-                    <div class="settings-control__label">Фоновая музыка</div>
-                    <div class="settings-control__buttons">
-                        <button class="settings-control__btn ${musicEnabled ? 'active' : ''}" data-action="musicOn">♬</button>
-                        <button class="settings-control__btn ${!musicEnabled ? 'active' : ''}" data-action="musicOff">✖</button>
-                    </div>
-                </div>
-                <div class="settings-control" style="justify-content: center;">
-                    <div class="settings-control__buttons" style="width: 100%; display: flex; justify-content: center;">
-                        <div class="music-track-selector">
-                            <button class="music-track-arrow" data-action="prevTrack">&lt;</button>
-                            <div class="music-track-name">
-                                <span class="music-track-text">${trackNames[musicTrack] || 'Sea Dogs'}</span>
-                            </div>
-                            <button class="music-track-arrow" data-action="nextTrack">&gt;</button>
-                        </div>
-                    </div>
-                </div>
+				<div class="settings-control" style="flex-direction: column; align-items: stretch; gap: 10px;">
+					<div style="display: flex; justify-content: space-between; align-items: center;">
+						<div class="settings-control__label">Фоновая музыка</div>
+						<div class="settings-control__buttons">
+							<button class="settings-control__btn ${musicEnabled ? 'active' : ''}" data-action="musicOn">♬</button>
+							<button class="settings-control__btn ${!musicEnabled ? 'active' : ''}" data-action="musicOff">✖</button>
+						</div>
+					</div>
+					<div class="settings-control__divider"></div>
+					<div class="music-track-selector">
+						<button class="music-track-arrow" data-action="prevTrack">&lt;</button>
+						<div class="music-track-name">
+							<span class="music-track-text">${trackNames[musicTrack] || 'Sea Dogs'}</span>
+						</div>
+						<button class="music-track-arrow" data-action="nextTrack">&gt;</button>
+					</div>
+					<div class="settings-control__divider"></div>
+				</div> 
                 <div class="settings-title">ГРАФИКА</div>
                 <div class="settings-control">
                     <div class="settings-control__label">Режим экрана</div>
@@ -150,25 +151,40 @@ function showSettingsModal() {
                         <button class="settings-control__btn ${isFullscreen ? 'active' : ''}" data-action="fullscreenOn">⛶</button>
                     </div>
                 </div>
-                <div class="settings-control">
-                    <div class="settings-control__label">Вид карт</div>
-                    <div class="settings-control__buttons">
-                        <select class="settings-select" data-action="cardDisplayMode">
-                            <option value="static" ${cardDisplayMode === 'static' ? 'selected' : ''}>Статические</option>
-                            <option value="animated" ${cardDisplayMode === 'animated' ? 'selected' : ''}>Анимированные</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="settings-title">ИГРА</div>
-                <div class="settings-control">
-                    <div class="settings-control__label">Режим игры</div>
-                    <div class="settings-control__buttons">
-                        <select class="settings-select" data-action="gameMode">
-                            <option value="classic" ${gameMode === 'classic' ? 'selected' : ''}>Классический</option>
-                            <option value="cdpred" ${gameMode === 'cdpred' ? 'selected' : ''}>CD Project Red</option>
-                        </select>
-                    </div>
-                </div>
+				<div class="settings-control">
+					<div class="settings-control__label">Вид карт</div>
+					<div class="settings-control__buttons">
+						<div class="settings-dropdown" data-dropdown="cardDisplayMode">
+							<div class="settings-dropdown-selected">
+								<span class="settings-dropdown-label">
+									${cardDisplayMode === 'static' ? 'Статические' : 'Анимированные'}
+								</span>
+								<span class="settings-dropdown-arrow">▾</span>
+							</div>
+							<div class="settings-dropdown-list">
+								<div class="settings-dropdown-option ${cardDisplayMode === 'static' ? 'active' : ''}" data-value="static">Статические</div>
+								<div class="settings-dropdown-option ${cardDisplayMode === 'animated' ? 'active' : ''}" data-value="animated">Анимированные</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="settings-control">
+					<div class="settings-control__label">Режим игры</div>
+					<div class="settings-control__buttons">
+						<div class="settings-dropdown" data-dropdown="gameMode">
+							<div class="settings-dropdown-selected">
+								<span class="settings-dropdown-label">
+									${gameMode === 'classic' ? 'Классический' : 'CD Project Red'}
+								</span>
+								<span class="settings-dropdown-arrow">▾</span>
+							</div>
+							<div class="settings-dropdown-list">
+								<div class="settings-dropdown-option ${gameMode === 'classic' ? 'active' : ''}" data-value="classic">Классический</div>
+								<div class="settings-dropdown-option ${gameMode === 'cdpred' ? 'active' : ''}" data-value="cdpred">CD Project Red</div>
+							</div>
+						</div>
+					</div>
+				</div>
             </div>
         </div>
     `;
@@ -179,25 +195,88 @@ function showSettingsModal() {
 }
 
 function setupModalEvents(overlay) {
-	const tracks = ['fieldsOfVelens', 'gosenberg', 'wartales', 'northern', 'seadogs'];
+	const tracks = ['fieldsOfVelens', 'KaerMorhen', 'gosenberg', 'wartales', 'northern', 'seadogs'];
 	const trackNames = {
 		northern: 'Northern Realms',
 		seadogs: 'Sea Dogs',
 		wartales: 'Wartales',
 		gosenberg: 'Gosenberg',
-		fieldsOfVelens: 'Fields of Velens'
+		fieldsOfVelens: 'Fields of Velens',
+		KaerMorhen: 'Kaer Morhen',
 	};
     let currentTrackIndex = Math.max(0, tracks.indexOf(settingsModule.settings.musicTrack));
 
-    const closeModal = () => {
-        overlay.classList.remove('active');
-        setTimeout(() => {
-            overlay.remove();
-            document.removeEventListener('keydown', overlay._escapeHandler);
-            document.removeEventListener('fullscreenchange', overlay._fullscreenHandler);
-        }, 300);
-        audioManager.playSound('button');
-    };
+	// ===== Кастомные выпадающие списки =====
+	const dropdownHandlers = {
+		cardDisplayMode: (value) => {
+			settingsModule.setCardDisplayMode(value);
+		},
+		gameMode: (value) => {
+			settingsModule.setGameMode(value);
+		}
+	};
+
+	overlay.querySelectorAll('.settings-dropdown').forEach(dropdown => {
+		const key = dropdown.dataset.dropdown;
+		const selected = dropdown.querySelector('.settings-dropdown-selected');
+		const label = dropdown.querySelector('.settings-dropdown-label');
+		const options = dropdown.querySelectorAll('.settings-dropdown-option');
+
+		// Открытие/закрытие
+		selected.addEventListener('click', (e) => {
+			e.stopPropagation();
+
+			// Закрываем все остальные дропдауны
+			overlay.querySelectorAll('.settings-dropdown').forEach(d => {
+				if (d !== dropdown) d.classList.remove('open');
+			});
+
+			dropdown.classList.toggle('open');
+			audioManager.playSound('button');
+		});
+
+		selected.addEventListener('mouseenter', () => audioManager.playSound('touch'));
+
+		// Выбор опции
+		options.forEach(opt => {
+			opt.addEventListener('click', (e) => {
+				e.stopPropagation();
+				const value = opt.dataset.value;
+
+				options.forEach(o => o.classList.remove('active'));
+				opt.classList.add('active');
+
+				label.textContent = opt.textContent;
+
+				dropdown.classList.remove('open');
+
+				dropdownHandlers[key]?.(value);
+
+				audioManager.playSound('button');
+			});
+
+			opt.addEventListener('mouseenter', () => audioManager.playSound('touch'));
+		});
+	});
+
+	// Клик вне любого дропдауна — закрыть все
+	const closeAllDropdowns = (e) => {
+		if (!e.target.closest('.settings-dropdown')) {
+			overlay.querySelectorAll('.settings-dropdown').forEach(d => d.classList.remove('open'));
+		}
+	};
+	overlay.addEventListener('click', closeAllDropdowns);
+
+	const closeModal = () => {
+		overlay.classList.remove('active');
+		setTimeout(() => {
+			overlay.remove();
+			document.removeEventListener('keydown', overlay._escapeHandler);
+			document.removeEventListener('fullscreenchange', overlay._fullscreenHandler);
+			overlay.removeEventListener('click', closeAllDropdowns);
+		}, 300);
+		audioManager.playSound('button');
+	};
 
     const updateUI = () => {
         const { soundEnabled, musicEnabled } = audioManager;
@@ -256,16 +335,6 @@ function setupModalEvents(overlay) {
         } else if (e.target === overlay) {
             closeModal();
         }
-    });
-
-    overlay.querySelector('[data-action="cardDisplayMode"]')?.addEventListener('change', (e) => {
-        settingsModule.setCardDisplayMode(e.target.value);
-        audioManager.playSound('button');
-    });
-
-    overlay.querySelector('[data-action="gameMode"]')?.addEventListener('change', (e) => {
-        settingsModule.setGameMode(e.target.value);
-        audioManager.playSound('button');
     });
 
     overlay._escapeHandler = (e) => e.key === 'Escape' && closeModal();

@@ -473,9 +473,23 @@ const gameModule = {
             `<video class="hand-card-media" muted playsinline preload="metadata"><source src="${mediaPath}" type="video/mp4"></video>` :
             `<img src="${mediaPath}" alt="${card.name}" class="hand-card-media" onerror="this.src='card/placeholder.jpg'">`;
 
-        let topRightElement = card.type === 'unit' ? 
-            `<div class="hand-card-strength">${card.strength || 0}</div>` :
-            `<div class="hand-card-type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+		let topRightElement = '';
+		if (card.type === 'unit') {
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<div class="card__ability-icon">
+					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+							alt="${card.ability}"
+							onerror="this.parentElement.style.display='none'">
+				   </div>`
+				: '';
+
+			topRightElement = `
+				<div class="hand-card-strength">${card.strength || 0}</div>
+				${abilityIcon}
+			`;
+		} else {
+			topRightElement = `<div class="hand-card-type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+		}
 
         let positionElement = '';
         if (card.type === 'unit' && card.position) {
@@ -2341,9 +2355,23 @@ const gameModule = {
             `<video class="hand-card-media" muted playsinline preload="metadata"><source src="${mediaPath}" type="video/mp4"></video>` :
             `<img src="${mediaPath}" alt="${card.name}" class="hand-card-media" onerror="this.src='card/placeholder.jpg'">`;
 
-        let topRightElement = card.type === 'unit' ? 
-            `<div class="hand-card-strength">${card.strength || 0}</div>` :
-            `<div class="hand-card-type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+		let topRightElement = '';
+		if (card.type === 'unit') {
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<div class="card__ability-icon">
+					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+							alt="${card.ability}"
+							onerror="this.parentElement.style.display='none'">
+				   </div>`
+				: '';
+
+			topRightElement = `
+				<div class="hand-card-strength">${card.strength || 0}</div>
+				${abilityIcon}
+			`;
+		} else {
+			topRightElement = `<div class="hand-card-type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+		}
 
         let positionElement = '';
         if (card.type === 'unit' && card.position) {
@@ -2410,17 +2438,28 @@ const gameModule = {
             mediaElement = `<img src="${mediaPath}" alt="${card.name}" class="board-card-media" onerror="this.src='card/placeholder.jpg'">`;
         }
 
-        let topRightElement = '';
-        if (card.strength) {
-            topRightElement = `<div class="board-card-strength">${card.strength}</div>`;
-        } else {
-            const typeIconPath = this.getTypeIconPath(card.type);
-            topRightElement = `
-                <div class="board-card-type-icon">
-                    <img src="${typeIconPath}" alt="${card.type}">
-                </div>
-            `;
-        }
+		let topRightElement = '';
+		if (card.type === 'unit') {
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<div class="card__ability-icon">
+					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+							alt="${card.ability}"
+							onerror="this.parentElement.style.display='none'">
+				   </div>`
+				: '';
+
+			topRightElement = `
+				<div class="board-card-strength">${card.strength || 0}</div>
+				${abilityIcon}
+			`;
+		} else {
+			const typeIconPath = this.getTypeIconPath(card.type);
+			topRightElement = `
+				<div class="board-card-type-icon">
+					<img src="${typeIconPath}" alt="${card.type}">
+				</div>
+			`;
+		}
 
         let positionElement = '';
         if (card.type === 'unit' && card.position) {
@@ -2500,17 +2539,37 @@ const gameModule = {
             mediaElement = `<img src="${mediaPath}" alt="${card.name}" class="weather-card-media" onerror="this.src='card/placeholder.jpg'">`;
         }
 
-        let topRightElement = '';
-        if (card.strength) {
-            topRightElement = `<div class="weather-card-strength">${card.strength}</div>`;
-        } else {
-            const typeIconPath = this.getTypeIconPath(card.type);
-            topRightElement = `
-                <div class="weather-card-type-icon">
-                    <img src="${typeIconPath}" alt="${card.type}">
-                </div>
-            `;
-        }
+		let topRightElement = '';
+		if (card.type === 'unit') {
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<div class="card__ability-icon">
+					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+							alt="${card.ability}"
+							onerror="this.parentElement.style.display='none'">
+				   </div>`
+				: '';
+
+			topRightElement = `
+				<div class="weather-card-strength">${card.strength || 0}</div>
+				${abilityIcon}
+			`;
+		} else {
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<div class="card__ability-icon">
+					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+							alt="${card.ability}"
+							onerror="this.parentElement.style.display='none'">
+				   </div>`
+				: '';
+
+			const typeIconPath = this.getTypeIconPath(card.type);
+			topRightElement = `
+				<div class="weather-card-type-icon">
+					<img src="${typeIconPath}" alt="${card.type}">
+				</div>
+				${abilityIcon}
+			`;
+		}
 
         cardElement.innerHTML = `
             <div class="weather-card-container">
@@ -3363,9 +3422,23 @@ const gameModule = {
             `<video class="board-card-media" muted playsinline preload="metadata"><source src="${mediaPath}" type="video/mp4"></video>` :
             `<img src="${mediaPath}" alt="${card.name}" class="board-card-media" onerror="this.src='card/placeholder.jpg'">`;
 
-        let topRightElement = card.strength ? 
-            `<div class="board-card-strength">${card.strength}</div>` :
-            `<div class="board-card-type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+		let topRightElement = '';
+		if (card.type === 'unit') {
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<div class="card__ability-icon">
+					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+							alt="${card.ability}"
+							onerror="this.parentElement.style.display='none'">
+				   </div>`
+				: '';
+
+			topRightElement = `
+				<div class="board-card-strength">${card.strength || 0}</div>
+				${abilityIcon}
+			`;
+		} else {
+			topRightElement = `<div class="board-card-type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+		}
 
         let positionElement = '';
         if (card.type === 'unit' && card.position) {
@@ -3714,11 +3787,25 @@ const gameModule = {
                 `<video class="deck-card__media" muted playsinline preload="metadata"><source src="${mediaPath}" type="video/mp4"></video>` :
                 `<img src="${mediaPath}" alt="${card.name}" class="deck-card__media" onerror="this.onerror=null; this.src='card/placeholder.jpg'">`;
 
-            let strengthElement = card.strength ? 
-                `<div class="deck-card__strength">${card.strength}</div>` : '';
+			let strengthElement = '';
+			let typeIconElement = '';
 
-            let typeIconElement = !card.strength ? 
-                `<div class="deck-card__type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>` : '';
+			if (card.type === 'unit') {
+				const abilityIcon = card.ability && card.ability.trim() !== ''
+					? `<div class="card__ability-icon">
+						   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+								alt="${card.ability}"
+								onerror="this.parentElement.style.display='none'">
+					   </div>`
+					: '';
+
+				strengthElement = `
+					<div class="deck-card__strength">${card.strength || 0}</div>
+					${abilityIcon}
+				`;
+			} else {
+				typeIconElement = `<div class="deck-card__type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+			}
 
             let positionElement = '';
             if (card.type === 'unit' && card.position) {

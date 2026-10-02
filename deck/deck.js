@@ -872,17 +872,28 @@ function createCardElement(card, context) {
         mediaElement = `<img src="${mediaPath}" alt="${card.name}" class="card__media" onerror="this.src='card/placeholder.jpg'">`;
     }
     
-    let topRightElement = '';
-    if (card.type === 'unit') {
-        topRightElement = `<div class="card__strength">${card.strength}</div>`;
-    } else {
-        const typeIconPath = getTypeIconPath(card.type);
-        topRightElement = `
-            <div class="card__type-icon">
-                <img src="${typeIconPath}" alt="${card.type}">
-            </div>
-        `;
-    }
+	let topRightElement = '';
+	if (card.type === 'unit') {
+		const abilityIcon = card.ability && card.ability.trim() !== ''
+			? `<div class="card__ability-icon">
+				   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+						alt="${card.ability}"
+						onerror="this.parentElement.style.display='none'">
+			   </div>`
+			: '';
+
+		topRightElement = `
+			<div class="card__strength">${card.strength}</div>
+			${abilityIcon}
+		`;
+	} else {
+		const typeIconPath = getTypeIconPath(card.type);
+		topRightElement = `
+			<div class="card__type-icon">
+				<img src="${typeIconPath}" alt="${card.type}">
+			</div>
+		`;
+	}
     
     let positionElement = '';
     if (card.type === 'unit' && card.position) {
@@ -1098,23 +1109,34 @@ function showCardModal(card) {
         mediaElement = `<img src="${mediaPath}" alt="${card.name}" class="card__media">`;
     }
     
-    let topRightElement = '';
-    if (card.type === 'unit') {
-        topRightElement = `<div class="card__strength">${card.strength}</div>`;
-    } else if (card.type === 'leader') {
-        topRightElement = `
-            <div class="card__type-icon">
-                <img src="deck/type_leader.png" alt="Лидер">
-            </div>
-        `;
-    } else {
-        const typeIconPath = getTypeIconPath(card.type);
-        topRightElement = `
-            <div class="card__type-icon">
-                <img src="${typeIconPath}" alt="${card.type}">
-            </div>
-        `;
-    }
+	let topRightElement = '';
+	if (card.type === 'unit') {
+		const abilityIcon = card.ability && card.ability.trim() !== ''
+			? `<div class="card__ability-icon">
+				   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+						alt="${card.ability}"
+						onerror="this.parentElement.style.display='none'">
+			   </div>`
+			: '';
+
+		topRightElement = `
+			<div class="card__strength">${card.strength}</div>
+			${abilityIcon}
+		`;
+	} else if (card.type === 'leader') {
+		topRightElement = `
+			<div class="card__type-icon">
+				<img src="deck/type_leader.png" alt="Лидер">
+			</div>
+		`;
+	} else {
+		const typeIconPath = getTypeIconPath(card.type);
+		topRightElement = `
+			<div class="card__type-icon">
+				<img src="${typeIconPath}" alt="${card.type}">
+			</div>
+		`;
+	}
 	
     let positionElement = '';
     if (card.type === 'unit' && card.position) {

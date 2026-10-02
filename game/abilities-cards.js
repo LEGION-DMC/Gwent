@@ -507,6 +507,17 @@ const skillSystem = {
 				requiresRowSelection: true
 			}
 		},
+		'double_row_strength_unit': {
+			name: 'Командирский рог',
+			type: 'special',
+			description: 'Удваивает силу всех отрядов в размещённом ряду',
+			effect: {
+				type: 'double_row_strength_unit',
+				target: 'row',
+				condition: 'ally',
+				multiplier: 2
+			}
+		},
 
 		'boost_tag_witcher_2': {
 			name: 'Подготовка ведьмаков',
@@ -574,6 +585,11 @@ const skillSystem = {
 			}
 		}, 	
 
+	},
+
+	applyDoubleRowStrengthUnitEffect: function(effect, context) {
+		// Этот эффект обрабатывается в player.js и ai.js при размещении юнита
+		return { success: true, message: 'Способность активируется при размещении' };
 	},
 
 	applyFlockEffect: function(effect, context) {
@@ -1247,6 +1263,8 @@ const skillSystem = {
 					return this.applyBoostNearEffect(effect, context);
 				case 'double_row_strength':
 					return this.applyDoubleRowStrengthEffect(effect, context);
+				case 'double_row_strength_unit':
+					return this.applyDoubleRowStrengthUnitEffect(effect, context);
 				default:
 					return { success: false, message: 'Неизвестный тип эффекта' };
 			}

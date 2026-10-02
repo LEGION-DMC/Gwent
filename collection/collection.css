@@ -415,3 +415,197 @@
     pointer-events: none;
     font-family: 'Gwent', sans-serif;
 }
+
+.ability-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ===== Кнопка "Только со способностями" ===== */
+.filter-ability-toggle {
+    width: 100%;
+    padding: 6px 10px;
+    font-family: 'Gwent', sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 4px;
+    border: 1px solid #222;
+    background: rgba(30, 30, 40, 0.2);
+    color: #ccc;
+    cursor: url('../ui/cursor_hover.png'), pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease,
+                box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+    filter: grayscale(0.6) brightness(0.8);
+    opacity: 0.8;
+}
+
+.filter-ability-toggle:hover {
+    filter: none;
+    opacity: 1;
+    border-color: #cfaa4a;
+    transform: translateY(-1px);
+    text-shadow: 0 0 6px rgba(207, 170, 74, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.filter-ability-toggle.active {
+    filter: none;
+    opacity: 1;
+    border-color: #cfaa4a;
+    box-shadow: 0 0 10px rgba(207, 170, 74, 0.25);
+    background: linear-gradient(135deg, #a57c2c 0%, #cfaa4a 45%, #b58a2a 80%, #e5c168 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 8px rgba(207, 170, 74, 0.5), 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== Кастомный выпадающий список ===== */
+.ability-dropdown {
+    position: relative;
+    width: 100%;
+    user-select: none;
+}
+
+.ability-dropdown-selected {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid #222;
+    border-radius: 4px;
+    background: rgba(30, 30, 40, 0.2);
+    cursor: url('../ui/cursor_hover.png'), pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    filter: grayscale(0.6) brightness(0.9);
+    opacity: 0.9;
+}
+
+.ability-dropdown-selected:hover,
+.ability-dropdown.open .ability-dropdown-selected {
+    filter: none;
+    opacity: 1;
+    border-color: #cfaa4a;
+    box-shadow: 0 0 6px rgba(207, 170, 74, 0.2);
+}
+
+.ability-selected-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.ability-selected-name {
+    flex: 1;
+    font-family: 'Gwent', sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    background: linear-gradient(135deg, #a57c2c 0%, #cfaa4a 45%, #b58a2a 80%, #e5c168 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #ccc;
+    filter: grayscale(0.6) brightness(0.8);
+    opacity: 0.8;
+}
+
+.ability-dropdown-arrow {
+    color: #ccc;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.ability-dropdown.open .ability-dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.ability-dropdown-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    background: rgba(15, 15, 20, 0.98);
+    border: 1px solid #cfaa4a;
+    border-radius: 4px;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-5px);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+}
+
+.ability-dropdown.open .ability-dropdown-list {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.ability-dropdown-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    cursor: url('../ui/cursor_hover.png'), pointer;
+    border-bottom: 1px solid rgba(207, 170, 74, 0.08);
+    transition: background 0.15s ease;
+}
+
+.ability-dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.ability-dropdown-option:hover {
+    background: rgba(207, 170, 74, 0.1);
+}
+
+.ability-dropdown-option.active {
+    background: rgba(207, 170, 74, 0.18);
+}
+
+.ability-option-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: brightness(0.9);
+}
+
+.ability-dropdown-option:hover .ability-option-icon,
+.ability-dropdown-option.active .ability-option-icon {
+    filter: brightness(1) drop-shadow(0 0 2px rgba(207, 170, 74, 0.5));
+}
+
+.ability-option-name {
+    font-family: 'Gwent', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    color: #ccc;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ability-dropdown-option.active .ability-option-name {
+    background: linear-gradient(135deg, #a57c2c 0%, #cfaa4a 45%, #b58a2a 80%, #e5c168 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.ability-empty {
+    grid-column: 1 / -1;
+    color: #777;
+    font-size: 11px;
+    font-style: italic;
+    text-align: center;
+    padding: 5px;
+}

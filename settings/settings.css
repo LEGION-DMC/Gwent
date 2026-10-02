@@ -78,6 +78,12 @@
     font-size: 16px;
 }
 
+.settings-control__divider {
+    height: 1px;
+    margin: 3px 3%;
+    background: linear-gradient(90deg, transparent, #d4af37, transparent);
+}
+
 .music-track-selector {
     display: flex;
     align-items: center;
@@ -179,33 +185,109 @@
     color: #d4af37;
 }
 
-.settings-select {
-    cursor: url('../ui/cursor_hover.png'), pointer !important;
+/* ===== Кастомный выпадающий список в настройках ===== */
+.settings-dropdown {
+    position: relative;
+    min-width: 150px;
+    user-select: none;
+}
+
+.settings-dropdown-selected {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid #d4af37;
+    border-radius: 5px;
     background: rgba(10, 10, 10, 0.8);
     color: white;
-    border: 1px solid #d4af37;
-    padding: 8px 30px 8px 10px;
-    border-radius: 5px;
     font-size: 13px;
-    font-family: inherit;
-    min-width: 150px;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d4af37'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 16px;
+    cursor: url('../ui/cursor_hover.png'), pointer;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.settings-select:hover {
+.settings-dropdown-selected:hover,
+.settings-dropdown.open .settings-dropdown-selected {
     border-color: #e5c168;
     box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
 }
 
-.settings-select:focus {
-    outline: none;
-    border-color: #e5c168;
-    box-shadow: 0 0 12px rgba(212, 175, 55, 0.5);
+.settings-dropdown-label {
+    display: inline-block;
+    transition: transform 0.3s ease, opacity 0.2s ease;
+    background: linear-gradient(135deg, #cfaa4a, #e5c168);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    white-space: nowrap;
+    letter-spacing: 1px;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+.settings-dropdown-arrow {
+    color: #d4af37;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.settings-dropdown.open .settings-dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.settings-dropdown-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: rgba(15, 15, 20, 0.98);
+    border: 1px solid #d4af37;
+    border-radius: 5px;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-5px);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+
+.settings-dropdown.open .settings-dropdown-list {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.settings-dropdown-option {
+    padding: 7px 8px;
+    font-family: 'Gwent', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: #ccc;
+    cursor: url('../ui/cursor_hover.png'), pointer;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.08);
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.settings-dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.settings-dropdown-option {
+    transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.settings-dropdown-option:hover {
+    transform: translateX(5px);
+}
+
+.settings-dropdown-option.active {
+    background: linear-gradient(135deg, #cfaa4a, #e5c168);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    white-space: nowrap;
+    letter-spacing: 1px;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
 }

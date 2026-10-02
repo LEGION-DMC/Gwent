@@ -1096,6 +1096,9 @@ const aiModule = {
 		else if (card.ability && card.ability.startsWith('damage_')) {
 			baseScore = this.evaluateDamageCard(card);
 		} 
+		else if (card.ability === 'double_row_strength_unit') {
+			baseScore = this.evaluateDoubleStrengthUnitCard(card);
+		}
 		else {
 			baseScore = 5;
 		}
@@ -1115,6 +1118,45 @@ const aiModule = {
 		baseScore += situationBonus;
 		
 		return Math.max(0, baseScore);
+	},
+
+	evaluateDoubleStrengthUnitCard: function(card) {
+		let score = card.strength || 5;
+		
+		// Находим лучший ряд для размещения
+		const bestRow = this.findBestRowForUnit(card);
+		
+		if (bestRow) {
+			const rowState = this.gameState.opponent.rows[bestRow];
+			const boostableUnits = rowState.cards.filter(c => 
+				c.type === 'unit' && !this.isHeroCard(c)
+			);
+			
+			if (boostableUnits.length > 0) {
+				// Считаем общую силу карт в ряду
+				const totalStrength = boostableUnits.reduce((sum, c) => {
+					const strength = c.currentStrength !== undefined ? 
+						c.currentStrength : (c.strength || 0);
+					return sum + strength;
+				}, 0);
+				
+				// Чем больше карт и чем они сильнее, тем ценнее удвоение
+				score += boostableUnits.length * 8;
+				score += totalStrength * 0.6;
+				
+				// Бонус за большое количество карт в ряду
+				if (boostableUnits.length >= 3) {
+					score += 20;
+				}
+				
+				// Бонус за ряды без погоды
+				if (!this.gameState.weather.effects[bestRow]) {
+					score += 15;
+				}
+			}
+		}
+		
+		return score;
 	},
 
 	evaluateFlockCard: function(card) {
@@ -4254,8 +4296,12 @@ const aiModule = {
 			if (window.gameModule) {
 				window.gameModule.displayCardOnRow(bestRow, cardCopy, 'opponent', insertIndex);
 				window.gameModule.updateRowStrength(bestRow, 'opponent');
-				
-				if (card.ability === 'medic' && card.type === 'unit') {
+
+				if (card.ability === 'double_row_strength_unit') {
+					setTimeout(() => {
+						this.activateDoubleRowStrengthUnitAbilityForAI(cardCopy, bestRow);
+					}, 300);
+				} else if (card.ability === 'medic' && card.type === 'unit') {
 					setTimeout(() => {
 						this.activateMedicAbilityForAI(cardCopy);
 					}, 400);
@@ -4267,6 +4313,92 @@ const aiModule = {
 					}, 1000);
 				}
 			}
+		}
+	},
+
+	activateDoubleRowStrengthUnitAbilityForAI: function(playedCard, row) {
+		const rowState = this.gameState.opponent.rows[row];
+		let boostedCards = 0;
+		
+		// Удваиваем силу всех карт в ряду (кроме самого командира и героев)
+		rowState.cards.forEach(unitCard => {
+			if (unitCard.type === 'unit' && 
+				!this.isHeroCard(unitCard) && 
+				unitCard.uniqueId !== playedCard.uniqueId) {
+				
+				if (unitCard.baseStrength === undefined) {
+					unitCard.baseStrength = unitCard.strength;
+				}
+				if (unitCard.modifiedStrength === undefined) {
+					unitCard.modifiedStrength = unitCard.strength;
+				}
+				if (unitCard.currentStrength === undefined) {
+					unitCard.currentStrength = unitCard.strength;
+				}
+				
+				// Удваиваем modifiedStrength
+				const boostValue = unitCard.modifiedStrength;
+				unitCard.modifiedStrength += boostValue;
+				
+				if (!unitCard.underWeather) {
+					unitCard.currentStrength = unitCard.modifiedStrength;
+					unitCard.strength = unitCard.modifiedStrength;
+				}
+				
+				boostedCards++;
+				
+				// Визуальный эффект
+				this.createDoubleStrengthVisualEffect(unitCard, row);
+			}
+		});
+		
+		// Также удваиваем силу самого командира
+		if (playedCard.baseStrength === undefined) {
+			playedCard.baseStrength = playedCard.strength;
+		}
+		if (playedCard.modifiedStrength === undefined) {
+			playedCard.modifiedStrength = playedCard.strength;
+		}
+		if (playedCard.currentStrength === undefined) {
+			playedCard.currentStrength = playedCard.strength;
+		}
+		
+		const commanderBoost = playedCard.modifiedStrength;
+		playedCard.modifiedStrength += commanderBoost;
+		
+		if (!playedCard.underWeather) {
+			playedCard.currentStrength = playedCard.modifiedStrength;
+			playedCard.strength = playedCard.modifiedStrength;
+		}
+		
+		this.createDoubleStrengthVisualEffect(playedCard, row);
+		
+		if (window.gameModule) {
+			rowState.cards.forEach(unitCard => {
+				if (unitCard.type === 'unit') {
+					window.gameModule.updateCardStrengthDisplay(unitCard, row, 'opponent');
+				}
+			});
+			
+			window.gameModule.updateRowStrength(row, 'opponent');
+			window.gameModule.updateTotalScoreDisplays();
+			
+			setTimeout(() => {
+				if (window.gameModule.completeCardPlay) {
+					window.gameModule.completeCardPlay();
+				}
+			}, 800);
+		}
+		
+		if (window.audioManager && window.audioManager.playSound) {
+			audioManager.playSound('card_boost');
+		}
+		
+		if (window.gameModule && boostedCards > 0) {
+			window.gameModule.showGameMessage(
+				`Противник: Командир удвоил силу ${boostedCards + 1} отрядов в ряду!`, 
+				'warning'
+			);
 		}
 	},
 

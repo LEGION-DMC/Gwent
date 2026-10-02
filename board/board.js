@@ -344,6 +344,7 @@ const boardModule = {
 				<img class="card-preview-banner" id="cardPreviewBanner" src="" alt="">
 				<div class="card-preview-name" id="cardPreviewName"></div>
 				<div class="card-preview-strength" id="cardPreviewStrength"></div>
+				<div class="card-preview-ability-icon" id="cardPreviewAbilityIcon"></div>
 				<div class="card-preview-type-icon" id="cardPreviewTypeIcon"></div>
 				<div class="card-preview-position" id="cardPreviewPosition">
 					<img class="card-preview-position-banner" id="cardPreviewPositionBanner" src="" alt="">
@@ -363,6 +364,7 @@ const boardModule = {
 		const banner = document.getElementById('cardPreviewBanner');
 		const nameEl = document.getElementById('cardPreviewName');
 		const strengthEl = document.getElementById('cardPreviewStrength');
+		const abilityIconEl = document.getElementById('cardPreviewAbilityIcon');
 		const typeIconEl = document.getElementById('cardPreviewTypeIcon');
 		const posBanner = document.getElementById('cardPreviewPositionBanner');
 		const posIcon = document.getElementById('cardPreviewPositionIcon');
@@ -445,6 +447,25 @@ const boardModule = {
 			strengthEl.style.display = 'block';
 		} else {
 			strengthEl.style.display = 'none';
+		}
+
+		// Иконка способности — для юнитов, если есть ability
+		if (abilityIconEl) {
+			const hasAbility = cardData.type === 'unit'
+				&& cardData.ability
+				&& cardData.ability.trim() !== '';
+
+			if (hasAbility) {
+				abilityIconEl.innerHTML = `
+					<img src="deck/${cardData.ability}.webp"
+						 alt="${cardData.ability}"
+						 onerror="this.parentElement.style.display='none'">
+				`;
+				abilityIconEl.style.display = 'block';
+			} else {
+				abilityIconEl.innerHTML = '';
+				abilityIconEl.style.display = 'none';
+			}
 		}
 		
     // ===== ИКОНКА ТИПА - для всех НЕ юнитов, включая лидера =====

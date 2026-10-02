@@ -9,21 +9,26 @@ const audioManager = {
     _musicPlaying: false,
     _wasMusicPlaying: false,
     _savedMusicTrack: 'fieldsOfVelens',
+	_battleTrackQueue: [],
 
 	musicTracks: {
-		northern: 'sfx/northern.mp3',
-		seadogs: 'sfx/seadogs.mp3',
-		glory: 'sfx/glory.mp3',
-		wartales: 'sfx/wartales.mp3',
-		gosenberg: 'sfx/gosenberg.mp3',
-		fieldsOfVelens: 'sfx/fields_of_velens.mp3',
-		galvanization: 'sfx/galvanization.mp3',
-		arena: 'sfx/arena.mp3'
+		fieldsOfVelens: 'sfx/music/Fields Of Velens.mp3',
+		KaerMorhen: 'sfx/music/Kaer Morhen.mp3',
+		gosenberg: 'sfx/music/gosenberg.mp3',
+		wartales: 'sfx/music/wartales.mp3',
+		northern: 'sfx/music/northern.mp3',
+		seadogs: 'sfx/music/seadogs.mp3',
+		
+		SteelForHumans: 'sfx/music/Steel for Humans.mp3',
+		DrinkUp: 'sfx/music/Drink Up.mp3',
+		glory: 'sfx/music/glory.mp3',
+		galvanization: 'sfx/music/galvanization.mp3',
+		arena: 'sfx/music/arena.mp3'
 	},
 
-	battleTracks: ['glory', 'galvanization', 'arena'],
+	battleTracks: ['SteelForHumans', 'DrinkUp', 'glory', 'galvanization', 'arena'],
 	defaultBattleTrack: 'glory',
-	altBattleTracks: ['galvanization', 'arena'],
+	altBattleTracks: ['SteelForHumans', 'DrinkUp', 'galvanization', 'arena'],
 
     init() {
         this.loadSettings();
@@ -60,33 +65,33 @@ const audioManager = {
     createAudioElements() {
         this.backgroundMusic = this._createMusicTrack(this.currentMusicTrack);
 
-        const soundFiles = {
-            button: 'sfx/button.mp3',
-            touch: 'sfx/touch.mp3',
-            warning: 'sfx/warning.mp3',
-            lock: 'sfx/lock.mp3',
-            cardAdd: 'sfx/card_add.mp3',
-            cardRemove: 'sfx/card_remove.mp3',
-            card_selected: 'sfx/card-selected.mp3',
-            card_damage: 'sfx/card_damage.mp3',
-            card_boost: 'sfx/card_boost.mp3',
-            card_destroy: 'sfx/card_destroy.mp3',
-            card_draw: 'sfx/card_draw.mp3',
-            weatherFrost: 'sfx/frost.mp3',
-            weatherFog: 'sfx/fog.mp3',
-            weatherRain: 'sfx/rain.mp3',
-            weatherClear: 'sfx/clear.mp3',
-            round_start: 'sfx/round_start.mp3',
-            coin: 'sfx/coin.mp3',
-            win: 'sfx/win.mp3',
-            lose: 'sfx/lose.mp3',
-            draw: 'sfx/draw.mp3',
-            scorch: 'sfx/scorch.mp3',
-            card_close: 'sfx/card_close.wav',
-            card_range: 'sfx/card_range.wav',
-            card_siege: 'sfx/card_siege.wav',
-            artefact: 'sfx/artefact.wav'
-        };
+	const soundFiles = {
+		button: 'sfx/sound/button.mp3',
+		touch: 'sfx/sound/touch.mp3',
+		warning: 'sfx/sound/warning.mp3',
+		lock: 'sfx/sound/lock.mp3',
+		cardAdd: 'sfx/sound/card_add.mp3',
+		cardRemove: 'sfx/sound/card_remove.mp3',
+		card_selected: 'sfx/sound/card-selected.mp3',
+		card_damage: 'sfx/sound/card_damage.mp3',
+		card_boost: 'sfx/sound/card_boost.mp3',
+		card_destroy: 'sfx/sound/card_destroy.mp3',
+		card_draw: 'sfx/sound/card_draw.mp3',
+		weatherFrost: 'sfx/sound/frost.mp3',
+		weatherFog: 'sfx/sound/fog.mp3',
+		weatherRain: 'sfx/sound/rain.mp3',
+		weatherClear: 'sfx/sound/clear.mp3',
+		round_start: 'sfx/sound/round_start.mp3',
+		coin: 'sfx/sound/coin.mp3',
+		win: 'sfx/sound/win.mp3',
+		lose: 'sfx/sound/lose.mp3',
+		draw: 'sfx/sound/draw.mp3',
+		scorch: 'sfx/sound/scorch.mp3',
+		card_close: 'sfx/sound/card_close.wav',
+		card_range: 'sfx/sound/card_range.wav',
+		card_siege: 'sfx/sound/card_siege.wav',
+		artefact: 'sfx/sound/artefact.wav'
+	};
 
         for (const [key, src] of Object.entries(soundFiles)) {
             this.sounds[key] = new Audio(src);
@@ -127,11 +132,43 @@ const audioManager = {
 	setBattleMusic() {
 		if (!this.musicEnabled || this.battleTracks.includes(this.currentMusicTrack)) return;
 
+		// Формируем список боевых треков для текущей сессии
 		const pool = this.currentMusicTrack === 'seadogs'
 			? [this.defaultBattleTrack]
-			: this.altBattleTracks;
-		const battleTrack = pool[Math.floor(Math.random() * pool.length)];
+			: [...this.battleTracks]; // или this.altBattleTracks, если нужно
+
+		// Если очередь пуста — заполняем и перемешиваем
+		if (this._battleTrackQueue.length === 0) {
+			this._battleTrackQueue = this._shuffleArray([...pool]);
+		}
+
+		// Если в очереди остались треки из старого пула (например, сменился seadogs),
+		// фильтруем по актуальному pool
+		this._battleTrackQueue = this._battleTrackQueue.filter(t => pool.includes(t));
+
+		// Если после фильтрации пусто — перезаполняем
+		if (this._battleTrackQueue.length === 0) {
+			this._battleTrackQueue = this._shuffleArray([...pool]);
+		}
+
+		// Не даём сыграть тот же трек, что играет сейчас (если есть альтернативы)
+		let battleTrack = this._battleTrackQueue.shift();
+
+		if (battleTrack === this.currentMusicTrack && this._battleTrackQueue.length > 0) {
+			// Вернём текущий в конец и возьмём следующий
+			this._battleTrackQueue.push(battleTrack);
+			battleTrack = this._battleTrackQueue.shift();
+		}
+
 		this._switchTrack(battleTrack, false);
+	},
+
+	_shuffleArray(arr) {
+		for (let i = arr.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[arr[i], arr[j]] = [arr[j], arr[i]];
+		}
+		return arr;
 	},
 
 	restoreSavedMusic() {
@@ -139,7 +176,7 @@ const audioManager = {
 			this._switchTrack(this._savedMusicTrack, false);
 		}
 	},
-
+	
     setupEventListeners() {
         ['click', 'touchstart', 'keydown'].forEach(event => {
             document.addEventListener(event, () => {
@@ -234,6 +271,9 @@ const audioManager = {
 			gosenberg: 'Gosenberg',
 			fieldsOfVelens: 'Fields of Velens',
 			galvanization: 'Galvanization',
+			KaerMorhen: 'Kaer Morhen',
+			DrinkUp: 'Drink Up',
+			SteelForHumans: 'Steel for Humans',
 			arena: 'Arena'
 		};
 		return names[this.currentMusicTrack] || 'Sea Dogs';
