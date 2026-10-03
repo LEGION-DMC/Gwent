@@ -520,7 +520,10 @@ const collectionModule = (function() {
 
 		// Сброс выпадающего списка
 		const label = document.getElementById('abilityDropdownLabel');
-		if (label) label.textContent = 'Все способности';
+		if (label) label.textContent = 'Все';
+
+		const dropdownSelected = document.getElementById('abilityDropdownSelected');
+		if (dropdownSelected) dropdownSelected.classList.remove('active');
 
 		const headerIcon = document.querySelector('#abilityDropdownSelected .ability-selected-icon');
 		if (headerIcon) {
@@ -535,7 +538,7 @@ const collectionModule = (function() {
 		displayCards();
 		audioManager?.playSound('button');
 	}
-
+	
 	function updateHiddenToggleState() {
 		const hiddenToggle = document.querySelector('.hidden-toggle');
 		if (hiddenToggle) {
@@ -586,7 +589,10 @@ const collectionModule = (function() {
 					currentFilters.ability = 'all';
 
 					const label = document.getElementById('abilityDropdownLabel');
-					if (label) label.textContent = 'Все способности';
+					if (label) label.textContent = 'Все';
+
+					const dropdownSelected = document.getElementById('abilityDropdownSelected');
+					if (dropdownSelected) dropdownSelected.classList.remove('active');
 
 					const headerIcon = document.querySelector('#abilityDropdownSelected .ability-selected-icon');
 					if (headerIcon) {
@@ -617,23 +623,30 @@ const collectionModule = (function() {
 		function setAbilityValue(abilityId) {
 			currentFilters.ability = abilityId;
 
-		const selectedOption = dropdownList.querySelector(`.ability-dropdown-option[data-ability="${abilityId}"]`);
-		if (selectedOption) {
-			const icon = selectedOption.querySelector('.ability-option-icon');
-			const name = selectedOption.querySelector('.ability-option-name')?.textContent || 'Все способности';
+			const selectedOption = dropdownList.querySelector(`.ability-dropdown-option[data-ability="${abilityId}"]`);
+			if (selectedOption) {
+				const icon = selectedOption.querySelector('.ability-option-icon');
+				const name = selectedOption.querySelector('.ability-option-name')?.textContent || 'Все';
 
-			const headerIcon = dropdownSelected.querySelector('.ability-selected-icon');
-			if (headerIcon) {
-				if (icon && icon.src) {
-					headerIcon.src = icon.src;
-					headerIcon.style.display = '';
-				} else {
-					headerIcon.style.display = 'none';
+				const headerIcon = dropdownSelected.querySelector('.ability-selected-icon');
+				if (headerIcon) {
+					if (icon && icon.src) {
+						headerIcon.src = icon.src;
+						headerIcon.style.display = '';
+					} else {
+						headerIcon.style.display = 'none';
+					}
 				}
+
+				dropdownLabel.textContent = name;
 			}
 
-			dropdownLabel.textContent = name;
-		}
+			// Подсветка заголовка выпадающего списка как активной кнопки
+			if (abilityId !== 'all') {
+				dropdownSelected.classList.add('active');
+			} else {
+				dropdownSelected.classList.remove('active');
+			}
 
 			// Активность опций
 			dropdownList.querySelectorAll('.ability-dropdown-option').forEach(opt => {
@@ -716,7 +729,10 @@ const collectionModule = (function() {
 
 				// Сбросить выпадающий список на "Все способности"
 				const label = document.getElementById('abilityDropdownLabel');
-				if (label) label.textContent = 'Все способности';
+				if (label) label.textContent = 'Все';
+
+				const dropdownSelectedReset = document.getElementById('abilityDropdownSelected');
+				if (dropdownSelectedReset) dropdownSelectedReset.classList.remove('active');
 
 				const headerIcon = document.querySelector('#abilityDropdownSelected .ability-selected-icon');
 				if (headerIcon) {
@@ -783,7 +799,7 @@ const collectionModule = (function() {
 			resetBtn.addEventListener('mouseenter', () => audioManager?.playSound('touch'));
 		}
 	}
-   
+	
     function setupEscapeHandler() {
         if (escapeHandler) document.removeEventListener('keydown', escapeHandler);
         
@@ -963,10 +979,10 @@ const collectionModule = (function() {
 		const options = [
 			`<div class="ability-dropdown-option" data-ability="all">
 				<img src="deck/ability.webp"
-					 alt="Все способности"
+					 alt="Все"
 					 class="ability-option-icon"
 					 onerror="this.style.display='none'">
-				<span class="ability-option-name">Все способности</span>
+				<span class="ability-option-name">Все</span>
 			</div>`
 		];
 
@@ -1085,7 +1101,7 @@ const collectionModule = (function() {
 								 alt="Способности"
 								 class="ability-selected-icon"
 								 onerror="this.style.display='none'">
-							<span class="ability-selected-name" id="abilityDropdownLabel">Все способности</span>
+							<span class="ability-selected-name" id="abilityDropdownLabel">Все</span>
 							<span class="ability-dropdown-arrow">▾</span>
 						</div>
 						<div class="ability-dropdown-list" id="abilityDropdownList">

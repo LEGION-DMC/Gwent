@@ -35,10 +35,19 @@ const rulesData = {
             <p style="text-align: center;">Правила составления колоды определяют баланс и разнообразие игры</p>
             <div class="bloc-rule"><div><h3>Ограничения по количеству карт</h3><ul><li><strong>Максимальное количество всех карт в колоде:</strong>  40 карт</li><li><strong>Минимальное количество карт отрядов:</strong> 22 карт</li><li><strong>Максимальное количество специальных карт:</strong>  10 карт</li></ul></div></div>
             <div><h3>Типы карт в колоде</h3>
-            <div class="bloc-rule"><img src="deck/unit.png" alt="Отряды" class="rule-modal__image"><div class="cards"><h3>Отряды</h3><p>Основные боевые единицы, которые размещаются на поле боя и имеют очки Силы. После размещения на поле боя карта отряда добавляет к общей силе войск количество очков, указанное в её левом верхнем углу.</p><p><strong>Особенности:</strong></p><ul><li>Имеют числовое значение силы (от 1 до 10)</li><li>Размещаются на поле в одном из трёх боевых рядов</li><li>Остаются на поле до конца раунда</li><li>Среди карт Отрядов, есть карты <strong>Героев</strong> - данные карты не подвержены ослаблению, усилению и уничтожению. На них не действуют способности карт: Погоды, Казнь, Чучело и другие эффекты, которые могут изменить их силу или удалить с поля.</li></ul></div></div>
+            <div class="bloc-rule"><img src="deck/unit.png" alt="Отряды" class="rule-modal__image"><div class="cards"><h3>Отряды</h3><p>Основные боевые единицы, которые размещаются на поле боя и имеют очки Силы. После размещения на поле боя карта отряда добавляет к общей силе войск количество очков, указанное в её левом верхнем углу.</p><p><strong>Особенности:</strong></p><ul><li>Имеют числовое значение силы (от 1 до 10)</li><li>Размещаются на поле в одном из трёх боевых рядов</li><li>Остаются на поле до конца раунда</li><li>Среди карт Отрядов, есть карты <strong>Героев</strong> - данные карты не подвержены ослаблению, усилению и уничтожению. На них не действуют способности карт: Погоды, Казнь, Чучело и другие эффекты, которые могут изменить их силу или удалить с поля.</li><li>Среди карт Отрядов, есть карты <strong>со способностями</strong> - данные карты как и специальные карты, могут усиливать другие отряды, либо призывать другие карты из колоды и руки.</li></ul></div></div>
             <div class="bloc-rule"><img src="deck/special.png" alt="Специальные" class="rule-modal__image"><div class="cards"><h3>Специальные</h3><p>Специальные карты, которые оказывают немедленный эффект.</p><p><strong>Особенности:</strong></p><ul><li>Не имеют силы и не размещаются на поле (за исключением погодных карт и Чучела)</li><li>Эффект применяется мгновенно при розыгрыше</li><li>После применения - отправляются в Сброс</li><li>Могут наносить урон и усиливать карты Отрядов</li></ul><p><strong>Карты Погоды: Особый класс Специальных карт</strong></p><ul><li>Размещаются на поле, в особом слоте</li><li>Эффект применяется мгновенно при розыгрыше</li><li>Карта после применения остаётся на поле до конца раунда, или пока карта не будет заменена или отменена другой</li><li>Несут негативный эффект для карт Отрядов</li></ul></div></div>
             <div class="bloc-rule"><img src="deck/artifact.png" alt="Артефакты" class="rule-modal__image"><div class="cards"><h3>Артефакты</h3><p>Мощные предметы, которые остаются на поле боя и оказывают постоянный эффект.</p><p><strong>Особенности:</strong></p><ul><li>Размещаются на поле, занимая место в боевых рядах</li><li>Эффект применяется мгновенно при розыгрыше</li><li>Карта после применения остаётся на поле до конца раунда, или пока карта не будет уничтожена</li><li>Могут усиливать отряды, давать пассивные бонусы или особые способности</li></ul></div></div>
             <div class="bloc-rule"><img src="deck/tactic.png" alt="Тактики" class="rule-modal__image"><div class="cards"><h3>Тактики</h3><p>Стратегические карты, применяют групповые или масштабные эффекты</p><p><strong>Особенности:</strong></p><ul><li>Размещаются на поле, в особом слоте</li><li>Эффект действует разово, и карта при этом остаётся на поле до конца раунда</li><li>Могут усиливать отряды, давать пассивные бонусы или особые способности</li><li>Применяются на целые ряды для группы карт или карт с определённым тегом</li></ul></div></div></div>
+        `
+    },
+    cardAbilities: {
+        title: 'Способности карт',
+        description: 'Все способности карт',
+        type: 'rule',
+        content: `
+            <p style="text-align: center;">Способности определяют, как карта влияет на ход сражения.</p>
+            <div id="abilitiesCatalog"></div>
         `
     },
     preparation: {
@@ -155,6 +164,105 @@ const rulesData = {
     }
 };
 
+const ABILITY_ICONS = {
+    // Погода
+    biting_frost:      'deck/biting_frost.webp',
+    frost:             'deck/frost.webp',
+    impenetrable_fog:  'deck/impenetrable_fog.webp',
+    torrential_rain:   'deck/torrential_rain.webp',
+    storm:             'deck/storm.webp',
+    clear_weather:     'deck/clear_weather.webp',
+
+    // Отряды
+    destroy:                  'deck/destroy.webp',
+    spy:                      'deck/spy.webp',
+    medic:                    'deck/medic.webp',
+    decoy:                    'deck/decoy.webp',
+    flock:                    'deck/flock.webp',
+    call_rat:                 'deck/call.webp',
+    double_row_strength_unit: 'deck/double_row_strength_unit.webp',
+    boost_tag_witcher_2:      'deck/witcher.webp',
+
+    // Специальные
+    destroy_artf:   'deck/destroy_artifact.webp',
+    damage_1:       'deck/damage_1.webp',
+    damage_row_1:   'deck/damage_row_1.webp',
+
+    // Артефакты
+    boost_1:        'deck/boost_1.webp',
+    boost_near_1:   'deck/boost_near_1.webp',
+
+    // Тактики
+    boost_row_1:         'deck/boost_row_1.webp',
+    double_row_strength: 'deck/double_row_strength_unit.webp',
+    boost_tag_witcher_3: 'deck/witcher.webp',
+};
+
+const ABILITY_GROUPS = {
+    weather: {
+        label: 'Погода',
+        cards: [
+            { id: 'biting_frost' },
+            { id: 'frost' },
+            { id: 'impenetrable_fog' },
+            { id: 'torrential_rain' },
+            { id: 'storm' },
+            { id: 'clear_weather' }
+        ]
+    },
+    units: {
+        label: 'Отряды',
+        cards: [
+            { id: 'destroy', title: 'Казнь', showBoth: true },
+            { id: 'spy' },
+            { id: 'medic' },
+            { id: 'decoy' },
+            { id: 'flock' },
+            {
+                id: 'call_rat',
+                title: 'Призыв',
+                ids: ['call_rat', 'call_driad', 'call_warrior'],
+                description: 'Призывает на поле несколько определённых карт.'
+            },
+            { id: 'double_row_strength_unit' },
+            {
+                id: 'boost_tag_witcher_2',
+                title: 'Усиление тега',
+                ids: ['boost_tag_witcher_2', 'boost_tag_thirst', 'boost_tag_dwarf'],
+                description: 'Усиливает все отряды с указанным тегом в одном ряду на указанное значение силы.'
+            },
+        ]
+    },
+    specials: {
+        label: 'Специальные',
+        cards: [
+            { id: 'destroy_artf' },
+            { id: 'damage_1', title: 'Атака', ids: ['damage_1','damage_2','damage_3','damage_4','damage_5'] },
+            { id: 'damage_row_1', title: 'Атака по ряду', ids: ['damage_row_1','damage_row_2','damage_row_3','damage_row_4','damage_row_5'] }
+        ]
+    },
+    artifacts: {
+        label: 'Артефакты',
+        cards: [
+            { id: 'boost_1', title: 'Усиление', ids: ['boost_1','boost_2','boost_3','boost_4','boost_5'] },
+            { id: 'boost_near_1', title: 'Усиление союза', ids: ['boost_near_1','boost_near_2','boost_near_3','boost_near_4','boost_near_5'] }
+        ]
+    },
+    tactics: {
+        label: 'Тактики',
+        cards: [
+            { id: 'boost_row_1', title: 'Усиление ряда', ids: ['boost_row_1','boost_row_2','boost_row_3','boost_row_4','boost_row_5'] },
+            { id: 'double_row_strength' },
+            {
+                id: 'boost_tag_witcher_3',
+                title: 'Усиление тега',
+                ids: ['boost_tag_witcher_3', 'boost_tag_criminal'],
+                description: 'Усиливает все отряды с указанным тегом в выбранном ряду на указанное значение силы.'
+            },
+        ]
+    }
+};
+
 const rulesModule = {
     escapeHandler: null,
     currentSection: null,
@@ -165,6 +273,96 @@ const rulesModule = {
         this.showRulesPage();
     },
 
+    getAbilityTypeLabel(type) {
+        const labels = {
+            weather: 'Погода',
+            special: 'Специальнst',
+            artifact: 'Артефакт',
+            tactic: 'Тактика',
+            passive: 'Пассивная',
+            leader: 'Лидер',
+            combat: 'Боевая'
+        };
+        return labels[type] || 'Прочее';
+    },
+
+    buildAbilitiesCatalog() {
+        const abilities = window.skillSystem?.abilities;
+        if (!abilities) {
+            return `<div class="no-content-selected">Способности ещё не загружены</div>`;
+        }
+
+        // Значения для групповых способностей: собираем диапазон из ids
+        const getRangeValue = (ids, field = 'effect.value') => {
+            const values = ids
+                .map(id => abilities[id])
+                .filter(Boolean)
+                .map(a => field.split('.').reduce((o, k) => o?.[k], a))
+                .filter(v => typeof v === 'number');
+            if (!values.length) return null;
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            return min === max ? `${min}` : `${min}–${max}`;
+        };
+
+        const renderCard = (card) => {
+            const ids = card.ids || [card.id];
+            const primary = abilities[card.id] || abilities[ids[0]];
+            if (!primary) return '';
+
+            const name = card.title || primary.name || card.id;
+
+            let description = '';
+
+            if (card.description) {
+                // Явное описание из группы — приоритетнее
+                description = card.description;
+            } else if (card.showBoth && primary.unitDescription) {
+                description = `${primary.description || ''}
+                    <div style="margin-top:6px; opacity:0.85;"><em>На отряде:</em> ${primary.unitDescription}</div>`;
+            } else if (card.mode === 'unit' && primary.unitDescription) {
+                description = primary.unitDescription;
+            } else {
+                description = primary.description || '';
+            }
+
+            // Диапазон значений для объединённых карточек
+            if (ids.length > 1 && !card.description) {
+                const range = getRangeValue(ids);
+                if (range) {
+                    description += `<div style="margin-top:4px; opacity:0.85;"><em>Значение:</em> ${range}</div>`;
+                }
+            }
+
+            const iconPath = ABILITY_ICONS[card.id] || `deck/${card.id}.webp`;
+
+            return `
+                <div class="bloc-rule">
+                    <img src="${iconPath}" alt="${name}" class="rule-modal__image"
+                         onerror="this.style.display='none'">
+                    <div>
+                        <h3>${name}</h3>
+                        <p>${description}</p>
+                    </div>
+                </div>
+            `;
+        };
+
+        const order = ['weather', 'units', 'specials', 'artifacts', 'tactics'];
+
+        return order.map(groupKey => {
+            const group = ABILITY_GROUPS[groupKey];
+            if (!group) return '';
+
+            const items = group.cards.map(renderCard).join('');
+            if (!items) return '';
+
+            return `<h3>${group.label}</h3>${items}`;
+        })
+        .filter(Boolean)
+        .join('<div class="section-divider"></div>');
+    },
+	
     resetRulesState() {
         document.querySelectorAll('.rule-item.active, .content-section.active').forEach(el => el.classList.remove('active'));
         const noContent = document.querySelector('.no-content-selected');
@@ -268,10 +466,19 @@ const rulesModule = {
     showContent(ruleTitle) {
         document.querySelectorAll('.rule-item').forEach(item => item.classList.toggle('active', item.dataset.rule === ruleTitle));
         document.querySelectorAll('.content-section').forEach(section => section.classList.toggle('active', section.id === `content-${ruleTitle}`));
-        
+
         const noContent = document.querySelector('.no-content-selected');
         if (noContent) noContent.style.display = 'none';
-        
+
+        // Заполняем каталог способностей при первом открытии раздела
+        if (ruleTitle === 'Способности карт') {
+            const catalog = document.getElementById('abilitiesCatalog');
+            if (catalog && !catalog.dataset.filled) {
+                catalog.innerHTML = this.buildAbilitiesCatalog();
+                catalog.dataset.filled = 'true';
+            }
+        }
+
         this.currentSection = ruleTitle;
         document.getElementById('rulesContent')?.scrollTo({ top: 0, behavior: 'smooth' });
     },

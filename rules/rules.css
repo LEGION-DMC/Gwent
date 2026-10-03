@@ -15,7 +15,7 @@
 
 .rules-title {
     font-size: 35px;
-    margin: 45px 0 30px;
+    margin: 35px 0 30px;
     width: 80%;
     text-transform: uppercase;
     text-align: center;
@@ -36,7 +36,7 @@
     display: flex;
     width: 90%;
     max-width: 1700px;
-    height: calc(90vh - 120px);
+    height: calc(90vh - 110px);
     gap: 25px;
     animation: fadeInUp 0.5s ease forwards;
 }

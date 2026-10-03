@@ -449,6 +449,31 @@
     text-shadow: 0 0 6px rgba(207, 170, 74, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
+.ability-dropdown-selected.active {
+    filter: none;
+    opacity: 1;   
+    border-color: #cfaa4a;
+    background: linear-gradient(135deg, #a57c2c 0%, #cfaa4a 45%, #b58a2a 80%, #e5c168 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.ability-dropdown-selected.active .ability-selected-name {
+    background: linear-gradient(135deg, #a57c2c 0%, #cfaa4a 45%, #b58a2a 80%, #e5c168 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: none;
+    opacity: 1;
+    text-shadow: 0 0 8px rgba(207, 170, 74, 0.5), 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.ability-dropdown-selected.active .ability-dropdown-arrow {
+    color: #cfaa4a;
+    filter: drop-shadow(0 0 2px rgba(207, 170, 74, 0.5));
+}
+
 .filter-ability-toggle.active {
     filter: none;
     opacity: 1;
