@@ -72,7 +72,7 @@ const rulesData = {
             <div class="bloc-rule"><img src="deck/ranged-row.png" alt="Дальний бой" class="rule-modal__image"><div><h3>Дальний бой</h3><p>Второй ряд для карт дальнего боя.</p><p><strong>Типичные отряды:</strong></p><ul><li>Лучники</li><li>Арбалетчики</li><li>Маги</li></ul></div></div>
             <div class="bloc-rule"><img src="deck/siege-row.png" alt="Осадные ряд" class="rule-modal__image"><div><h3>Осадные орудия</h3><p>Третий ряд для осадных орудий и поддержки.</p><p><strong>Типичные отряды:</strong></p><ul><li>Орудия</li><li>Гиганты</li><li>Маги поддержки</li></ul></div></div>
             <div class="bloc-rule"><img src="deck/any-row.png" alt="Гибрид" class="rule-modal__image"><div><h3>Гибридные отряды</h3><p>Возможно размещение в любом из доступных рядов.</p><p><strong>Типичные отряды:</strong></p><ul><li>Разведчики</li><li>Некоторые Герои</li><li>Элитные отряды</li></ul></div></div>
-			<div class="bloc-rule"><img src="deck/hidden-all-row.png" alt="Шпионы" class="rule-modal__image"><div><h3>Шпионы</h3><p>Размещение согластно позиции отряда, но на сторонге противника.</p><p><strong>Типичные отряды:</strong></p><ul><li>Разведчики</li><li>Дипломаты</li><li>Наёмные убийцы</li></ul></div></div>
+			<div class="bloc-rule"><img src="deck/hidden-all-row.png" alt="Шпионы" class="rule-modal__image"><div><h3>Шпионы</h3><p>Размещение согластно позиции отряда, но на стороне противника.</p><p><strong>Типичные отряды:</strong></p><ul><li>Разведчики</li><li>Дипломаты</li><li>Наёмные убийцы</li></ul></div></div>
 		`
     },
     interaction: {
