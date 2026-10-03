@@ -821,32 +821,53 @@ const playerModule = {
 						<div class="deck-modal__count">${validCards.length}</div>
 					</div>
 					<div class="deck-modal__content">
-					${validCards.map((item, idx) => `
-						<div class="deck-card" data-medic-index="${idx}" data-card-id="${item.card.id}">
-							<div class="deck-card__container">
-								<img src="card/${item.card.faction}/${item.card.imageStatic || (item.card.image ? item.card.image.replace('.mp4', '.jpg') : 'placeholder.jpg')}"
-									 class="deck-card__media" onerror="this.src='card/placeholder.jpg'">
-								<img src="${item.card.border || 'deck/bord_silver.png'}" class="deck-card__border">
-								<img src="${item.card.banner || 'faction/' + item.card.faction + '/banner_silver.png'}" class="deck-card__banner">
-								<div class="deck-card__name">${item.card.name}</div>
-								${item.card.type === 'unit' && item.card.ability && item.card.ability.trim() !== ''
-									? `<div class="card__ability-icon">
-										   <img src="${window.cardsModule?.getAbilityIconPath?.(item.card.ability) || `deck/${item.card.ability}.webp`}"
-												alt="${item.card.ability}"
-												onerror="this.parentElement.style.display='none'">
-									   </div>`
-									: ''
-								}
-								<div class="deck-card__strength">${item.card.strength || ''}</div>
-								${item.card.position ? `
-								<div class="deck-card__position">
-									<img src="${item.card.positionBanner || 'faction/' + item.card.faction + '/banner_position.png'}" class="deck-card__position-banner">
-									<img src="${window.gameModule?.getPositionIconPath ? window.gameModule.getPositionIconPath(item.card.position) : 'deck/any-row.png'}" class="deck-card__position-icon">
+					${validCards.map((item, idx) => {
+						const positions = Array.isArray(item.card.position)
+							? item.card.position
+							: (item.card.position ? [item.card.position] : []);
+						const displayPosition = positions.length > 1 ? 'any' : positions[0];
+						const positionIconPath = displayPosition
+							? (window.gameModule?.getPositionIconPath
+								? window.gameModule.getPositionIconPath(displayPosition)
+								: 'deck/any-row.png')
+							: null;
+
+						const abilityBanner = item.card.type === 'unit'
+							&& item.card.ability
+							&& item.card.ability.trim() !== ''
+							? `<img src="faction/${item.card.faction}/banner_abbility.png" alt="Способность" class="deck-card__ability-banner">`
+							: '';
+						const abilityIcon = item.card.type === 'unit'
+							&& item.card.ability
+							&& item.card.ability.trim() !== ''
+							? `<img src="${window.cardsModule?.getAbilityIconPath?.(item.card.ability) || `deck/${item.card.ability}.webp`}"
+									alt="${item.card.ability}"
+									class="deck-card__ability-icon"
+									onerror="this.style.display='none'">`
+							: '';
+
+						return `
+							<div class="deck-card" data-medic-index="${idx}" data-card-id="${item.card.id}">
+								<div class="deck-card__container">
+									<img src="card/${item.card.faction}/${item.card.imageStatic || (item.card.image ? item.card.image.replace('.mp4', '.jpg') : 'placeholder.jpg')}"
+										 class="deck-card__media" onerror="this.src='card/placeholder.jpg'">
+									<img src="${item.card.border || 'deck/bord_silver.png'}" class="deck-card__border">
+									<img src="${item.card.banner || 'faction/' + item.card.faction + '/banner_silver.png'}" class="deck-card__banner">
+									<div class="deck-card__name">${item.card.name}</div>
+									${item.card.type === 'unit' ? `<div class="deck-card__strength">${item.card.strength || 0}</div>` : ''}
+									${displayPosition ? `
+									<div class="deck-card__position">
+										<img src="${item.card.positionBanner || 'faction/' + item.card.faction + '/banner_position.png'}"
+											 class="deck-card__position-banner">
+										${abilityBanner}
+										${abilityIcon}
+										<img src="${positionIconPath}" class="deck-card__position-icon">
+									</div>
+									` : ''}
 								</div>
-								` : ''}
 							</div>
-						</div>
-					`).join('')}
+						`;
+					}).join('')}
 					</div>
 				</div>
 			`;

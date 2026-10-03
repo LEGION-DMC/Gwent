@@ -475,41 +475,41 @@ const gameModule = {
 
 		let topRightElement = '';
 		if (card.type === 'unit') {
-			const abilityIcon = card.ability && card.ability.trim() !== ''
-				? `<div class="card__ability-icon">
-					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
-							alt="${card.ability}"
-							onerror="this.parentElement.style.display='none'">
-				   </div>`
-				: '';
-
-			topRightElement = `
-				<div class="hand-card-strength">${card.strength || 0}</div>
-				${abilityIcon}
-			`;
+			topRightElement = `<div class="hand-card-strength">${card.strength || 0}</div>`;
 		} else {
 			topRightElement = `<div class="hand-card-type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
 		}
 
-        let positionElement = '';
-        if (card.type === 'unit' && card.position) {
-            let positions = [];
-            if (Array.isArray(card.position)) {
-                positions = card.position;
-            } else {
-                positions = [card.position];
-            }
-            
-            const displayPosition = positions.length > 1 ? 'any' : positions[0];
-            const positionIconPath = this.getPositionIconPath(displayPosition);
-            
-            positionElement = `
-                <div class="hand-card-position">
-                    <img src="${card.positionBanner || 'deck/position_banner.png'}" alt="Позиция" class="hand-card-position-banner">
-                    <img src="${positionIconPath}" alt="${displayPosition}" class="hand-card-position-icon">
-                </div>
-            `;
-        }
+		let positionElement = '';
+		if (card.type === 'unit' && card.position) {
+			let positions = [];
+			if (Array.isArray(card.position)) {
+				positions = card.position;
+			} else {
+				positions = [card.position];
+			}
+
+			const displayPosition = positions.length > 1 ? 'any' : positions[0];
+			const positionIconPath = this.getPositionIconPath(displayPosition);
+			const abilityBanner = card.ability && card.ability.trim() !== ''
+				? `<img src="faction/${card.faction}/banner_abbility.png" alt="Способность" class="hand-card-ability-banner">`
+				: '';
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+						alt="${card.ability}"
+						class="hand-card-ability-icon"
+						onerror="this.style.display='none'">`
+				: '';
+
+			positionElement = `
+				<div class="hand-card-position">
+					<img src="${card.positionBanner || `faction/${card.faction}/banner_position.png`}" alt="Позиция" class="hand-card-position-banner">
+					${abilityBanner}
+					${abilityIcon}
+					<img src="${positionIconPath}" alt="${displayPosition}" class="hand-card-position-icon">
+				</div>
+			`;
+		}
 
         cardElement.innerHTML = `
             <div class="hand-card-container">
@@ -2357,45 +2357,41 @@ const gameModule = {
 
 		let topRightElement = '';
 		if (card.type === 'unit') {
-			const abilityIcon = card.ability && card.ability.trim() !== ''
-				? `<div class="card__ability-icon">
-					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
-							alt="${card.ability}"
-							onerror="this.parentElement.style.display='none'">
-				   </div>`
-				: '';
-
-			topRightElement = `
-				<div class="hand-card-strength">${card.strength || 0}</div>
-				${abilityIcon}
-			`;
+			topRightElement = `<div class="hand-card-strength">${card.strength || 0}</div>`;
 		} else {
 			topRightElement = `<div class="hand-card-type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
 		}
 
-        let positionElement = '';
-        if (card.type === 'unit' && card.position) {
-            let positions = [];
-            if (Array.isArray(card.position)) {
-                positions = card.position;
-            } else {
-                positions = [card.position];
-            }
-            
-            const displayPosition = positions.length > 1 ? 'any' : positions[0];
-            const positionIconPath = this.getPositionIconPath(displayPosition);
-            
-            positionElement = `
-                <div class="hand-card-position">
-                    <img src="${card.positionBanner || 'deck/position_banner.png'}" alt="Позиция" class="hand-card-position-banner">
-                    <img src="${positionIconPath}" alt="${displayPosition}" class="hand-card-position-icon">
-                </div>
-            `;
-            
-            if (positions.length > 1) {
-                cardElement.title = `Доступные ряды: ${positions.join(', ').replace(/-row/g, '')}`;
-            }
-        }
+		let positionElement = '';
+		if (card.type === 'unit' && card.position) {
+			let positions = [];
+			if (Array.isArray(card.position)) {
+				positions = card.position;
+			} else {
+				positions = [card.position];
+			}
+
+			const displayPosition = positions.length > 1 ? 'any' : positions[0];
+			const positionIconPath = this.getPositionIconPath(displayPosition);
+			const abilityBanner = card.ability && card.ability.trim() !== ''
+				? `<img src="faction/${card.faction}/banner_abbility.png" alt="Способность" class="hand-card-ability-banner">`
+				: '';
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+						alt="${card.ability}"
+						class="hand-card-ability-icon"
+						onerror="this.style.display='none'">`
+				: '';
+
+			positionElement = `
+				<div class="hand-card-position">
+					<img src="${card.positionBanner || `faction/${card.faction}/banner_position.png`}" alt="Позиция" class="hand-card-position-banner">
+					${abilityBanner}
+					${abilityIcon}
+					<img src="${positionIconPath}" alt="${displayPosition}" class="hand-card-position-icon">
+				</div>
+			`;
+		}
 
         cardElement.innerHTML = `
             <div class="hand-card-container">
@@ -2440,46 +2436,41 @@ const gameModule = {
 
 		let topRightElement = '';
 		if (card.type === 'unit') {
+			topRightElement = `<div class="board-card-strength">${card.strength || 0}</div>`;
+		} else {
+			topRightElement = `<div class="board-card-type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+		}
+
+		let positionElement = '';
+		if (card.type === 'unit' && card.position) {
+			let positions = [];
+			if (Array.isArray(card.position)) {
+				positions = card.position;
+			} else {
+				positions = [card.position];
+			}
+
+			const displayPosition = positions.length > 1 ? 'any' : positions[0];
+			const positionIconPath = this.getPositionIconPath(displayPosition);
+			const abilityBanner = card.ability && card.ability.trim() !== ''
+				? `<img src="faction/${card.faction}/banner_abbility.png" alt="Способность" class="board-card-ability-banner">`
+				: '';
 			const abilityIcon = card.ability && card.ability.trim() !== ''
-				? `<div class="card__ability-icon">
-					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
-							alt="${card.ability}"
-							onerror="this.parentElement.style.display='none'">
-				   </div>`
+				? `<img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+						alt="${card.ability}"
+						class="board-card-ability-icon"
+						onerror="this.style.display='none'">`
 				: '';
 
-			topRightElement = `
-				<div class="board-card-strength">${card.strength || 0}</div>
-				${abilityIcon}
-			`;
-		} else {
-			const typeIconPath = this.getTypeIconPath(card.type);
-			topRightElement = `
-				<div class="board-card-type-icon">
-					<img src="${typeIconPath}" alt="${card.type}">
+			positionElement = `
+				<div class="board-card-position">
+					<img src="${card.positionBanner || `faction/${card.faction}/banner_position.png`}" alt="Позиция" class="board-card-position-banner">
+					${abilityBanner}
+					${abilityIcon}
+					<img src="${positionIconPath}" alt="${displayPosition}" class="board-card-position-icon">
 				</div>
 			`;
 		}
-
-        let positionElement = '';
-        if (card.type === 'unit' && card.position) {
-            let positions = [];
-            if (Array.isArray(card.position)) {
-                positions = card.position;
-            } else {
-                positions = [card.position];
-            }
-            
-            const displayPosition = positions.length > 1 ? 'any' : positions[0];
-            const positionIconPath = this.getPositionIconPath(displayPosition);
-            
-            positionElement = `
-                <div class="board-card-position">
-                    <img src="${card.positionBanner || 'deck/position_banner.png'}" alt="Позиция" class="board-card-position-banner">
-                    <img src="${positionIconPath}" alt="${displayPosition}" class="board-card-position-icon">
-                </div>
-            `;
-        }
 
         cardElement.innerHTML = `
             <div class="board-card-container">
@@ -2520,98 +2511,78 @@ const gameModule = {
         return cardElement;
     },
 
-    createWeatherCardElement: function(card, index) {
-        const cardElement = document.createElement('div');
-        cardElement.className = 'weather-card';
-        cardElement.dataset.cardId = card.id;
-        cardElement.dataset.weatherIndex = index;
-        
-        const { mediaPath, isVideo } = this.getCardMediaPath(card);
+	createWeatherCardElement: function(card, index) {
+		const cardElement = document.createElement('div');
+		cardElement.className = 'weather-card';
+		cardElement.dataset.cardId = card.id;
+		cardElement.dataset.weatherIndex = index;
 
-        let mediaElement = '';
-        if (isVideo) {
-            mediaElement = `
-                <video class="weather-card-media" muted playsinline preload="metadata">
-                    <source src="${mediaPath}" type="video/mp4">
-                </video>
-            `;
-        } else {
-            mediaElement = `<img src="${mediaPath}" alt="${card.name}" class="weather-card-media" onerror="this.src='card/placeholder.jpg'">`;
-        }
+		const { mediaPath, isVideo } = this.getCardMediaPath(card);
+
+		let mediaElement = '';
+		if (isVideo) {
+			mediaElement = `
+				<video class="weather-card-media" muted playsinline preload="metadata">
+					<source src="${mediaPath}" type="video/mp4">
+				</video>
+			`;
+		} else {
+			mediaElement = `<img src="${mediaPath}" alt="${card.name}" class="weather-card-media" onerror="this.src='card/placeholder.jpg'">`;
+		}
 
 		let topRightElement = '';
 		if (card.type === 'unit') {
-			const abilityIcon = card.ability && card.ability.trim() !== ''
-				? `<div class="card__ability-icon">
-					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
-							alt="${card.ability}"
-							onerror="this.parentElement.style.display='none'">
-				   </div>`
-				: '';
-
-			topRightElement = `
-				<div class="weather-card-strength">${card.strength || 0}</div>
-				${abilityIcon}
-			`;
+			topRightElement = `<div class="weather-card-strength">${card.strength || 0}</div>`;
 		} else {
-			const abilityIcon = card.ability && card.ability.trim() !== ''
-				? `<div class="card__ability-icon">
-					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
-							alt="${card.ability}"
-							onerror="this.parentElement.style.display='none'">
-				   </div>`
-				: '';
-
 			const typeIconPath = this.getTypeIconPath(card.type);
 			topRightElement = `
 				<div class="weather-card-type-icon">
 					<img src="${typeIconPath}" alt="${card.type}">
 				</div>
-				${abilityIcon}
 			`;
 		}
 
-        cardElement.innerHTML = `
-            <div class="weather-card-container">
-                ${mediaElement}
-                <img src="${card.border || 'deck/bord_bronze.png'}" alt="Рамка" class="weather-card-border">
-                <img src="${card.banner || `faction/${card.faction}/banner_bronze.png`}" alt="Баннер" class="weather-card-banner">
-                <div class="weather-card-name">${card.name || 'Неизвестная карта'}</div>
-                ${topRightElement}
-            </div>
-        `;
+		cardElement.innerHTML = `
+			<div class="weather-card-container">
+				${mediaElement}
+				<img src="${card.border || 'deck/bord_bronze.png'}" alt="Рамка" class="weather-card-border">
+				<img src="${card.banner || `faction/${card.faction}/banner_bronze.png`}" alt="Баннер" class="weather-card-banner">
+				<div class="weather-card-name">${card.name || 'Неизвестная карта'}</div>
+				${topRightElement}
+			</div>
+		`;
 
-        cardElement.addEventListener('contextmenu', (event) => {
-            event.preventDefault();
-            this.showCardModal(card);
-        });
+		cardElement.addEventListener('contextmenu', (event) => {
+			event.preventDefault();
+			this.showCardModal(card);
+		});
 
-        cardElement.addEventListener('click', () => {
-            audioManager.playSound('touch');
-        });
+		cardElement.addEventListener('click', () => {
+			audioManager.playSound('touch');
+		});
 
-        cardElement.addEventListener('mouseenter', () => {
-            audioManager.playSound('touch');
-            
-            const video = cardElement.querySelector('video');
-            if (video) {
-                video.currentTime = 0;
-                video.play().catch(e => {});
-                video.loop = true;
-            }
-        });
+		cardElement.addEventListener('mouseenter', () => {
+			audioManager.playSound('touch');
 
-        cardElement.addEventListener('mouseleave', () => {
-            const video = cardElement.querySelector('video');
-            if (video) {
-                video.pause();
-                video.currentTime = 0;
-                video.loop = false;
-            }
-        });
+			const video = cardElement.querySelector('video');
+			if (video) {
+				video.currentTime = 0;
+				video.play().catch(e => {});
+				video.loop = true;
+			}
+		});
 
-        return cardElement;
-    },
+		cardElement.addEventListener('mouseleave', () => {
+			const video = cardElement.querySelector('video');
+			if (video) {
+				video.pause();
+				video.currentTime = 0;
+				video.loop = false;
+			}
+		});
+
+		return cardElement;
+	},
 
     displayWeatherCards: function() {
         const weatherSlot = document.getElementById('weatherSlot');
@@ -3424,41 +3395,41 @@ const gameModule = {
 
 		let topRightElement = '';
 		if (card.type === 'unit') {
-			const abilityIcon = card.ability && card.ability.trim() !== ''
-				? `<div class="card__ability-icon">
-					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
-							alt="${card.ability}"
-							onerror="this.parentElement.style.display='none'">
-				   </div>`
-				: '';
-
-			topRightElement = `
-				<div class="board-card-strength">${card.strength || 0}</div>
-				${abilityIcon}
-			`;
+			topRightElement = `<div class="board-card-strength">${card.strength || 0}</div>`;
 		} else {
 			topRightElement = `<div class="board-card-type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
 		}
 
-        let positionElement = '';
-        if (card.type === 'unit' && card.position) {
-            let positions = [];
-            if (Array.isArray(card.position)) {
-                positions = card.position;
-            } else {
-                positions = [card.position];
-            }
-            
-            const displayPosition = positions.length > 1 ? 'any' : positions[0];
-            const positionIconPath = this.getPositionIconPath(displayPosition);
-            
-            positionElement = `
-                <div class="board-card-position">
-                    <img src="${card.positionBanner || 'deck/position_banner.png'}" alt="Позиция" class="board-card-position-banner">
-                    <img src="${positionIconPath}" alt="${displayPosition}" class="board-card-position-icon">
-                </div>
-            `;
-        }
+		let positionElement = '';
+		if (card.type === 'unit' && card.position) {
+			let positions = [];
+			if (Array.isArray(card.position)) {
+				positions = card.position;
+			} else {
+				positions = [card.position];
+			}
+
+			const displayPosition = positions.length > 1 ? 'any' : positions[0];
+			const positionIconPath = this.getPositionIconPath(displayPosition);
+			const abilityBanner = card.ability && card.ability.trim() !== ''
+				? `<img src="faction/${card.faction}/banner_abbility.png" alt="Способность" class="board-card-ability-banner">`
+				: '';
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+						alt="${card.ability}"
+						class="board-card-ability-icon"
+						onerror="this.style.display='none'">`
+				: '';
+
+			positionElement = `
+				<div class="board-card-position">
+					<img src="${card.positionBanner || `faction/${card.faction}/banner_position.png`}" alt="Позиция" class="board-card-position-banner">
+					${abilityBanner}
+					${abilityIcon}
+					<img src="${positionIconPath}" alt="${displayPosition}" class="board-card-position-icon">
+				</div>
+			`;
+		}
 
         cardElement.innerHTML = `
             <div class="board-card-container">
@@ -3791,41 +3762,42 @@ const gameModule = {
 			let typeIconElement = '';
 
 			if (card.type === 'unit') {
-				const abilityIcon = card.ability && card.ability.trim() !== ''
-					? `<div class="card__ability-icon">
-						   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
-								alt="${card.ability}"
-								onerror="this.parentElement.style.display='none'">
-					   </div>`
-					: '';
-
-				strengthElement = `
-					<div class="deck-card__strength">${card.strength || 0}</div>
-					${abilityIcon}
-				`;
+				strengthElement = `<div class="deck-card__strength">${card.strength || 0}</div>`;
 			} else {
 				typeIconElement = `<div class="deck-card__type-icon"><img src="${this.getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
 			}
 
-            let positionElement = '';
-            if (card.type === 'unit' && card.position) {
-                let positions = [];
-                if (Array.isArray(card.position)) {
-                    positions = card.position;
-                } else {
-                    positions = [card.position];
-                }
-                
-                const displayPosition = positions.length > 1 ? 'any' : positions[0];
-                const positionIconPath = this.getPositionIconPath(displayPosition);
-                
-                positionElement = `
-                    <div class="deck-card__position">
-                        <img src="${card.positionBanner || 'deck/position_banner.png'}" alt="Позиция" class="deck-card__position-banner">
-                        <img src="${positionIconPath}" alt="${displayPosition}" class="deck-card__position-icon">
-                    </div>
-                `;
-            }
+			let positionElement = '';
+			if (card.type === 'unit' && card.position) {
+				let positions = [];
+				if (Array.isArray(card.position)) {
+					positions = card.position;
+				} else {
+					positions = [card.position];
+				}
+
+				const displayPosition = positions.length > 1 ? 'any' : positions[0];
+				const positionIconPath = this.getPositionIconPath(displayPosition);
+
+				const abilityBanner = card.ability && card.ability.trim() !== ''
+					? `<img src="faction/${card.faction}/banner_abbility.png" alt="Способность" class="deck-card__ability-banner">`
+					: '';
+				const abilityIcon = card.ability && card.ability.trim() !== ''
+					? `<img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+							alt="${card.ability}"
+							class="deck-card__ability-icon"
+							onerror="this.style.display='none'">`
+					: '';
+
+				positionElement = `
+					<div class="deck-card__position">
+						<img src="${card.positionBanner || `faction/${card.faction}/banner_position.png`}" alt="Позиция" class="deck-card__position-banner">
+						${abilityBanner}
+						${abilityIcon}
+						<img src="${positionIconPath}" alt="${displayPosition}" class="deck-card__position-icon">
+					</div>
+				`;
+			}
 
             return `
                 <div class="deck-card" data-card-id="${card.id}">

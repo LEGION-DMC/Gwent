@@ -538,6 +538,7 @@
 	height: 100%;
 	object-fit: cover;
 	border-radius: 10px;
+	z-index: 1;
 }
 
 .card-modal__preview .card__banner {
@@ -985,6 +986,30 @@
 	color: #d4af37;
 }
 
+.card__ability-icon-img {
+    position: absolute;
+    top: -15%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    z-index: 3;           
+    pointer-events: none;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.card__ability-banner {
+	position: absolute;
+	top: -28px;
+	left: -27px;
+	width: calc(100% + 54px);
+	height: calc(100% + 56px);
+	object-fit: contain;
+	z-index: 0;
+	pointer-events: none;
+}
+
 .card__position {
 	position: absolute;
 	bottom: -3px;
@@ -996,6 +1021,7 @@
 
 .card__position-banner {
 	position: absolute;
+  z-index: 1;
 	top: 0;
 	left: 0;
 	width: 100%;
@@ -1006,6 +1032,7 @@
 
 .card__position-icon {
 	position: absolute;
+  z-index: 2;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
@@ -1014,16 +1041,32 @@
 	object-fit: contain;
 }
 
+.card-modal__preview .card__ability-icon-img {
+    width: 43px;
+    height: 43px;
+    z-index: 4;
+}
+
+.card-modal__preview .card__ability-banner {
+	top: -60px;
+	left: -51px;
+	width: calc(100% + 100px);
+	height: calc(100% + 125px);
+	z-index: 0;
+}
+
 .card-modal__preview .card__position {
 	width: 85px;
 	height: 85px;
 	bottom: -5px;
 	right: -9px;
+  z-index: 1;
 }
 
 .card-modal__preview .card__position-icon {
 	width: 50px;
 	height: auto;
+  z-index: 1;
 }
 
 .back-to-faction-btn {
@@ -1259,29 +1302,4 @@
 	  rotate: 90deg;
     z-index: 9;
     pointer-events: none;
-}
-
-.card__ability-icon {
-    position: absolute;
-    top: 50px;
-    left: 8%;
-    transform: translateX(-58%);
-    width: 18px;
-    height: 18px;
-    z-index: 4;
-    pointer-events: none;
-}
-
-.card__ability-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
-}
-
-.card-modal__preview .card__ability-icon {
-    top: 135px;
-    left: 10%;
-    width: 50px;
-    height: 50px;
 }

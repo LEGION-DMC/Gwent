@@ -241,27 +241,28 @@ const collectionModule = (function() {
 		
 		let topRightElement = '';
 		if (card.type === 'unit') {
-			const abilityIcon = card.ability && card.ability.trim() !== ''
-				? `<div class="card__ability-icon">
-					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
-							alt="${card.ability}"
-							onerror="this.parentElement.style.display='none'">
-				   </div>`
-				: '';
-
-			topRightElement = `
-				<div class="card__strength">${card.strength}</div>
-				${abilityIcon}
-			`;
+			topRightElement = `<div class="card__strength">${card.strength}</div>`;
 		} else {
 			topRightElement = `<div class="card__type-icon"><img src="${getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
 		}
 		
 		let positionElement = '';
 		if (card.type === 'unit' && card.position) {
+			const abilityBanner = card.ability && card.ability.trim() !== ''
+				? `<img src="faction/${card.faction}/banner_abbility.png" alt="Способность" class="card__ability-banner">`
+				: '';
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+						alt="${card.ability}"
+						class="card__ability-icon-img"
+						onerror="this.style.display='none'">`
+				: '';
+
 			positionElement = `
 				<div class="card__position">
-					<img src="${card.positionBanner || 'deck/position_banner.png'}" alt="Позиция" class="card__position-banner">
+					<img src="${card.positionBanner || `faction/${card.faction}/banner_position.png`}" alt="Позиция" class="card__position-banner">
+					${abilityBanner}
+					${abilityIcon}
 					<img src="${getPositionIconPath(card.position)}" alt="${card.position}" class="card__position-icon">
 				</div>
 			`;
@@ -355,31 +356,32 @@ const collectionModule = (function() {
         
 		let topRightElement = '';
 		if (card.type === 'unit') {
-			const abilityIcon = card.ability && card.ability.trim() !== ''
-				? `<div class="card__ability-icon">
-					   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
-							alt="${card.ability}"
-							onerror="this.parentElement.style.display='none'">
-				   </div>`
-				: '';
-
-			topRightElement = `
-				<div class="card__strength">${card.strength}</div>
-				${abilityIcon}
-			`;
+			topRightElement = `<div class="card__strength">${card.strength}</div>`;
 		} else {
 			topRightElement = `<div class="card__type-icon"><img src="${getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
 		}
-        
-        let positionElement = '';
-        if (card.type === 'unit' && card.position) {
-            positionElement = `
-                <div class="card__position">
-                    <img src="${card.positionBanner || 'deck/position_banner.png'}" alt="Позиция" class="card__position-banner">
-                    <img src="${getPositionIconPath(card.position)}" alt="${card.position}" class="card__position-icon">
-                </div>
-            `;
-        }
+		
+		let positionElement = '';
+		if (card.type === 'unit' && card.position) {
+			const abilityBanner = card.ability && card.ability.trim() !== ''
+				? `<img src="faction/${card.faction}/banner_abbility.png" alt="Способность" class="card__ability-banner">`
+				: '';
+			const abilityIcon = card.ability && card.ability.trim() !== ''
+				? `<img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+						alt="${card.ability}"
+						class="card__ability-icon-img"
+						onerror="this.style.display='none'">`
+				: '';
+
+			positionElement = `
+				<div class="card__position">
+					<img src="${card.positionBanner || `faction/${card.faction}/banner_position.png`}" alt="Позиция" class="card__position-banner">
+					${abilityBanner}
+					${abilityIcon}
+					<img src="${getPositionIconPath(card.position)}" alt="${card.position}" class="card__position-icon">
+				</div>
+			`;
+		}
         
         let abilityHtml = '';
         if (card.ability && window.skillSystem?.abilities?.[card.ability]) {

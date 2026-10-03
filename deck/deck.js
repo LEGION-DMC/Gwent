@@ -874,37 +874,32 @@ function createCardElement(card, context) {
     
 	let topRightElement = '';
 	if (card.type === 'unit') {
+		topRightElement = `<div class="card__strength">${card.strength}</div>`;
+	} else {
+		topRightElement = `<div class="card__type-icon"><img src="${getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+	}
+
+	let positionElement = '';
+	if (card.type === 'unit' && card.position) {
+		const abilityBanner = card.ability && card.ability.trim() !== ''
+			? `<img src="faction/${card.faction}/banner_abbility.png" alt="Способность" class="card__ability-banner">`
+			: '';
 		const abilityIcon = card.ability && card.ability.trim() !== ''
-			? `<div class="card__ability-icon">
-				   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
-						alt="${card.ability}"
-						onerror="this.parentElement.style.display='none'">
-			   </div>`
+			? `<img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+					alt="${card.ability}"
+					class="card__ability-icon-img"
+					onerror="this.style.display='none'">`
 			: '';
 
-		topRightElement = `
-			<div class="card__strength">${card.strength}</div>
-			${abilityIcon}
-		`;
-	} else {
-		const typeIconPath = getTypeIconPath(card.type);
-		topRightElement = `
-			<div class="card__type-icon">
-				<img src="${typeIconPath}" alt="${card.type}">
+		positionElement = `
+			<div class="card__position">
+				<img src="${card.positionBanner || `faction/${card.faction}/banner_position.png`}" alt="Позиция" class="card__position-banner">
+				${abilityBanner}
+				${abilityIcon}
+				<img src="${getPositionIconPath(card.position)}" alt="${card.position}" class="card__position-icon">
 			</div>
 		`;
 	}
-    
-    let positionElement = '';
-    if (card.type === 'unit' && card.position) {
-        const positionIconPath = getPositionIconPath(card.position);
-        positionElement = `
-            <div class="card__position">
-                <img src="${card.positionBanner || 'deck/position_banner.png'}" alt="Позиция" class="card__position-banner">
-                <img src="${positionIconPath}" alt="${card.position}" class="card__position-icon">
-            </div>
-        `;
-    }
     
     cardElement.innerHTML = `
         <div class="card__container">
@@ -1111,43 +1106,32 @@ function showCardModal(card) {
     
 	let topRightElement = '';
 	if (card.type === 'unit') {
+		topRightElement = `<div class="card__strength">${card.strength}</div>`;
+	} else {
+		topRightElement = `<div class="card__type-icon"><img src="${getTypeIconPath(card.type)}" alt="${card.type}"></div>`;
+	}
+
+	let positionElement = '';
+	if (card.type === 'unit' && card.position) {
+		const abilityBanner = card.ability && card.ability.trim() !== ''
+			? `<img src="faction/${card.faction}/banner_abbility.png" alt="Способность" class="card__ability-banner">`
+			: '';
 		const abilityIcon = card.ability && card.ability.trim() !== ''
-			? `<div class="card__ability-icon">
-				   <img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
-						alt="${card.ability}"
-						onerror="this.parentElement.style.display='none'">
-			   </div>`
+			? `<img src="${window.cardsModule?.getAbilityIconPath?.(card.ability) || `deck/${card.ability}.webp`}"
+					alt="${card.ability}"
+					class="card__ability-icon-img"
+					onerror="this.style.display='none'">`
 			: '';
 
-		topRightElement = `
-			<div class="card__strength">${card.strength}</div>
-			${abilityIcon}
-		`;
-	} else if (card.type === 'leader') {
-		topRightElement = `
-			<div class="card__type-icon">
-				<img src="deck/type_leader.png" alt="Лидер">
-			</div>
-		`;
-	} else {
-		const typeIconPath = getTypeIconPath(card.type);
-		topRightElement = `
-			<div class="card__type-icon">
-				<img src="${typeIconPath}" alt="${card.type}">
+		positionElement = `
+			<div class="card__position">
+				<img src="${card.positionBanner || `faction/${card.faction}/banner_position.png`}" alt="Позиция" class="card__position-banner">
+				${abilityBanner}
+				${abilityIcon}
+				<img src="${getPositionIconPath(card.position)}" alt="${card.position}" class="card__position-icon">
 			</div>
 		`;
 	}
-	
-    let positionElement = '';
-    if (card.type === 'unit' && card.position) {
-        const positionIconPath = getPositionIconPath(card.position);
-        positionElement = `
-            <div class="card__position">
-                <img src="${card.positionBanner || 'faction/${card.faction}/position_banner.png'}" alt="Позиция" class="card__position-banner">
-                <img src="${positionIconPath}" alt="${card.position}" class="card__position-icon">
-            </div>
-        `;
-    }
 	
     const displayName = card.name || 'Без имени';
     

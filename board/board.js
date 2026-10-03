@@ -338,19 +338,20 @@ const boardModule = {
 			cardWrapper.className = 'card-preview-card';
 			container.appendChild(cardWrapper);
 			
-			cardWrapper.innerHTML = `
-				<img class="card-preview-media" id="cardPreviewMedia" src="" alt="Превью карты">
-				<img class="card-preview-border" id="cardPreviewBorder" src="" alt="">
-				<img class="card-preview-banner" id="cardPreviewBanner" src="" alt="">
-				<div class="card-preview-name" id="cardPreviewName"></div>
-				<div class="card-preview-strength" id="cardPreviewStrength"></div>
-				<div class="card-preview-ability-icon" id="cardPreviewAbilityIcon"></div>
-				<div class="card-preview-type-icon" id="cardPreviewTypeIcon"></div>
-				<div class="card-preview-position" id="cardPreviewPosition">
-					<img class="card-preview-position-banner" id="cardPreviewPositionBanner" src="" alt="">
-					<img class="card-preview-position-icon" id="cardPreviewPositionIcon" src="" alt="">
-				</div>
-			`;
+		cardWrapper.innerHTML = `
+			<img class="card-preview-media" id="cardPreviewMedia" src="" alt="Превью карты">
+			<img class="card-preview-border" id="cardPreviewBorder" src="" alt="">
+			<img class="card-preview-banner" id="cardPreviewBanner" src="" alt="">
+			<div class="card-preview-name" id="cardPreviewName"></div>
+			<div class="card-preview-strength" id="cardPreviewStrength"></div>
+			<div class="card-preview-type-icon" id="cardPreviewTypeIcon"></div>
+			<div class="card-preview-position" id="cardPreviewPosition">
+				<img class="card-preview-position-banner" id="cardPreviewPositionBanner" src="" alt="">
+				<img class="card-preview-ability-banner" id="cardPreviewAbilityBanner" src="" alt="">
+				<img class="card-preview-ability-icon" id="cardPreviewAbilityIcon" src="" alt="">
+				<img class="card-preview-position-icon" id="cardPreviewPositionIcon" src="" alt="">
+			</div>
+		`;
 			
 			const descDiv = document.createElement('div');
 			descDiv.className = 'card-preview-description';
@@ -365,6 +366,7 @@ const boardModule = {
 		const nameEl = document.getElementById('cardPreviewName');
 		const strengthEl = document.getElementById('cardPreviewStrength');
 		const abilityIconEl = document.getElementById('cardPreviewAbilityIcon');
+		const abilityBannerEl = document.getElementById('cardPreviewAbilityBanner');
 		const typeIconEl = document.getElementById('cardPreviewTypeIcon');
 		const posBanner = document.getElementById('cardPreviewPositionBanner');
 		const posIcon = document.getElementById('cardPreviewPositionIcon');
@@ -449,21 +451,21 @@ const boardModule = {
 			strengthEl.style.display = 'none';
 		}
 
-		// Иконка способности — для юнитов, если есть ability
-		if (abilityIconEl) {
+		if (abilityIconEl && abilityBannerEl) {
 			const hasAbility = cardData.type === 'unit'
 				&& cardData.ability
 				&& cardData.ability.trim() !== '';
 
 			if (hasAbility) {
-				abilityIconEl.innerHTML = `
-					<img src="deck/${cardData.ability}.webp"
-						 alt="${cardData.ability}"
-						 onerror="this.parentElement.style.display='none'">
-				`;
+				abilityBannerEl.src = `faction/${cardData.faction || 'neutral'}/banner_abbility.png`;
+				abilityBannerEl.style.display = 'block';
+
+				abilityIconEl.src = window.cardsModule?.getAbilityIconPath?.(cardData.ability)
+					|| `deck/${cardData.ability}.webp`;
 				abilityIconEl.style.display = 'block';
+				abilityIconEl.onerror = () => { abilityIconEl.style.display = 'none'; };
 			} else {
-				abilityIconEl.innerHTML = '';
+				abilityBannerEl.style.display = 'none';
 				abilityIconEl.style.display = 'none';
 			}
 		}
