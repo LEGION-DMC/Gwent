@@ -11,6 +11,7 @@ const collectionModule = (function() {
     let escapeHandler = null;
     let showCopies = false;
     let showHidden = false;
+	let searchQuery = '';
     let cachedElements = {};
     
     function getElement(id) {
@@ -62,6 +63,44 @@ const collectionModule = (function() {
     function filterCards() {
         let filtered = [...allCards];
         
+		if (searchQuery.trim() !== '') {
+			const q = searchQuery.trim().toLowerCase();
+
+			// Совпадение в начале любого слова
+			const matchesWordStart = (text) => {
+				if (!text) return false;
+				const lower = String(text).toLowerCase();
+				return lower.split(/[\s\-–—]+/).some(word => word.startsWith(q));
+			};
+
+			// Совпадение тега: по ключу или по локализованному названию
+			const matchesTag = (tag) => {
+				if (!tag) return false;
+				const key = String(tag).toLowerCase();
+				if (key.startsWith(q)) return true;
+
+				// локализованное название тега (например 'witcher' → 'Ведьмак')
+				const localized = (window.localizations?.tags?.[tag] || '').toLowerCase();
+				if (localized && localized.split(/[\s\-–—]+/).some(w => w.startsWith(q))) {
+					return true;
+				}
+				return false;
+			};
+
+			filtered = filtered.filter(card => {
+				// 1. По name / namefull
+				if (matchesWordStart(card.name) || matchesWordStart(card.namefull)) return true;
+
+				// 2. По обычным тегам
+				if (Array.isArray(card.tags) && card.tags.some(matchesTag)) return true;
+
+				// 3. По тегам стаи (tagsflock)
+				if (Array.isArray(card.tagsflock) && card.tagsflock.some(matchesTag)) return true;
+
+				return false;
+			});
+		}
+
         if (currentFilters.faction !== 'all') {
             filtered = filtered.filter(card => card.faction === currentFilters.faction);
         }
@@ -493,7 +532,13 @@ const collectionModule = (function() {
 			onlyWithAbility: false
 		};
 		showCopies = false;
-		
+
+		searchQuery = '';
+		const searchInputReset = document.getElementById('collectionSearchInput');
+		if (searchInputReset) searchInputReset.value = '';
+		const searchWrapperReset = document.querySelector('.collection-search');
+		if (searchWrapperReset) searchWrapperReset.classList.remove('has-value');
+
 		const showCopiesCheckbox = document.getElementById('showCopiesCheckbox');
 		if (showCopiesCheckbox) {
 			showCopiesCheckbox.checked = false;
@@ -550,6 +595,20 @@ const collectionModule = (function() {
 				hiddenToggle.classList.remove('active');
 			}
 		}
+	}
+
+	function setupCollapsibleSections() {
+		document.querySelectorAll('.collection-filters .filter-section').forEach(section => {
+			const title = section.querySelector('.filter-title');
+			if (!title) return;
+
+			title.addEventListener('click', () => {
+				section.classList.toggle('collapsed');
+				audioManager?.playSound('button');
+			});
+
+			title.addEventListener('mouseenter', () => audioManager?.playSound('touch'));
+		});
 	}
 
 	function setupFilterListeners() {
@@ -800,6 +859,54 @@ const collectionModule = (function() {
 			resetBtn.addEventListener('click', resetFilters);
 			resetBtn.addEventListener('mouseenter', () => audioManager?.playSound('touch'));
 		}
+
+// ===== Поиск по имени карты =====
+const searchInput = document.getElementById('collectionSearchInput');
+const searchClear = document.getElementById('collectionSearchClear');
+const searchWrapper = searchInput?.closest('.collection-search');
+
+if (searchInput) {
+    // начальное значение (если возвращаемся в коллекцию после сброса)
+    searchInput.value = searchQuery;
+    updateSearchUI();
+
+    let searchDebounce = null;
+
+    searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        updateSearchUI();
+
+        // небольшая задержка, чтобы не перерисовывать на каждый символ
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+            displayCards();
+        }, 120);
+    });
+
+    searchInput.addEventListener('mouseenter', () => audioManager?.playSound('touch'));
+    searchInput.addEventListener('focus', () => audioManager?.playSound('touch'));
+}
+
+if (searchClear) {
+    searchClear.addEventListener('click', () => {
+        searchQuery = '';
+        if (searchInput) searchInput.value = '';
+        updateSearchUI();
+        displayCards();
+        audioManager?.playSound('button');
+        searchInput?.focus();
+    });
+    searchClear.addEventListener('mouseenter', () => audioManager?.playSound('touch'));
+}
+
+function updateSearchUI() {
+    if (!searchWrapper || !searchInput) return;
+    if (searchInput.value.trim() !== '') {
+        searchWrapper.classList.add('has-value');
+    } else {
+        searchWrapper.classList.remove('has-value');
+    }
+}
 	}
 	
     function setupEscapeHandler() {
@@ -882,6 +989,7 @@ const collectionModule = (function() {
 		allCards = [];
 		showCopies = false;
 		showHidden = false;
+		searchQuery = '';
 		clearCache();
 		
 		const startPage = document.querySelector('.start-page');
@@ -936,6 +1044,7 @@ const collectionModule = (function() {
 			}, 100);
 			
 			setupFilterListeners();
+			setupCollapsibleSections();
 			setupEscapeHandler();
 			
 			setTimeout(() => {
@@ -1070,7 +1179,20 @@ const collectionModule = (function() {
 
     function generateFiltersHTML() {
         return `
-            <div class="filter-section">
+			<div class="collection-search">
+				<input type="text"
+					   class="collection-search__input"
+					   id="collectionSearchInput"
+					   placeholder="Поиск..."
+					   autocomplete="off"
+					   spellcheck="false">
+				<button class="collection-search__clear"
+						id="collectionSearchClear"
+						type="button"
+						title="Очистить">✕</button>
+			</div>
+			<div class="collection-search-divider"></div>
+            <div class="filter-section collapsed">
                 <div class="filter-title">Фракция</div>
                 <div class="section-divider"></div>
                 <div class="filter-buttons faction-buttons">
@@ -1080,7 +1202,7 @@ const collectionModule = (function() {
                     </div>
                 </div>
             </div>
-            <div class="filter-section">
+            <div class="filter-section collapsed">
                 <div class="filter-title">Тип</div>
                 <div class="section-divider"></div>
                 <div class="filter-buttons type-buttons">
@@ -1090,7 +1212,7 @@ const collectionModule = (function() {
                     </div>
                 </div>
             </div>
-			<div class="filter-section">
+			<div class="filter-section collapsed">
 				<div class="filter-title">Способности отрядов</div>
 				<div class="section-divider"></div>
 				<div class="filter-buttons ability-buttons">
@@ -1113,7 +1235,7 @@ const collectionModule = (function() {
 
 				</div>
 			</div>
-            <div class="filter-section">
+            <div class="filter-section collapsed">
                 <div class="filter-title">Редкость</div>
                 <div class="section-divider"></div>
                 <div class="filter-buttons rarity-buttons">
@@ -1123,7 +1245,7 @@ const collectionModule = (function() {
                     </div>
                 </div>
             </div>
-            <div class="filter-section">
+            <div class="filter-section collapsed">
                 <div class="filter-title">Позиция</div>
                 <div class="section-divider"></div>
                 <div class="filter-buttons position-buttons">

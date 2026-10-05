@@ -2976,7 +2976,7 @@ const localizations = {
 		specter: 'Дух',                 
 		dwarf: 'Краснолюд',             
 		mercenary: 'Наёмник',
-		elf: 'Ельф',
+		elf: 'Эльф',
 		oak: 'Древень',
 		curse: 'Проклятие',
 		religy: 'Религия',

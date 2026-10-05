@@ -202,10 +202,10 @@ const ABILITY_GROUPS = {
     weather: {
         label: 'Погода',
         cards: [
-            { id: 'biting_frost' },
             { id: 'frost' },
             { id: 'impenetrable_fog' },
             { id: 'torrential_rain' },
+            { id: 'biting_frost' },
             { id: 'storm' },
             { id: 'clear_weather' }
         ]
@@ -225,12 +225,6 @@ const ABILITY_GROUPS = {
                 description: 'Призывает на поле несколько определённых карт.'
             },
             { id: 'double_row_strength_unit' },
-            {
-                id: 'boost_tag_witcher_2',
-                title: 'Усиление тега',
-                ids: ['boost_tag_witcher_2', 'boost_tag_thirst', 'boost_tag_dwarf'],
-                description: 'Усиливает все отряды с указанным тегом в одном ряду на указанное значение силы.'
-            },
         ]
     },
     specials: {
@@ -251,14 +245,14 @@ const ABILITY_GROUPS = {
     tactics: {
         label: 'Тактики',
         cards: [
-            { id: 'boost_row_1', title: 'Усиление ряда', ids: ['boost_row_1','boost_row_2','boost_row_3','boost_row_4','boost_row_5'] },
-            { id: 'double_row_strength' },
             {
                 id: 'boost_tag_witcher_3',
                 title: 'Усиление тега',
                 ids: ['boost_tag_witcher_3', 'boost_tag_criminal'],
                 description: 'Усиливает все отряды с указанным тегом в выбранном ряду на указанное значение силы.'
             },
+            { id: 'boost_row_1', title: 'Усиление ряда', ids: ['boost_row_1','boost_row_2','boost_row_3','boost_row_4','boost_row_5'] },
+            { id: 'double_row_strength' },
         ]
     }
 };

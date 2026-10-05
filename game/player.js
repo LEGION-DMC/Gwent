@@ -4101,7 +4101,7 @@ const playerModule = {
 		const rowState = this.gameState.player.rows[row];
 		let boostedCards = 0;
 		
-		// Удваиваем силу всех карт в ряду (кроме самого командира и героев)
+		// Удваиваем силу всех карт в ряду, КРОМЕ героев и САМОГО КОМАНДИРА
 		rowState.cards.forEach(unitCard => {
 			if (unitCard.type === 'unit' && 
 				!this.isHeroCard(unitCard) && 
@@ -4126,19 +4126,10 @@ const playerModule = {
 			}
 		});
 		
-		// Также удваиваем силу самого командира
-		this.initializeCardFields(playedCard);
-		const commanderBoost = playedCard.modifiedStrength;
-		playedCard.modifiedStrength += commanderBoost;
-		
-		if (!playedCard.underWeather) {
-			playedCard.currentStrength = playedCard.modifiedStrength;
-			playedCard.strength = playedCard.modifiedStrength;
-		}
-		
-		this.createDoubleStrengthVisualEffect(playedCard, row);
-		
+		// НЕ удваиваем силу самого командира — просто обновляем его отображение
 		if (window.gameModule) {
+			window.gameModule.updateCardStrengthDisplay(playedCard, row, 'player');
+			
 			// Обновляем все карты в ряду
 			rowState.cards.forEach(unitCard => {
 				if (unitCard.type === 'unit') {
@@ -4158,10 +4149,10 @@ const playerModule = {
 			audioManager.playSound('card_boost');
 		}
 		
-		// Показываем сообщение
+		// Показываем сообщение — теперь только реально усиленные карты
 		if (window.gameModule && boostedCards > 0) {
 			window.gameModule.showGameMessage(
-				`Командир удвоил силу ${boostedCards + 1} отрядов в ряду!`, 
+				`Командир удвоил силу ${boostedCards} отрядов в ряду!`, 
 				'info'
 			);
 		}

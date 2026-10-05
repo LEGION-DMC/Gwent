@@ -36,7 +36,7 @@ const skillSystem = {
         'biting_frost': {
             name: 'Белый хлад',
             type: 'weather',
-            description: 'Накладывает эффект мороза и тумана, снижая силу всех отрядов в <span class="hint-trigger">Дальнем и Блежнем рядах</span> до 1',
+            description: 'Накладывает эффект мороза и тумана, снижая силу всех отрядов в <span class="hint-trigger">Дальнем и Ближнем рядах</span> до 1',
             effect: {
                 type: 'weather',
                 weatherType: 'frost',
@@ -48,7 +48,7 @@ const skillSystem = {
 		'frost': {
             name: 'Трескучий мороз',
             type: 'weather',
-            description: 'Накладывает эффект мороза, снижая силу всех отрядов в <span class="hint-trigger">Блежнем ряду</span> до 1',
+            description: 'Накладывает эффект мороза, снижая силу всех отрядов в <span class="hint-trigger">Ближнем ряду</span> до 1',
             effect: {
                 type: 'weather',
                 weatherType: 'frost',
@@ -148,7 +148,7 @@ const skillSystem = {
 		'spy': {
 			name: 'Шпион',
 			type: 'special',
-			description: 'Размещается на стороне противника. После размещения из Колоды в Руку добирается 2 случайные карты',
+			description: 'Размещается на стороне противника. После размещения из колоды в руку добирается 2 случайные карты',
 		},
 		'medic': {
 			name: 'Медик',
@@ -510,7 +510,7 @@ const skillSystem = {
 		'double_row_strength_unit': {
 			name: 'Командирский рог',
 			type: 'special',
-			description: 'Удваивает силу всех отрядов в размещённом ряду',
+			description: 'Удваивает силу всех отрядов в размещённом ряду, кроме себя',
 			effect: {
 				type: 'double_row_strength_unit',
 				target: 'row',

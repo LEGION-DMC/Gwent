@@ -28,10 +28,6 @@
     backdrop-filter: blur(5px);
 }
 
-.filter-section {
-    margin-bottom: 10px;
-}
-
 .filter-title {
     font-size: 18px;
     text-transform: uppercase;
@@ -145,7 +141,7 @@
 }
 
 .filter-faction-btn span {
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 1px;
     transition: color 0.2s ease;
@@ -205,12 +201,13 @@
 }
 
 .copy-toggle {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
     background: rgba(30, 30, 40, 0.2);
     border: 1px solid #222;
-    padding: 3px 10px;
+    padding: 2px 5px;
     border-radius: 4px;
     cursor: url('../ui/cursor_hover.png'), pointer;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
@@ -234,15 +231,45 @@
 }
 
 .copy-toggle input {
-    cursor: url('../ui/cursor_hover.png'), pointer;
-    width: 15px;
-    height: 15px;
-    accent-color: #cfaa4a;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    pointer-events: none;
 }
 
-.copy-toggle.active input {
-    accent-color: #d4af37;
-    filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.3));
+.copy-toggle::before {
+    content: '◇';
+    font-size: 19px;
+    padding-top: 1px;
+    line-height: 1;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    text-align: center;
+    color: #888;
+    background: none;
+    -webkit-text-fill-color: #888;
+    text-shadow: none;
+    transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
+    transform: translateY(-1px);
+}
+
+.copy-toggle.active::before {
+    content: '◈';
+    color: #cfaa4a;
+    -webkit-text-fill-color: #cfaa4a;
+    text-shadow: 0 0 6px rgba(207, 170, 74, 0.6);
+    transform: translateY(-1px) scale(1.05);
+}
+
+.copy-toggle:hover::before {
+    color: #cfaa4a;
+    -webkit-text-fill-color: #cfaa4a;
+    text-shadow: 0 0 6px rgba(207, 170, 74, 0.5);
 }
 
 .copy-toggle-label {
@@ -633,4 +660,185 @@
     font-style: italic;
     text-align: center;
     padding: 5px;
+}
+
+/* ===== Сворачиваемые секции фильтров ===== */
+.filter-section {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.filter-title {
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    text-align: center;
+    cursor: url('../ui/cursor_hover.png'), pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: opacity 0.2s ease, filter 0.2s ease, text-shadow 0.2s ease;
+
+    /* По умолчанию — серый */
+    background: linear-gradient(135deg, #8a8a8a 0%, #b0b0b0 45%, #909090 80%, #c0c0c0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: grayscale(0.6) brightness(0.8);
+    opacity: 0.8;
+    text-shadow: none;
+}
+
+/* При наведении и в развёрнутом виде — исходный золотой стиль */
+.filter-title:hover,
+.filter-section:not(.collapsed) .filter-title {
+    background: linear-gradient(135deg, #a57c2c 0%, #cfaa4a 45%, #b58a2a 80%, #e5c168 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: none;
+    opacity: 1;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4), 0 0 5px rgba(165, 124, 44, 0.3);
+}
+
+/* Стрелка-индикатор */
+.filter-title::after {
+    content: '▽';
+    font-size: 10px;
+    line-height: 1;
+    color: #cfaa4a;
+    transition: transform 0.25s ease;
+    transform-origin: center;
+    background: none;
+    -webkit-text-fill-color: #cfaa4a;
+    text-shadow: 0 0 4px rgba(207, 170, 74, 0.4);
+}
+
+/* Поворот стрелки в свёрнутом состоянии */
+.filter-section.collapsed .filter-title::after {
+    transform: rotate(-90deg);
+}
+
+/* Плавное скрытие содержимого секции */
+.filter-section .section-divider,
+.filter-section .filter-buttons {
+    transition: opacity 0.25s ease, max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+    overflow: hidden;
+}
+
+.filter-section.collapsed .section-divider,
+.filter-section.collapsed .filter-buttons {
+    opacity: 0;
+    max-height: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    pointer-events: none;
+}
+
+/* Свёрнутая секция — меньше отступ */
+.filter-section.collapsed {
+    margin-bottom: 0px;
+}
+
+/* ===== Поиск по имени карты ===== */
+.collection-search__input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 5px 0px 5px 22px;
+    font-family: 'Gwent', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #ccc;
+    background: rgba(30, 30, 40, 0.2);
+    border: 1px solid #222;
+    border-radius: 4px;
+    outline: none;
+    cursor: text;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease,
+                filter 0.2s ease, opacity 0.2s ease;
+    filter: grayscale(0.6) brightness(0.9);
+    opacity: 0.85;
+}
+
+.collection-search__input::placeholder {
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.collection-search__input:hover {
+    border-color: #cfaa4a;
+    filter: none;
+    opacity: 1;
+}
+
+.collection-search__input:focus {
+    border-color: #cfaa4a;
+    box-shadow: 0 0 8px rgba(207, 170, 74, 0.25);
+    filter: none;
+    opacity: 1;
+    color: #e5c168;
+}
+
+/* Иконка лупы слева */
+.collection-search {
+    position: relative;
+}
+
+.collection-search::before {
+    content: '⌕';
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%) scaleX(-1);
+    font-size: 15px;
+    line-height: 1;
+    color: #cfaa4a;
+    pointer-events: none;
+    -webkit-text-fill-color: #cfaa4a;
+    text-shadow: 0 0 4px rgba(207, 170, 74, 0.35);
+}
+
+/* Кнопка очистки */
+.collection-search__clear {
+    position: absolute;
+    right: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    width: 15px;
+    height: 15px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Gwent', sans-serif;
+    font-size: 12px;
+    line-height: 1;
+    color: #888;
+    cursor: url('../ui/cursor_hover.png'), pointer;
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.collection-search__clear:hover {
+    color: #cfaa4a;
+    text-shadow: 0 0 6px rgba(207, 170, 74, 0.5);
+}
+
+.collection-search.has-value .collection-search__clear {
+    display: flex;
+}
+
+/* Разделитель под поиском */
+.collection-search-divider {
+    height: 0.5px;
+    background: linear-gradient(90deg, transparent, #d4af37, transparent);
+    margin: 8px 0;
 }

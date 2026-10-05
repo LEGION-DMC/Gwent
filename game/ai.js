@@ -4320,7 +4320,7 @@ const aiModule = {
 		const rowState = this.gameState.opponent.rows[row];
 		let boostedCards = 0;
 		
-		// Удваиваем силу всех карт в ряду (кроме самого командира и героев)
+		// Удваиваем силу всех карт в ряду, КРОМЕ героев и САМОГО КОМАНДИРА
 		rowState.cards.forEach(unitCard => {
 			if (unitCard.type === 'unit' && 
 				!this.isHeroCard(unitCard) && 
@@ -4352,7 +4352,7 @@ const aiModule = {
 			}
 		});
 		
-		// Также удваиваем силу самого командира
+		// НЕ удваиваем силу самого командира — только обновляем отображение
 		if (playedCard.baseStrength === undefined) {
 			playedCard.baseStrength = playedCard.strength;
 		}
@@ -4363,17 +4363,10 @@ const aiModule = {
 			playedCard.currentStrength = playedCard.strength;
 		}
 		
-		const commanderBoost = playedCard.modifiedStrength;
-		playedCard.modifiedStrength += commanderBoost;
-		
-		if (!playedCard.underWeather) {
-			playedCard.currentStrength = playedCard.modifiedStrength;
-			playedCard.strength = playedCard.modifiedStrength;
-		}
-		
-		this.createDoubleStrengthVisualEffect(playedCard, row);
-		
+		// Обновляем отображение
 		if (window.gameModule) {
+			window.gameModule.updateCardStrengthDisplay(playedCard, row, 'opponent');
+			
 			rowState.cards.forEach(unitCard => {
 				if (unitCard.type === 'unit') {
 					window.gameModule.updateCardStrengthDisplay(unitCard, row, 'opponent');
@@ -4396,7 +4389,7 @@ const aiModule = {
 		
 		if (window.gameModule && boostedCards > 0) {
 			window.gameModule.showGameMessage(
-				`Противник: Командир удвоил силу ${boostedCards + 1} отрядов в ряду!`, 
+				`Противник: Командир удвоил силу ${boostedCards} отрядов в ряду!`, 
 				'warning'
 			);
 		}
