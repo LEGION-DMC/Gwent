@@ -1,0 +1,182 @@
+/* ======================= Выбор типа игры ======================= */
+
+.game-mode-selection {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    z-index: 1000;
+}
+
+.game-mode-selection--visible {
+    opacity: 1;
+}
+
+/* Появление: заголовок опускается, карточки всплывают по очереди */
+.game-mode-selection--visible .game-mode-selection__title {
+    animation: gameModeTitleIn 0.6s ease both;
+}
+
+.game-mode-selection--visible .game-mode-card {
+    animation: gameModeCardIn 0.55s ease both;
+    animation-delay: 0.22s;
+}
+
+.game-mode-selection--visible .game-mode-card:nth-child(2) {
+    animation-delay: 0.36s;
+}
+
+@keyframes gameModeTitleIn {
+    from {
+        opacity: 0;
+        translate: 0 -26px;
+    }
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+@keyframes gameModeCardIn {
+    from {
+        opacity: 0;
+        translate: 0 26px;
+    }
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+.game-mode-selection__title {
+    background: linear-gradient(135deg, #a57c2c 0%, #cfaa4a 45%, #b58a2a 80%, #e5c168 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 35px;
+    margin-bottom: 65px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 8px rgba(165, 124, 44, 0.4);
+    text-align: center;
+    margin-top: -160px;
+}
+
+.game-mode-selection__container {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.game-mode-card {
+    position: relative;
+    width: 286px;
+    padding: 15px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: none;
+    border: none;
+    color: #d9d9d9;
+    font-family: 'Gwent', Georgia, serif;
+    cursor: url('../ui/cursor_hover.png'), pointer;
+    transition: transform 0.3s ease;
+}
+
+/* Две линии при наведении — как у пунктов главного меню */
+.game-mode-card::before,
+.game-mode-card::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #cfaa4a, #e5c168, #cfaa4a, transparent);
+    transition: width 0.4s ease;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.game-mode-card::before {
+    top: 0;
+}
+
+.game-mode-card::after {
+    bottom: 0;
+}
+
+.game-mode-card:hover::before,
+.game-mode-card:hover::after,
+.game-mode-card:focus-visible::before,
+.game-mode-card:focus-visible::after {
+    width: 100%;
+}
+
+.game-mode-card:hover,
+.game-mode-card:focus-visible {
+    transform: scale(1.03);
+    outline: none;
+}
+
+.game-mode-card__name {
+    font-size: 18px;
+    letter-spacing: 1.5px;
+    color: #e5c168;
+    text-align: center;
+}
+
+.game-mode-card__desc {
+    max-width: 225px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #9d9484;
+    text-align: center;
+}
+
+.game-mode-note {
+    position: fixed;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 18px;
+    border: 1px solid rgba(244, 67, 54, 0.55);
+    border-radius: 6px;
+    background: rgba(20, 10, 10, 0.95);
+    color: #ff9b90;
+    font-family: 'Gwent', Georgia, serif;
+    font-size: 13px;
+    text-align: center;
+    z-index: 12000;
+}
+
+@media (max-width: 700px) {
+    .game-mode-selection__title {
+        font-size: 24px;
+        margin-bottom: 26px;
+        padding: 0 16px;
+    }
+
+    .game-mode-selection__container {
+        gap: 18px;
+    }
+
+    .game-mode-card {
+        width: 250px;
+        min-height: 200px;
+        padding: 22px 18px;
+    }
+
+    .game-mode-card__badge {
+        width: 54px;
+        height: 54px;
+        font-size: 17px;
+    }
+}

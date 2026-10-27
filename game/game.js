@@ -818,7 +818,11 @@ const gameModule = {
 		}
 	},
 
-	startCoinTossAnimation: function() {
+	startCoinTossAnimation: function(firstPlayer) {
+		// Результат может быть задан извне (сетевая игра), чтобы обе стороны
+		// увидели одинаковую монетку.
+		this._coinResult = firstPlayer || null;
+
 		// Поднимаем canvas поверх фона оверлея
 		const fireCanvas = document.querySelector('.fire-canvas');
 		if (fireCanvas) {
@@ -875,7 +879,8 @@ const gameModule = {
 		}
 		
 		const randomValue = Math.random();
-		const goesFirst = randomValue < 0.5 ? 'player' : 'opponent';
+		const goesFirst = this._coinResult || (randomValue < 0.5 ? 'player' : 'opponent');
+		this._coinResult = null;
 		
 		const finalSide = goesFirst === 'player' ? 0 : 180;
 		const totalRotations = 5;
@@ -3067,7 +3072,7 @@ const gameModule = {
             imageStatic: `leader.jpg`,
             description: factionData.description,
             descriptionfull: factionData.descriptionfull,
-            ability: `${faction}_ability`,
+            ability: this.gameState.opponent.ability || `${faction}_ability`,
             rarity: 'gold',
             tags: ['leader'],
             border: 'deck/bord_gold.png',

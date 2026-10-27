@@ -221,7 +221,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     elements.playBtn?.addEventListener('click', () => {
         audioManager.playSound('button');
-        animateTransition(() => window.factionModule?.initFactionSelection());
+        animateTransition(() => {
+            if (window.gameModeModule && window.gameModeModule.initGameModeSelection) {
+                window.gameModeModule.initGameModeSelection();
+            } else {
+                window.factionModule?.initFactionSelection();
+            }
+        });
     });
 
     elements.collectionBtn?.addEventListener('click', () => {

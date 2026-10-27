@@ -159,6 +159,9 @@ function createFactionSelectionHTML() {
     setTimeout(() => {
         factionSection.style.opacity = '1';
         factionSection.style.transform = 'translateY(0)';
+        if (window.networkModule && window.networkModule.reapplyFactionLocks) {
+            window.networkModule.reapplyFactionLocks();
+        }
     }, 50);
 }
 
@@ -187,9 +190,17 @@ function setupFactionEventListeners() {
         });
         
         card.addEventListener('click', () => {
+            if (card.classList.contains('faction-card--taken')) {
+                audioManager?.playSound('warning');
+                return;
+            }
             audioManager?.playSound('touch');
             playFactionVoice(factionId);
             selectFaction(faction);
+
+            if (window.networkModule && window.networkModule.onFactionSelected) {
+                window.networkModule.onFactionSelected(factionId);
+            }
         });
     });
     
@@ -200,6 +211,18 @@ function setupFactionEventListeners() {
         newConfirmBtn.addEventListener('mouseenter', () => audioManager?.playSound('touch'));
         newConfirmBtn.addEventListener('click', () => {
             if (selectedFaction) {
+                if (selectedFaction && isFactionLocked(selectedFaction.id)) {
+                    audioManager?.playSound('warning');
+                    clearFactionSelection();
+                    if (window.networkModule && window.networkModule.showFactionNote) {
+                        window.networkModule.showFactionNote('Эта фракция уже выбрана соперником');
+                    }
+                    return;
+                }
+                if (window.networkModule && window.networkModule.onFactionConfirmRequest &&
+                    !window.networkModule.onFactionConfirmRequest(selectedFaction.id)) {
+                    return;
+                }
                 audioManager?.playSound('button');
                 proceedToDeckBuilding(selectedFaction);
             }
@@ -215,7 +238,51 @@ function cleanupFactionSelection() {
     clearCache();
 }
 
+function isFactionLocked(factionId) {
+    const card = document.querySelector(`[data-faction="${factionId}"]`);
+    return !!(card && card.classList.contains('faction-card--taken'));
+}
+
+function lockFaction(factionId, label) {
+    const card = document.querySelector(`[data-faction="${factionId}"]`);
+    if (!card) return;
+    card.classList.add('faction-card--taken');
+    card.dataset.takenLabel = label || 'ЗАНЯТО';
+    card.setAttribute('aria-disabled', 'true');
+}
+
+function unlockFaction(factionId) {
+    const card = document.querySelector(`[data-faction="${factionId}"]`);
+    if (!card) return;
+    card.classList.remove('faction-card--taken');
+    delete card.dataset.takenLabel;
+    card.removeAttribute('aria-disabled');
+}
+
+function clearFactionSelection() {
+    stopCurrentVoice();
+
+    document.querySelectorAll('.faction-card').forEach(card => {
+        card.classList.remove('faction-card--selected');
+    });
+    selectedFaction = null;
+    window.selectedFaction = null;
+
+    const confirmBtn = document.getElementById('confirmFactionBtn');
+    if (confirmBtn) {
+        confirmBtn.style.opacity = '0';
+        confirmBtn.style.transform = 'translateY(20px)';
+        confirmBtn.style.pointerEvents = 'none';
+    }
+
+    hideFactionDescription();
+}
+
 function selectFaction(faction) {
+    if (isFactionLocked(faction.id)) {
+        return;
+    }
+
     document.querySelectorAll('.faction-card').forEach(card => {
         card.classList.remove('faction-card--selected');
     });
@@ -274,6 +341,9 @@ function proceedToDeckBuilding(faction) {
 function handleKeyPress(event) {
     if (event.key === 'Escape') {
         if (selectedFaction) {
+            if (window.networkModule && window.networkModule.onFactionDeselected) {
+                window.networkModule.onFactionDeselected();
+            }
             stopCurrentVoice();
             
             document.querySelectorAll('.faction-card').forEach(card => {
@@ -340,5 +410,9 @@ window.factionModule = {
     factionsData,
     returnToMainMenu,
     playFactionVoice,    
-    stopCurrentVoice     
+    stopCurrentVoice,
+    lockFaction,
+    unlockFaction,
+    isFactionLocked,
+    clearFactionSelection
 };

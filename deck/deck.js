@@ -2358,6 +2358,17 @@ function showMessage(text) {
 }
 
 function startGame() {
+    // В сетевой игре колода сначала отправляется сопернику, а доска
+    // создаётся только когда обе стороны готовы (см. network/network.js).
+    if (window.networkModule &&
+        window.networkModule.isNetworkSession &&
+        window.networkModule.isNetworkSession()) {
+        const handled = window.networkModule.onLocalDeckReady(
+            window.deckModule && window.deckModule.currentDeck
+        );
+        if (handled) return;
+    }
+
     if (window.boardModule && window.boardModule.initGameBoard) {
         if (window.audioManager) {
             window.audioManager.setBattleMusic();
