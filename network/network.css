@@ -92,6 +92,59 @@
     color: #e8dcc0;
 }
 
+.network-mode-switch--sub {
+    margin-top: 4px;
+    margin-bottom: 12px;
+}
+
+.network-mode-switch--sub button {
+    padding: 8px 6px;
+    font-size: 12px;
+    letter-spacing: 0.6px;
+}
+
+/* ======================= Комната по коду ======================= */
+
+.network-room {
+    margin: 10px 0 4px;
+    padding: 14px 12px;
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.35);
+    text-align: center;
+    box-shadow: inset 0 0 18px rgba(212, 175, 55, 0.06);
+}
+
+.network-room-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #8d8067;
+}
+
+.network-room-code {
+    margin-top: 8px;
+    font-size: 38px;
+    line-height: 1.1;
+    letter-spacing: 10px;
+    text-indent: 10px;
+    color: #e8dcc0;
+    text-shadow: 0 0 18px rgba(212, 175, 55, 0.35);
+    user-select: all;
+}
+
+.network-code--single {
+    min-height: 0;
+    height: 46px;
+    padding: 8px 10px;
+    font-size: 22px;
+    letter-spacing: 6px;
+    text-align: center;
+    text-transform: uppercase;
+    resize: none;
+    overflow: hidden;
+}
+
 .network-pane.hidden {
     display: none;
 }

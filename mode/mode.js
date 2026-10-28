@@ -43,7 +43,7 @@
                 </button>
                 <button type="button" class="game-mode-card" id="gameModePvp">
                     <span class="game-mode-card__name">ИГРОК ПРОТИВ ИГРОКА</span>
-                    <span class="game-mode-card__desc">Партия по локальной сети</span>
+                    <span class="game-mode-card__desc">Партия по сети — в интернете или локально</span>
                 </button>
             </div>
         `;

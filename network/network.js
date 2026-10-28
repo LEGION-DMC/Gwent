@@ -21,6 +21,48 @@
     ];
 
     // ---------------------------------------------------------------------
+    // ICE-серверы
+    //
+    // STUN бесплатный и не требует регистрации: именно он превращает
+    // «игру по локальной сети» в игру через интернет. Без него браузер
+    // видит только локальные адреса и соединяет игроков лишь в одной сети.
+    //
+    // Если у обоих игроков «строгий» NAT (мобильный интернет, некоторые
+    // провайдеры), нужен TURN-сервер, который пересылает трафик. TURN
+    // можно добавить в массив ниже или задать через localStorage:
+    //
+    //   localStorage.setItem('gwentIceServers', JSON.stringify([
+    //       { urls: 'turn:turn.example.com:3478', username: 'user', credential: 'pass' }
+    //   ]));
+    //
+    // Свой список полностью заменяет стандартный.
+    // ---------------------------------------------------------------------
+
+    const DEFAULT_ICE_SERVERS = [
+        {
+            urls: [
+                'stun:stun.l.google.com:19302',
+                'stun:stun1.l.google.com:19302',
+                'stun:stun2.l.google.com:19302'
+            ]
+        },
+        { urls: 'stun:stun.cloudflare.com:3478' }
+    ];
+
+    function loadIceServers() {
+        try {
+            const raw = localStorage.getItem('gwentIceServers');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length) return parsed;
+            }
+        } catch (error) {
+            console.warn('[network] gwentIceServers:', error);
+        }
+        return DEFAULT_ICE_SERVERS;
+    }
+
+    // ---------------------------------------------------------------------
     // Вспомогательные функции
     // ---------------------------------------------------------------------
 
@@ -252,6 +294,14 @@
         navigatedToFactions: false,
         lobbyBusy: false,
 
+        // Автоматическая сигнализация по коду комнаты
+        roomCode: null,
+        signaling: null,
+        autoConnectTimer: null,
+        autoAnswerApplied: false,
+        autoOfferApplied: false,
+        autoOfferNonce: null,
+
         _originals: {},
 
         // -----------------------------------------------------------------
@@ -273,30 +323,76 @@
 					<div class="network-status" id="networkStatus">Не подключено</div>
 
 					<div class="network-body" id="networkBody">
-						<div class="network-mode-switch">
-							<button data-mode="host" class="active" id="networkHostTab">СОЗДАТЬ ИГРУ</button>
-							<button data-mode="guest" id="networkGuestTab">ПОДКЛЮЧИТЬСЯ</button>
+						<div class="network-mode-switch" id="networkMethodSwitch">
+							<button data-method="auto" class="active" id="methodAutoTab">ПО КОДУ КОМНАТЫ</button>
+							<button data-method="manual" id="methodManualTab">ВРУЧНУЮ (SDP)</button>
 						</div>
 
-						<div class="network-pane" id="hostPane">
-							<button class="network-action" id="createOfferBtn">СОЗДАТЬ ПРИГЛАШЕНИЕ</button>
+						<div class="network-pane" id="autoPane">
+							<div class="network-mode-switch network-mode-switch--sub" id="autoRoleSwitch">
+								<button data-role="host" class="active" id="autoHostTab">СОЗДАТЬ КОМНАТУ</button>
+								<button data-role="guest" id="autoGuestTab">ВОЙТИ ПО КОДУ</button>
+							</div>
 
-							<label class="network-label">Код приглашения</label>
-							<textarea class="network-code" id="offerCode" readonly placeholder="Код появится здесь"></textarea>
-							<button class="network-action secondary" id="copyOfferBtn">КОПИРОВАТЬ КОД</button>
+							<div class="network-pane" id="autoHostPane">
+								<div class="network-room">
+									<div class="network-room-label">Код комнаты</div>
+									<div class="network-room-code" id="roomCodeDisplay">------</div>
+								</div>
+								<button class="network-action" id="createRoomBtn">СОЗДАТЬ КОМНАТУ</button>
+								<button class="network-action secondary" id="copyRoomBtn" disabled>КОПИРОВАТЬ КОД</button>
+								<div class="network-hint">
+									Передайте код другу любым способом. Ему нужно открыть игру,
+									выбрать «ВОЙТИ ПО КОДУ» и ввести его. Постоянный сервер не
+									нужен: параметры соединения передаются через бесплатный
+									сервис ntfy.sh, а сама игра идёт напрямую между браузерами.
+								</div>
+							</div>
 
-							<label class="network-label">Код ответа от второго игрока</label>
-							<textarea class="network-code" id="answerCode" placeholder="Вставьте сюда код ответа..."></textarea>
-							<button class="network-action" id="acceptAnswerBtn">ПОДКЛЮЧИТЬСЯ</button>
+							<div class="network-pane hidden" id="autoGuestPane">
+								<label class="network-label">Код комнаты от друга</label>
+								<input class="network-code network-code--single" id="roomCodeInput" maxlength="12"
+									autocomplete="off" autocapitalize="characters" spellcheck="false"
+									placeholder="НАПРИМЕР K7M2QX">
+								<button class="network-action" id="joinRoomBtn">ПОДКЛЮЧИТЬСЯ</button>
+								<div class="network-hint">
+									Код чувствителен к опечаткам — вводите его без пробелов.
+								</div>
+							</div>
 						</div>
 
-						<div class="network-pane hidden" id="guestPane">
-							<textarea class="network-code" id="offerInput" placeholder="Вставьте код приглашения..."></textarea>
-							<button class="network-action" id="createAnswerBtn">СОЗДАТЬ КОД ОТВЕТА</button>
+						<div class="network-pane hidden" id="manualPane">
+							<div class="network-mode-switch network-mode-switch--sub">
+								<button data-mode="host" class="active" id="networkHostTab">СОЗДАТЬ ИГРУ</button>
+								<button data-mode="guest" id="networkGuestTab">ПОДКЛЮЧИТЬСЯ</button>
+							</div>
 
-							<label class="network-label">Передайте этот код хосту</label>
-							<textarea class="network-code" id="answerOutput" readonly placeholder="Код ответа появится здесь"></textarea>
-							<button class="network-action secondary" id="copyAnswerBtn">КОПИРОВАТЬ КОД</button>
+							<div class="network-pane" id="hostPane">
+								<button class="network-action" id="createOfferBtn">СОЗДАТЬ ПРИГЛАШЕНИЕ</button>
+
+								<label class="network-label">Код приглашения</label>
+								<textarea class="network-code" id="offerCode" readonly placeholder="Код появится здесь"></textarea>
+								<button class="network-action secondary" id="copyOfferBtn">КОПИРОВАТЬ КОД</button>
+
+								<label class="network-label">Код ответа от второго игрока</label>
+								<textarea class="network-code" id="answerCode" placeholder="Вставьте сюда код ответа..."></textarea>
+								<button class="network-action" id="acceptAnswerBtn">ПОДКЛЮЧИТЬСЯ</button>
+							</div>
+
+							<div class="network-pane hidden" id="guestPane">
+								<textarea class="network-code" id="offerInput" placeholder="Вставьте код приглашения..."></textarea>
+								<button class="network-action" id="createAnswerBtn">СОЗДАТЬ КОД ОТВЕТА</button>
+
+								<label class="network-label">Передайте этот код хосту</label>
+								<textarea class="network-code" id="answerOutput" readonly placeholder="Код ответа появится здесь"></textarea>
+								<button class="network-action secondary" id="copyAnswerBtn">КОПИРОВАТЬ КОД</button>
+							</div>
+
+							<div class="network-hint">
+								Ручной режим: коды приглашения и ответа нужно передать друг другу
+								любым способом. Работает и через интернет, если браузерам удаётся
+								пробить NAT (STUN уже включён).
+							</div>
 						</div>
 					</div>
 				</div>
@@ -310,6 +406,59 @@
             if (modePage) {
                 modePage.dataset.hiddenByNetwork = '1';
                 modePage.style.visibility = 'hidden';
+            }
+
+            const methodAutoTab = overlay.querySelector('#methodAutoTab');
+            const methodManualTab = overlay.querySelector('#methodManualTab');
+            const autoPane = overlay.querySelector('#autoPane');
+            const manualPane = overlay.querySelector('#manualPane');
+
+            methodAutoTab.addEventListener('click', () => {
+                methodAutoTab.classList.add('active');
+                methodManualTab.classList.remove('active');
+                autoPane.classList.remove('hidden');
+                manualPane.classList.add('hidden');
+            });
+            methodManualTab.addEventListener('click', () => {
+                methodManualTab.classList.add('active');
+                methodAutoTab.classList.remove('active');
+                manualPane.classList.remove('hidden');
+                autoPane.classList.add('hidden');
+            });
+
+            const autoHostTab = overlay.querySelector('#autoHostTab');
+            const autoGuestTab = overlay.querySelector('#autoGuestTab');
+            const autoHostPane = overlay.querySelector('#autoHostPane');
+            const autoGuestPane = overlay.querySelector('#autoGuestPane');
+
+            autoHostTab.addEventListener('click', () => {
+                autoHostTab.classList.add('active');
+                autoGuestTab.classList.remove('active');
+                autoHostPane.classList.remove('hidden');
+                autoGuestPane.classList.add('hidden');
+            });
+            autoGuestTab.addEventListener('click', () => {
+                autoGuestTab.classList.add('active');
+                autoHostTab.classList.remove('active');
+                autoGuestPane.classList.remove('hidden');
+                autoHostPane.classList.add('hidden');
+            });
+
+            overlay.querySelector('#createRoomBtn').addEventListener('click', () => this.createRoom());
+            overlay.querySelector('#joinRoomBtn').addEventListener('click', () => this.joinRoom());
+            overlay.querySelector('#copyRoomBtn').addEventListener('click', () => copyText(this.roomCode));
+
+            const roomInput = overlay.querySelector('#roomCodeInput');
+            if (roomInput) {
+                roomInput.addEventListener('input', () => {
+                    const normalized = window.networkSignaling
+                        ? window.networkSignaling.normalizeCode(roomInput.value)
+                        : roomInput.value.toUpperCase();
+                    if (roomInput.value !== normalized) roomInput.value = normalized;
+                });
+                roomInput.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') this.joinRoom();
+                });
             }
 
             const hostTab = overlay.querySelector('#networkHostTab');
@@ -372,6 +521,8 @@
 		},
 
         resetPeer: function () {
+            this.stopSignaling();
+            this.roomCode = null;
             if (this.dc) {
                 try { this.dc.close(); } catch (error) {}
                 this.dc = null;
@@ -388,13 +539,21 @@
         },
 
         createPeer: function () {
-            const pc = new RTCPeerConnection({ iceServers: [], iceCandidatePoolSize: 0 });
+            const pc = new RTCPeerConnection({
+                iceServers: loadIceServers(),
+                iceCandidatePoolSize: 0
+            });
             this.pc = pc;
 
             pc.addEventListener('connectionstatechange', () => {
                 if (pc !== this.pc) return;
                 if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
-                    this.onConnectionLost('Соединение потеряно');
+                    const failedBeforeConnect = pc.connectionState === 'failed' && !this.connected;
+                    this.onConnectionLost(
+                        failedBeforeConnect
+                            ? 'Не удалось установить соединение. Если у кого-то «строгий» NAT, нужен TURN-сервер (см. NETWORK.md).'
+                            : 'Соединение потеряно'
+                    );
                 }
             });
 
@@ -432,7 +591,7 @@
                     pc.removeEventListener('icegatheringstatechange', check);
                     resolve();
                 };
-                const timer = setTimeout(finish, 4000);
+                const timer = setTimeout(finish, 5000);
                 pc.addEventListener('icegatheringstatechange', check);
             });
         },
@@ -539,8 +698,201 @@
             }
         },
 
+        // -----------------------------------------------------------------
+        // Автоматическое соединение по коду комнаты
+        // (сигнализация через бесплатный ntfy.sh, трафик — напрямую)
+        // -----------------------------------------------------------------
+
+        createRoom: async function () {
+            if (this.lobbyBusy) return;
+            try {
+                if (!window.networkSignaling) throw new Error('Модуль сигнализации не загружен');
+
+                this.resetPeer();
+                this.side = 'host';
+                this.autoAnswerApplied = false;
+                this.setBusy(true);
+                this.setStatus('Создание комнаты…');
+
+                const code = window.networkSignaling.generateCode(6);
+                this.roomCode = code;
+                this.autoOfferNonce = window.networkSignaling.generateCode(8);
+                this.showRoomCode(code);
+
+                const pc = this.createPeer();
+                const channel = pc.createDataChannel('gwent', { ordered: true });
+                this.setupDataChannel(channel);
+
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                await this.waitIce(pc);
+
+                if (!pc.localDescription) throw new Error('Не удалось собрать параметры соединения');
+
+                this.signaling = window.networkSignaling.createChannel({
+                    code: code,
+                    role: 'host',
+                    onMessage: (message) => this.onAutoSignal(message),
+                    onStatus: (state, error) => this.onSignalStatus(state, error)
+                });
+                this.signaling.start();
+
+                await this.signaling.publish({
+                    t: 'offer',
+                    type: pc.localDescription.type,
+                    nonce: this.autoOfferNonce,
+                    sdp: pc.localDescription.sdp
+                });
+
+                this.setStatus('Комната ' + code + '. Ждём второго игрока…', 'wait');
+                this.startAutoTimeout();
+            } catch (error) {
+                console.error('[network] createRoom:', error);
+                this.setStatus('Ошибка: ' + error.message, 'error');
+            } finally {
+                this.setBusy(false);
+            }
+        },
+
+        joinRoom: async function () {
+            if (this.lobbyBusy) return;
+            const input = this.lobbyEl && this.lobbyEl.querySelector('#roomCodeInput');
+            const raw = input ? input.value : '';
+            try {
+                if (!window.networkSignaling) throw new Error('Модуль сигнализации не загружен');
+
+                const code = window.networkSignaling.normalizeCode(raw);
+                if (code.length < 4) throw new Error('Введите код комнаты');
+
+                this.resetPeer();
+                this.side = 'guest';
+                this.autoOfferApplied = false;
+                this.setBusy(true);
+                this.setStatus('Ищем комнату ' + code + '…');
+
+                this.signaling = window.networkSignaling.createChannel({
+                    code: code,
+                    role: 'guest',
+                    onMessage: (message) => this.onAutoSignal(message),
+                    onStatus: (state, error) => this.onSignalStatus(state, error)
+                });
+                this.signaling.start();
+
+                this.startAutoTimeout();
+            } catch (error) {
+                console.error('[network] joinRoom:', error);
+                this.setStatus('Ошибка: ' + error.message, 'error');
+            } finally {
+                this.setBusy(false);
+            }
+        },
+
+        showRoomCode: function (code) {
+            if (!this.lobbyEl) return;
+            const display = this.lobbyEl.querySelector('#roomCodeDisplay');
+            if (display) display.textContent = code;
+            const copy = this.lobbyEl.querySelector('#copyRoomBtn');
+            if (copy) copy.disabled = false;
+        },
+
+        startAutoTimeout: function () {
+            if (this.autoConnectTimer) clearTimeout(this.autoConnectTimer);
+            this.autoConnectTimer = setTimeout(() => {
+                this.autoConnectTimer = null;
+                if (this.connected) return;
+                this.setStatus(
+                    this.side === 'host'
+                        ? 'Соперник не подключился. Код можно передать ещё раз или создать новую комнату.'
+                        : 'Не удалось подключиться. Проверьте код и попробуйте снова.',
+                    'error'
+                );
+            }, 60000);
+        },
+
+        onAutoSignal: function (message) {
+            if (!message || !message.sdp) return;
+            if (this.side === 'host') this.onHostAnswer(message);
+            else if (this.side === 'guest') this.onGuestOffer(message);
+        },
+
+        /** Хост получает ответ гостя и завершает рукопожатие. */
+        onHostAnswer: async function (message) {
+            if (message.t !== 'answer' || !this.pc) return;
+            if (this.autoAnswerApplied) return;
+            if (this.pc.signalingState !== 'have-local-offer') return;
+
+            // Ответ должен относиться именно к нашему приглашению.
+            if (this.autoOfferNonce && message.nonce !== this.autoOfferNonce) return;
+
+            this.autoAnswerApplied = true;
+            try {
+                this.setStatus('Соперник найден. Устанавливаем соединение…', 'wait');
+                await this.pc.setRemoteDescription({ type: 'answer', sdp: message.sdp });
+            } catch (error) {
+                this.autoAnswerApplied = false;
+                console.warn('[network] не удалось применить ответ:', error);
+            }
+        },
+
+        /** Гость получает приглашение и отправляет ответ. */
+        onGuestOffer: async function (message) {
+            if (message.t !== 'offer' || this.pc) return;
+            this.autoOfferApplied = true;
+            try {
+                this.setStatus('Комната найдена. Устанавливаем соединение…', 'wait');
+
+                const pc = this.createPeer();
+                await pc.setRemoteDescription({ type: 'offer', sdp: message.sdp });
+
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                await this.waitIce(pc);
+
+                if (!pc.localDescription) throw new Error('Не удалось собрать параметры соединения');
+
+                if (this.signaling) {
+                    await this.signaling.publish({
+                        t: 'answer',
+                        type: pc.localDescription.type,
+                        nonce: message.nonce || null,
+                        sdp: pc.localDescription.sdp
+                    });
+                }
+
+                this.setStatus('Ответ отправлен. Устанавливаем соединение…', 'wait');
+            } catch (error) {
+                console.error('[network] onGuestOffer:', error);
+                this.setStatus('Не удалось подключиться к комнате: ' + error.message, 'error');
+            }
+        },
+
+        onSignalStatus: function (state) {
+            if (this.connected || !this.lobbyEl) return;
+            if (state === 'closed') {
+                this.setStatus('Переподключение к сервису сигнализации…', 'wait');
+            } else if (state === 'open') {
+                if (this.side === 'host' && this.roomCode) {
+                    this.setStatus('Комната ' + this.roomCode + '. Ждём второго игрока…', 'wait');
+                } else if (this.side === 'guest' && this.signaling) {
+                    this.setStatus('Ищем комнату ' + this.signaling.code + '…', 'wait');
+                }
+            }
+        },
+
+        stopSignaling: function () {
+            if (this.autoConnectTimer) {
+                clearTimeout(this.autoConnectTimer);
+                this.autoConnectTimer = null;
+            }
+            if (this.signaling) {
+                try { this.signaling.close(); } catch (error) {}
+                this.signaling = null;
+            }
+        },
+
         onConnected: function () {
             if (this.connected) return;
+            this.stopSignaling();
             this.connected = true;
             this.inNetworkFlow = true;
             this.localDeck = null;
@@ -629,7 +981,10 @@
         },
 
         onConnectionLost: function (reason) {
-            if (!this.connected && !this.active) return;
+            if (!this.connected && !this.active) {
+                if (this.lobbyEl) this.setStatus(reason || 'Не удалось установить соединение', 'error');
+                return;
+            }
             this.connected = false;
 
             if (this.active) {
