@@ -729,6 +729,11 @@
     overflow: hidden;
 }
 
+/* В развёрнутой секции не обрезаем выпадающий список способностей */
+.filter-section:not(.collapsed) .filter-buttons {
+    overflow: visible;
+}
+
 .filter-section.collapsed .section-divider,
 .filter-section.collapsed .filter-buttons {
     opacity: 0;

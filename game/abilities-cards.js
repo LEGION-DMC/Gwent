@@ -849,6 +849,27 @@ const skillSystem = {
 		};
 	},
 
+	boostCardStrength: function(card, boostValue) {
+		if (!card) return;
+		
+		if (window.gameModule && window.gameModule.applyCardBoost) {
+			window.gameModule.applyCardBoost(card, boostValue);
+			return;
+		}
+		
+		if (card.originalStrength === undefined) {
+			card.originalStrength = card.strength;
+		}
+		if (card.modifiedStrength === undefined) {
+			card.modifiedStrength = card.strength;
+		}
+		
+		card.modifiedStrength += boostValue;
+		card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+		card.strength = card.currentStrength;
+		card._displayStrength = card.currentStrength;
+	},
+
 	executeCardBoost: function(cardData, boostValue, context) {
 		const { card, row, position } = cardData;
 		
@@ -864,11 +885,7 @@ const skillSystem = {
 			card.originalStrength = card.strength;
 		}
 		
-		const currentStrength = card._displayStrength !== undefined ? 
-			card._displayStrength : card.strength;
-		
-		card.strength = currentStrength + boostValue;
-		card._displayStrength = card.strength;
+		this.boostCardStrength(card, boostValue);
 		
 		if (context.gameState) {
 			context.gameState.player.rows[row].strength = 
@@ -903,11 +920,7 @@ const skillSystem = {
 					leftCard.originalStrength = leftCard.strength;
 				}
 				
-				const currentStrength = leftCard._displayStrength !== undefined ? 
-					leftCard._displayStrength : leftCard.strength;
-				
-				leftCard.strength = currentStrength + boostValue;
-				leftCard._displayStrength = leftCard.strength;
+				this.boostCardStrength(leftCard, boostValue);
 				boostedCards++;
 				
 				this.createVisualEffect(leftCard, 'boost', boostValue);
@@ -923,11 +936,7 @@ const skillSystem = {
 					rightCard.originalStrength = rightCard.strength;
 				}
 				
-				const currentStrength = rightCard._displayStrength !== undefined ? 
-					rightCard._displayStrength : rightCard.strength;
-				
-				rightCard.strength = currentStrength + boostValue;
-				rightCard._displayStrength = rightCard.strength;
+				this.boostCardStrength(rightCard, boostValue);
 				boostedCards++;
 				
 				this.createVisualEffect(rightCard, 'boost', boostValue);
@@ -1020,11 +1029,7 @@ const skillSystem = {
 					card.originalStrength = card.strength;
 				}
 				
-				const currentStrength = card._displayStrength !== undefined ? 
-					card._displayStrength : card.strength;
-				
-				card.strength = currentStrength + boostValue;
-				card._displayStrength = card.strength;
+				this.boostCardStrength(card, boostValue);
 				
 				boostedCards++;
 				
@@ -1065,11 +1070,7 @@ const skillSystem = {
 					card.originalStrength = card.strength;
 				}
 				
-				const currentStrength = card._displayStrength !== undefined ? 
-					card._displayStrength : card.strength;
-				
-				card.strength = currentStrength + boostValue;
-				card._displayStrength = card.strength;
+				this.boostCardStrength(card, boostValue);
 				
 				boostedCards++;
 				
@@ -1119,10 +1120,16 @@ const skillSystem = {
 		
 		rowState.cards.forEach(card => {
 			if (card.type === 'unit') {
-				const originalStrength = card.strength;
-				card.strength = Math.max(0, card.strength - damageValue);
+				if (window.gameModule && window.gameModule.applyCardDamage) {
+					window.gameModule.applyCardDamage(card, damageValue);
+				} else {
+					if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+					card.modifiedStrength = Math.max(0, card.modifiedStrength - damageValue);
+					card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+					card.strength = card.currentStrength;
+				}
 				
-				if (card.strength === 0) {
+				if (card.modifiedStrength <= 0) {
 					destroyedCards++;
 					this.destroyCard(card);
 				} else {
@@ -1360,7 +1367,11 @@ const skillSystem = {
 		}
 		
 		const destroyedCardCopy = { ...card };
-		context.gameState.opponent.discard.push(destroyedCardCopy);
+		if (window.gameModule && window.gameModule.addCardToDiscard) {
+			window.gameModule.addCardToDiscard(card, 'opponent');
+		} else {
+			context.gameState.opponent.discard.push(destroyedCardCopy);
+		}
 		
 		return { 
 			success: true, 
@@ -1789,18 +1800,32 @@ const skillSystem = {
     },
 
     boostCard: function(card, value) {
-        card.currentStrength += value;
+        if (window.gameModule && window.gameModule.applyCardBoost) {
+            window.gameModule.applyCardBoost(card, value);
+        } else {
+            if (card.modifiedStrength === undefined) card.modifiedStrength = card.currentStrength;
+            card.modifiedStrength += value;
+            card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+        }
         card.state = this.cardStates.BOOSTED;
         this.updateCardDisplay(card);
     },
 
     damageCard: function(card, value) {
-        card.currentStrength = Math.max(0, card.currentStrength - value);
-        card.state = card.currentStrength === 0 ? this.cardStates.DESTROYED : this.cardStates.DAMAGED;
+        if (window.gameModule && window.gameModule.applyCardDamage) {
+            window.gameModule.applyCardDamage(card, value);
+        } else {
+            if (card.modifiedStrength === undefined) card.modifiedStrength = card.currentStrength;
+            card.modifiedStrength = Math.max(0, card.modifiedStrength - value);
+            card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+        }
+        
+        const isDead = (card.modifiedStrength !== undefined ? card.modifiedStrength : card.currentStrength) <= 0;
+        card.state = isDead ? this.cardStates.DESTROYED : this.cardStates.DAMAGED;
         
         this.updateCardDisplay(card);
         
-        if (card.currentStrength === 0) {
+        if (isDead) {
             this.onCardDestroyed(card);
         }
     },

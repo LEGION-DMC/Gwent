@@ -23,6 +23,18 @@ const aiModule = {
 	makeMove: function() {
 																							this.debugDetailedAICards();
 		if (this.isMakingMove) return;
+		
+		// ИИ не должен действовать, пока раунд завершается или уже завершён —
+		// иначе отложенный ход может сбросить погоду до объявления результата
+		if (!this.gameState ||
+			this.gameState.roundResultPending ||
+			this.gameState.roundResultResolved ||
+			this.gameState.gamePhase === 'roundEnd' ||
+			this.gameState.gamePhase !== 'opponentTurn') {
+			this.isMakingMove = false;
+			return;
+		}
+		
 		this.isMakingMove = true;
 		
 		if (this.gameState.opponent.passed) {
@@ -321,9 +333,18 @@ const aiModule = {
 		
 		// Размещаем юнита
 		const rowState = this.gameState.opponent.rows[bestRow];
+		const cardBaseStrength = window.gameModule && window.gameModule.getCardBaseStrength
+			? window.gameModule.getCardBaseStrength(card)
+			: (card.baseStrength !== undefined ? card.baseStrength : card.strength);
+		
 		const cardCopy = { 
 			...card,
 			uniqueId: `${card.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+			baseStrength: cardBaseStrength,
+			strength: cardBaseStrength,
+			currentStrength: cardBaseStrength,
+			modifiedStrength: cardBaseStrength,
+			underWeather: false,
 			owner: 'opponent',
 			row: bestRow
 		};
@@ -369,7 +390,11 @@ const aiModule = {
 			// Удаляем карту
 			const destroyedCard = { ...rowState.cards[cardIndex] };
 			rowState.cards.splice(cardIndex, 1);
-			this.gameState[owner].discard.push(destroyedCard);
+			if (window.gameModule && window.gameModule.addCardToDiscard) {
+				window.gameModule.addCardToDiscard(destroyedCard, owner);
+			} else {
+				this.gameState[owner].discard.push(destroyedCard);
+			}
 			destroyedCount++;
 			
 			if (window.gameModule) {
@@ -2004,30 +2029,29 @@ const aiModule = {
 		this.removeCardFromHand(damageCard);
 		
 		const damageCardCopy = { ...damageCard };
-		this.gameState.opponent.discard.push(damageCardCopy);
+		if (window.gameModule && window.gameModule.addCardToDiscard) {
+			window.gameModule.addCardToDiscard(damageCard, 'opponent');
+		} else {
+			this.gameState.opponent.discard.push(damageCardCopy);
+		}
 		
 		const damageMatch = damageCard.ability.match(/damage_(\d+)/);
 		const damageValue = damageMatch ? parseInt(damageMatch[1]) : 1;
 		
-		// Инициализируем поля для отслеживания состояний, если их нет
-		if (targetCard.baseStrength === undefined) {
-			targetCard.baseStrength = targetCard.strength;
-		}
-		if (targetCard.modifiedStrength === undefined) {
-			targetCard.modifiedStrength = targetCard.strength;
-		}
-		if (targetCard.currentStrength === undefined) {
-			targetCard.currentStrength = targetCard.strength;
-		}
-		
-		// Применяем урон к модифицированной силе
-		const newModifiedStrength = Math.max(0, targetCard.modifiedStrength - damageValue);
-		targetCard.modifiedStrength = newModifiedStrength;
-		
-		// Если карта НЕ под погодой, обновляем текущую силу
-		if (!targetCard.underWeather) {
-			targetCard.currentStrength = newModifiedStrength;
-			targetCard.strength = newModifiedStrength;
+		// Применяем урон (учитывая погоду)
+		if (window.gameModule && window.gameModule.applyCardDamage) {
+			window.gameModule.applyCardDamage(targetCard, damageValue);
+		} else {
+			// Инициализируем поля для отслеживания состояний, если их нет
+			if (targetCard.baseStrength === undefined) {
+				targetCard.baseStrength = targetCard.strength;
+			}
+			if (targetCard.modifiedStrength === undefined) {
+				targetCard.modifiedStrength = targetCard.strength;
+			}
+			targetCard.modifiedStrength = Math.max(0, targetCard.modifiedStrength - damageValue);
+			targetCard.currentStrength = targetCard.underWeather ? 1 : targetCard.modifiedStrength;
+			targetCard.strength = targetCard.currentStrength;
 		}
 		
 		this.createDamageVisualEffect(targetCard, targetRow, damageValue);
@@ -2036,13 +2060,20 @@ const aiModule = {
 			window.gameModule.updateCardStrengthDisplay(targetCard, targetRow, 'player');
 		}
 		
-		if (targetCard.modifiedStrength === 0) {
+		if (targetCard.modifiedStrength <= 0) {
 			const rowState = this.gameState.player.rows[targetRow];
-			const cardIndex = rowState.cards.findIndex(c => c.id === targetCard.id);
+			const cardIndex = rowState.cards.findIndex(c =>
+				(c.uniqueId !== undefined && c.uniqueId === targetCard.uniqueId) ||
+				(c.uniqueId === undefined && c === targetCard)
+			);
 			if (cardIndex !== -1) {
 				const destroyedCard = { ...rowState.cards[cardIndex] };
 				rowState.cards.splice(cardIndex, 1);
-				this.gameState.player.discard.push(destroyedCard);
+				if (window.gameModule && window.gameModule.addCardToDiscard) {
+					window.gameModule.addCardToDiscard(destroyedCard, 'player');
+				} else {
+					this.gameState.player.discard.push(destroyedCard);
+				}
 				
 				setTimeout(() => {
 					if (window.gameModule) {
@@ -2073,7 +2104,11 @@ const aiModule = {
 		this.removeCardFromHand(damageCard);
 		
 		const damageCardCopy = { ...damageCard };
-		this.gameState.opponent.discard.push(damageCardCopy);
+		if (window.gameModule && window.gameModule.addCardToDiscard) {
+			window.gameModule.addCardToDiscard(damageCard, 'opponent');
+		} else {
+			this.gameState.opponent.discard.push(damageCardCopy);
+		}
 		
 		const rowState = this.gameState.player.rows[row];
 		let destroyedCards = [];
@@ -2084,25 +2119,19 @@ const aiModule = {
 			}
 			
 			if (card.type === 'unit') {
-				// Инициализируем поля для отслеживания состояний
-				if (card.baseStrength === undefined) {
-					card.baseStrength = card.strength;
-				}
-				if (card.modifiedStrength === undefined) {
-					card.modifiedStrength = card.strength;
-				}
-				if (card.currentStrength === undefined) {
-					card.currentStrength = card.strength;
-				}
-				
-				// Применяем урон к модифицированной силе
-				const newModifiedStrength = Math.max(0, card.modifiedStrength - damageValue);
-				card.modifiedStrength = newModifiedStrength;
-				
-				// Если карта НЕ под погодой, обновляем текущую силу
-				if (!card.underWeather) {
-					card.currentStrength = newModifiedStrength;
-					card.strength = newModifiedStrength;
+				if (window.gameModule && window.gameModule.applyCardDamage) {
+					window.gameModule.applyCardDamage(card, damageValue);
+				} else {
+					// Инициализируем поля для отслеживания состояний, если их нет
+					if (card.baseStrength === undefined) {
+						card.baseStrength = card.strength;
+					}
+					if (card.modifiedStrength === undefined) {
+						card.modifiedStrength = card.strength;
+					}
+					card.modifiedStrength = Math.max(0, card.modifiedStrength - damageValue);
+					card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+					card.strength = card.currentStrength;
 				}
 				
 				this.createDamageVisualEffect(card, row, damageValue);
@@ -2111,7 +2140,7 @@ const aiModule = {
 					window.gameModule.updateCardStrengthDisplay(card, row, 'player');
 				}
 				
-				if (card.modifiedStrength === 0) {
+				if (card.modifiedStrength <= 0) {
 					destroyedCards.push(card);
 				}
 			}
@@ -2119,12 +2148,19 @@ const aiModule = {
 		
 		for (let i = destroyedCards.length - 1; i >= 0; i--) {
 			const destroyedCard = destroyedCards[i];
-			const cardIndex = rowState.cards.findIndex(c => c.id === destroyedCard.id);
+			const cardIndex = rowState.cards.findIndex(c =>
+				(c.uniqueId !== undefined && c.uniqueId === destroyedCard.uniqueId) ||
+				(c.uniqueId === undefined && c === destroyedCard)
+			);
 			
 			if (cardIndex !== -1) {
 				const destroyedCardCopy = { ...rowState.cards[cardIndex] };
 				rowState.cards.splice(cardIndex, 1);
-				this.gameState.player.discard.push(destroyedCardCopy);
+				if (window.gameModule && window.gameModule.addCardToDiscard) {
+					window.gameModule.addCardToDiscard(destroyedCardCopy, 'player');
+				} else {
+					this.gameState.player.discard.push(destroyedCardCopy);
+				}
 				
 				setTimeout(() => {
 					if (window.gameModule) {
@@ -2372,7 +2408,11 @@ const aiModule = {
 			
 			// Добавляем в сброс
 			const cardCopy = { ...card };
-			this.gameState.opponent.discard.push(cardCopy);
+			if (window.gameModule && window.gameModule.addCardToDiscard) {
+				window.gameModule.addCardToDiscard(card, 'opponent');
+			} else {
+				this.gameState.opponent.discard.push(cardCopy);
+			}
 			
 			if (window.gameModule) {
 				window.gameModule.updateRowStrength(bestRow, 'opponent');
@@ -2450,7 +2490,11 @@ const aiModule = {
 			this.removeCardFromHand(card);
 			
 			const cardCopy = { ...card };
-			this.gameState.opponent.discard.push(cardCopy);
+			if (window.gameModule && window.gameModule.addCardToDiscard) {
+				window.gameModule.addCardToDiscard(card, 'opponent');
+			} else {
+				this.gameState.opponent.discard.push(cardCopy);
+			}
 			
 			if (window.gameModule) {
 				window.gameModule.updateRowStrength(bestRow, 'opponent');
@@ -2507,7 +2551,11 @@ const aiModule = {
 		
 		// Добавляем в сброс
 		const cardCopy = { ...card };
-		this.gameState.opponent.discard.push(cardCopy);
+		if (window.gameModule && window.gameModule.addCardToDiscard) {
+			window.gameModule.addCardToDiscard(card, 'opponent');
+		} else {
+			this.gameState.opponent.discard.push(cardCopy);
+		}
 		
 		if (window.gameModule) {
 			window.gameModule.updateRowStrength(targetRow, 'opponent');
@@ -2597,7 +2645,11 @@ const aiModule = {
 		
 		// Добавляем в сброс
 		const cardCopy = { ...card };
-		this.gameState.opponent.discard.push(cardCopy);
+		if (window.gameModule && window.gameModule.addCardToDiscard) {
+			window.gameModule.addCardToDiscard(card, 'opponent');
+		} else {
+			this.gameState.opponent.discard.push(cardCopy);
+		}
 		
 		if (window.gameModule) {
 			window.gameModule.updateRowStrength(row, 'opponent');
@@ -3033,12 +3085,16 @@ const aiModule = {
 		const insertIndex = rowState.cards.length;
 		
 		const cardCopy = { ...card };
+		const cardBaseStrength = window.gameModule && window.gameModule.getCardBaseStrength
+			? window.gameModule.getCardBaseStrength(card)
+			: (card.baseStrength !== undefined ? card.baseStrength : card.strength);
 		cardCopy.owner = 'opponent';
 		cardCopy.row = bestRow;
 		cardCopy.uniqueId = `${card.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-		cardCopy.baseStrength = card.strength;
-		cardCopy.currentStrength = card.strength;
-		cardCopy.modifiedStrength = card.strength;
+		cardCopy.baseStrength = cardBaseStrength;
+		cardCopy.currentStrength = cardBaseStrength;
+		cardCopy.modifiedStrength = cardBaseStrength;
+		cardCopy.strength = cardBaseStrength;
 		cardCopy.underWeather = false;
 		
 		rowState.cards.splice(insertIndex, 0, cardCopy);
@@ -3236,12 +3292,16 @@ const aiModule = {
 				}
 				
 				const summonCopy = { ...summonCard };
+				const summonBaseStrength = window.gameModule && window.gameModule.getCardBaseStrength
+					? window.gameModule.getCardBaseStrength(summonCard)
+					: (summonCard.baseStrength !== undefined ? summonCard.baseStrength : summonCard.strength);
 				summonCopy.owner = 'opponent';
 				summonCopy.row = targetRow;
 				summonCopy.uniqueId = `${summonCard.id}_flock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-				summonCopy.baseStrength = summonCard.strength;
-				summonCopy.currentStrength = summonCard.strength;
-				summonCopy.modifiedStrength = summonCard.strength;
+				summonCopy.baseStrength = summonBaseStrength;
+				summonCopy.currentStrength = summonBaseStrength;
+				summonCopy.modifiedStrength = summonBaseStrength;
+				summonCopy.strength = summonBaseStrength;
 				summonCopy.underWeather = false;
 				summonCopy.summonedByFlock = true;
 				
@@ -3794,7 +3854,11 @@ const aiModule = {
 		
 		// Добавляем карту в сброс противника (AI)
 		const destroyCardCopy = { ...destroyCard };
-		this.gameState.opponent.discard.push(destroyCardCopy);
+		if (window.gameModule && window.gameModule.addCardToDiscard) {
+			window.gameModule.addCardToDiscard(destroyCard, 'opponent');
+		} else {
+			this.gameState.opponent.discard.push(destroyCardCopy);
+		}
 		
 		// Удаляем ТОЛЬКО артефакты (не тактики)
 		if (targetType === 'artifact') {
@@ -3819,7 +3883,11 @@ const aiModule = {
 				rowState.cards.splice(cardIndex, 1);
 				
 				// Добавляем ТОЛЬКО ОДНУ копию в сброс игрока
-				this.gameState.player.discard.push(destroyedCard);
+				if (window.gameModule && window.gameModule.addCardToDiscard) {
+					window.gameModule.addCardToDiscard(destroyedCard, 'player');
+				} else {
+					this.gameState.player.discard.push(destroyedCard);
+				}
 				
 				// Обновляем отображение
 				if (window.gameModule) {
@@ -3974,7 +4042,11 @@ const aiModule = {
 		
 		// Добавляем Казнь в сброс ИИ
 		const destroyCardCopy = { ...destroyCard };
-		this.gameState.opponent.discard.push(destroyCardCopy);
+		if (window.gameModule && window.gameModule.addCardToDiscard) {
+			window.gameModule.addCardToDiscard(destroyCard, 'opponent');
+		} else {
+			this.gameState.opponent.discard.push(destroyCardCopy);
+		}
 		
 		let destroyedCount = 0;
 		
@@ -3992,7 +4064,11 @@ const aiModule = {
 			
 			const destroyedCard = { ...rowState.cards[cardIndex] };
 			rowState.cards.splice(cardIndex, 1);
-			this.gameState[owner].discard.push(destroyedCard);
+			if (window.gameModule && window.gameModule.addCardToDiscard) {
+				window.gameModule.addCardToDiscard(destroyedCard, owner);
+			} else {
+				this.gameState[owner].discard.push(destroyedCard);
+			}
 			destroyedCount++;
 			
 			if (window.gameModule) {
@@ -4214,9 +4290,18 @@ const aiModule = {
 			const rowState = this.gameState.opponent.rows[bestRow];
 			let insertIndex = rowState.cards.length;
 			
+			const cardBaseStrength = window.gameModule && window.gameModule.getCardBaseStrength
+				? window.gameModule.getCardBaseStrength(card)
+				: (card.baseStrength !== undefined ? card.baseStrength : card.strength);
+
 			const cardCopy = { 
 				...card,
 				uniqueId: `${card.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+				baseStrength: cardBaseStrength,
+				strength: cardBaseStrength,
+				currentStrength: cardBaseStrength,
+				modifiedStrength: cardBaseStrength,
+				underWeather: false,
 				owner: 'opponent',
 				row: bestRow
 			};
@@ -4269,7 +4354,7 @@ const aiModule = {
 				}
 			}
 			
-			rowState.cards.splice(insertIndex, 0, card);
+			rowState.cards.splice(insertIndex, 0, cardCopy);
 			
 			this.removeCardFromHand(card);
 			

@@ -36,12 +36,19 @@ const leaderAbilities = {
 		},
 		
 		boostCard: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardBoost) {
+				window.gameModule.applyCardBoost(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			card.strength = (card.strength || 0) + amount;
-			card.currentStrength = card.strength;
-			card.modifiedStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength += amount;
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		},
 		
 		// ===== НОВЫЙ МЕТОД ДЛЯ ВИЗУАЛЬНОГО ЭФФЕКТА =====
@@ -231,7 +238,7 @@ const leaderAbilities = {
 						return;
 					}
 					
-					if (target.card.strength <= 0) {
+					if (target.card.modifiedStrength <= 0) {
 						gameModule.showGameMessage('Эта карта уже уничтожена', 'warning');
 						this.removeHighlights(gameState);
 						return;
@@ -249,7 +256,7 @@ const leaderAbilities = {
 					this.createDamageVisualEffect(target.card, target.row, gameModule);
 					
 					// Если карта уничтожена
-					if (target.card.strength <= 0) {
+					if (target.card.modifiedStrength <= 0) {
 						this.destroyCard(gameState, target.card, target.row, gameModule);
 					}
 					
@@ -271,9 +278,13 @@ const leaderAbilities = {
 					const cardId = cardElement.dataset.cardId;
 					const uniqueId = cardElement.dataset.uniqueId;
 					
-					const target = enemyUnits.find(u => 
-						u.card.uniqueId === uniqueId || u.card.id === cardId
-					);
+					let target = null;
+					if (uniqueId) {
+						target = enemyUnits.find(u => u.card.uniqueId === uniqueId) || null;
+					}
+					if (!target) {
+						target = enemyUnits.find(u => u.card.id === cardId) || null;
+					}
 					
 					if (target) {
 						// Дополнительная проверка: убеждаемся, что это отряд
@@ -491,17 +502,41 @@ const leaderAbilities = {
 		},
 		
 		dealDamage: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardDamage) {
+				window.gameModule.applyCardDamage(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			const newStrength = (card.strength || 0) - amount;
-			card.strength = Math.max(0, newStrength);
-			card.currentStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		},
 		
 		destroyCard: function(gameState, card, row, gameModule) {
 			const rowCards = gameState.opponent.rows[row].cards;
-			const cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			let cardIndex = -1;
+			
+			if (card.uniqueId !== undefined) {
+				cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			}
+			if (cardIndex === -1) {
+				cardIndex = rowCards.indexOf(card);
+			}
+			if (cardIndex === -1) {
+				// Последний вариант — ищем по id, но только если карта одна
+				const sameId = rowCards
+					.map((c, index) => ({ c, index }))
+					.filter(entry => entry.c.id === card.id);
+				if (sameId.length === 1) {
+					cardIndex = sameId[0].index;
+				}
+			}
+			
 			if (cardIndex !== -1) {
 				const destroyedCard = rowCards.splice(cardIndex, 1)[0];
 				gameModule.addCardToDiscard(destroyedCard, 'opponent');
@@ -960,12 +995,19 @@ const leaderAbilities = {
 		},
 		
 		boostCard: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardBoost) {
+				window.gameModule.applyCardBoost(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			card.strength = (card.strength || 0) + amount;
-			card.currentStrength = card.strength;
-			card.modifiedStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength += amount;
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		}
 	},
 	'scoiatael_ability_5': {
@@ -1050,7 +1092,7 @@ const leaderAbilities = {
 							this.dealDamage(card, damageAmount);
 							damagedCount++;
 							
-							if (card.strength <= 0) {
+							if (card.modifiedStrength <= 0) {
 								unitsToDestroy.push({ card: card, row: rowId });
 							}
 						}
@@ -1297,17 +1339,41 @@ const leaderAbilities = {
 		},
 		
 		dealDamage: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardDamage) {
+				window.gameModule.applyCardDamage(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			const newStrength = (card.strength || 0) - amount;
-			card.strength = Math.max(0, newStrength);
-			card.currentStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		},
 		
 		destroyCard: function(gameState, card, row, gameModule) {
 			const rowCards = gameState.opponent.rows[row].cards;
-			const cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			let cardIndex = -1;
+			
+			if (card.uniqueId !== undefined) {
+				cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			}
+			if (cardIndex === -1) {
+				cardIndex = rowCards.indexOf(card);
+			}
+			if (cardIndex === -1) {
+				// Последний вариант — ищем по id, но только если карта одна
+				const sameId = rowCards
+					.map((c, index) => ({ c, index }))
+					.filter(entry => entry.c.id === card.id);
+				if (sameId.length === 1) {
+					cardIndex = sameId[0].index;
+				}
+			}
+			
 			if (cardIndex !== -1) {
 				const destroyedCard = rowCards.splice(cardIndex, 1)[0];
 				gameModule.addCardToDiscard(destroyedCard, 'opponent');
@@ -1616,17 +1682,25 @@ const leaderAbilities = {
 		},
 		
 		boostCard: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardBoost) {
+				window.gameModule.applyCardBoost(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) {
 				card.baseStrength = card.strength;
 			}
 			if (card.originalStrength === undefined) {
 				card.originalStrength = card.strength;
 			}
+			if (card.modifiedStrength === undefined) {
+				card.modifiedStrength = card.strength;
+			}
 			
-			card.strength = (card.strength || 0) + amount;
-			card.currentStrength = card.strength;
-			card.modifiedStrength = card.strength;
-			card._displayStrength = card.strength;
+			card.modifiedStrength += amount;
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		},
 		
 		getRowName: function(row) {
@@ -1714,7 +1788,7 @@ const leaderAbilities = {
 					}
 					
 					// Проверяем, что карта ещё жива
-					if (target.card.strength <= 0) {
+					if (target.card.modifiedStrength <= 0) {
 						gameModule.showGameMessage('Эта карта уже уничтожена', 'warning');
 						this.removeHighlights(gameState);
 						return;
@@ -2116,17 +2190,41 @@ const leaderAbilities = {
 		},
 		
 		dealDamage: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardDamage) {
+				window.gameModule.applyCardDamage(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			const newStrength = (card.strength || 0) - amount;
-			card.strength = Math.max(0, newStrength);
-			card.currentStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		},
 		
 		destroyCard: function(gameState, card, row, gameModule) {
 			const rowCards = gameState.opponent.rows[row].cards;
-			const cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			let cardIndex = -1;
+			
+			if (card.uniqueId !== undefined) {
+				cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			}
+			if (cardIndex === -1) {
+				cardIndex = rowCards.indexOf(card);
+			}
+			if (cardIndex === -1) {
+				// Последний вариант — ищем по id, но только если карта одна
+				const sameId = rowCards
+					.map((c, index) => ({ c, index }))
+					.filter(entry => entry.c.id === card.id);
+				if (sameId.length === 1) {
+					cardIndex = sameId[0].index;
+				}
+			}
+			
 			if (cardIndex !== -1) {
 				const destroyedCard = rowCards.splice(cardIndex, 1)[0];
 				gameModule.addCardToDiscard(destroyedCard, 'opponent');
@@ -2451,12 +2549,19 @@ const leaderAbilities = {
 		},
 		
 		boostCard: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardBoost) {
+				window.gameModule.applyCardBoost(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			card.strength = (card.strength || 0) + amount;
-			card.currentStrength = card.strength;
-			card.modifiedStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength += amount;
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		}
 	},
 	'realms_ability_4': {
@@ -2749,12 +2854,19 @@ const leaderAbilities = {
 		},
 		
 		boostCard: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardBoost) {
+				window.gameModule.applyCardBoost(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			card.strength = (card.strength || 0) + amount;
-			card.currentStrength = card.strength;
-			card.modifiedStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength += amount;
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		}
 	},
 	'realms_ability_5': {
@@ -2775,15 +2887,20 @@ const leaderAbilities = {
 			this.cleanupPreviousSelection();
 			
 			// 1. Показываем модальное окно с картами из колоды
+			// Шпионы в списке призыва не участвуют
 			const bronzeUnits = [];
 			gameState.player.deck.forEach((card, index) => {
-				if (card.type === 'unit' && card.rarity === 'bronze') {
+				const isSpy = typeof gameModule.isSpyCard === 'function'
+					? gameModule.isSpyCard(card)
+					: card.ability === 'spy';
+				
+				if (card.type === 'unit' && card.rarity === 'bronze' && !isSpy) {
 					bronzeUnits.push({ card: card, index: index });
 				}
 			});
 			
 			if (bronzeUnits.length === 0) {
-				gameModule.showGameMessage('Нет бронзовых отрядов в колоде', 'warning');
+				gameModule.showGameMessage('Нет бронзовых отрядов для призыва в колоде', 'warning');
 				return false;
 			}
 			
@@ -3126,22 +3243,25 @@ const leaderAbilities = {
 			const newCard = gameModule.createCardCopy(card);
 			newCard.summonedByAbility = true;
 			
-			// Добавляем карту в ряд
-			rowState.cards.push(newCard);
+			// Вставляем карту между отрядами, чтобы у неё были соседи
+			// с обеих сторон (при наличии минимум двух карт в ряду)
+			const insertIndex = rowState.cards.length >= 2
+				? Math.floor(rowState.cards.length / 2)
+				: rowState.cards.length;
+			rowState.cards.splice(insertIndex, 0, newCard);
 			
 			// Отображаем карту на поле
-			gameModule.displayCardOnRow(row, newCard, 'player');
+			gameModule.displayCardOnRow(row, newCard, 'player', insertIndex);
 			
 			// Применяем эффекты
 			this.boostCard(newCard, 3);
 			
-			// Усиливаем соседей
-			const cardIndex = rowState.cards.length - 1;
-			if (cardIndex > 0) {
-				this.boostCard(rowState.cards[cardIndex - 1], 3);
+			// Усиливаем соседей слева и справа
+			if (insertIndex > 0) {
+				this.boostCard(rowState.cards[insertIndex - 1], 3);
 			}
-			if (cardIndex < rowState.cards.length - 1) {
-				this.boostCard(rowState.cards[cardIndex + 1], 3);
+			if (insertIndex < rowState.cards.length - 1) {
+				this.boostCard(rowState.cards[insertIndex + 1], 3);
 			}
 			
 			// Обновляем отображение
@@ -3158,10 +3278,17 @@ const leaderAbilities = {
 		},
 		
 		boostCard: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardBoost) {
+				window.gameModule.applyCardBoost(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
-			card.strength = (card.strength || 0) + amount;
-			card.currentStrength = card.strength;
-			card.modifiedStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength += amount;
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
 		},
 		
 		closeModal: function(modal) {
@@ -3601,12 +3728,19 @@ const leaderAbilities = {
 		},
 		
 		boostCard: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardBoost) {
+				window.gameModule.applyCardBoost(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			card.strength = (card.strength || 0) + amount;
-			card.currentStrength = card.strength;
-			card.modifiedStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength += amount;
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		}
 	},
 	'nilfgaard_ability_2': {
@@ -3668,7 +3802,7 @@ const leaderAbilities = {
 					
 					this.createDamageVisualEffect(target.card, target.row, gameModule);
 					
-					if (target.card.strength <= 0) {
+					if (target.card.modifiedStrength <= 0) {
 						this.destroyCard(gameState, target.card, target.row, gameModule);
 					}
 					
@@ -3874,42 +4008,43 @@ const leaderAbilities = {
 		},
 		
 dealDamage: function(card, amount) {
+    if (window.gameModule && window.gameModule.applyCardDamage) {
+        window.gameModule.applyCardDamage(card, amount);
+        return;
+    }
+    
     // Инициализируем поля, если их нет
     if (card.baseStrength === undefined) card.baseStrength = card.strength;
     if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
     if (card.currentStrength === undefined) card.currentStrength = card.strength;
     if (card.originalStrength === undefined) card.originalStrength = card.strength;
     
-    // Сохраняем состояние "под погодой"
-    const isUnderWeather = card.underWeather === true;
-    
     // Наносим урон МОДИФИЦИРОВАННОЙ силе (реальной силе карты)
-    const newModifiedStrength = Math.max(0, card.modifiedStrength - amount);
-    card.modifiedStrength = newModifiedStrength;
-    
-    if (isUnderWeather) {
-        // Под погодой: currentStrength остаётся 1, но modifiedStrength уменьшается
-        card.currentStrength = 1;
-        card.strength = 1;
-        card._displayStrength = 1;
-    } else {
-        // Не под погодой: обновляем все значения
-        card.currentStrength = newModifiedStrength;
-        card.strength = newModifiedStrength;
-        card._displayStrength = newModifiedStrength;
-    }
-    
-    // Если modifiedStrength стал 0 — карта уничтожена
-    if (newModifiedStrength <= 0) {
-        card.strength = 0;
-        card.currentStrength = 0;
-        card._displayStrength = 0;
-    }
+    card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
+    card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+    card.strength = card.currentStrength;
+    card._displayStrength = card.currentStrength;
 },
 		
 		destroyCard: function(gameState, card, row, gameModule) {
 			const rowCards = gameState.opponent.rows[row].cards;
-			const cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			let cardIndex = -1;
+			
+			if (card.uniqueId !== undefined) {
+				cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			}
+			if (cardIndex === -1) {
+				cardIndex = rowCards.indexOf(card);
+			}
+			if (cardIndex === -1) {
+				const sameId = rowCards
+					.map((c, index) => ({ c, index }))
+					.filter(entry => entry.c.id === card.id);
+				if (sameId.length === 1) {
+					cardIndex = sameId[0].index;
+				}
+			}
+			
 			if (cardIndex !== -1) {
 				const destroyedCard = rowCards.splice(cardIndex, 1)[0];
 				gameModule.addCardToDiscard(destroyedCard, 'opponent');
@@ -4455,17 +4590,25 @@ dealDamage: function(card, amount) {
 		},
 		
 		boostCard: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardBoost) {
+				window.gameModule.applyCardBoost(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) {
 				card.baseStrength = card.strength;
 			}
 			if (card.originalStrength === undefined) {
 				card.originalStrength = card.strength;
 			}
+			if (card.modifiedStrength === undefined) {
+				card.modifiedStrength = card.strength;
+			}
 			
-			card.strength = (card.strength || 0) + amount;
-			card.currentStrength = card.strength;
-			card.modifiedStrength = card.strength;
-			card._displayStrength = card.strength;
+			card.modifiedStrength += amount;
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		}
 	},
 	'nilfgaard_ability_5': {
@@ -4880,21 +5023,25 @@ dealDamage: function(card, amount) {
 			}
 			
 			// Уменьшаем силу отрядов противника в этом ряду до 1
-			gameState.opponent.rows[row].cards.forEach(card => {
-				if (card.tags && (card.tags.includes('hero') || card.tags.includes('герой'))) return;
-				
-				if (card.baseStrength === undefined) card.baseStrength = card.strength || 0;
-				if (card.originalStrength === undefined) card.originalStrength = card.strength || 0;
-				
-				card.underWeather = true;
-				card.currentStrength = 1;
-				card.strength = 1;
-				
-				// Обновляем отображение карты
-				if (gameModule.updateCardStrengthDisplay) {
-					gameModule.updateCardStrengthDisplay(card, row, 'opponent');
-				}
-			});
+			if (gameModule.reduceRowStrengthTo1) {
+				gameModule.reduceRowStrengthTo1(row, 'opponent');
+			} else {
+				gameState.opponent.rows[row].cards.forEach(card => {
+					if (card.tags && (card.tags.includes('hero') || card.tags.includes('герой'))) return;
+					
+					if (card.baseStrength === undefined) card.baseStrength = card.strength || 0;
+					if (card.originalStrength === undefined) card.originalStrength = card.strength || 0;
+					
+					card.underWeather = true;
+					card.currentStrength = 1;
+					card.strength = 1;
+					
+					// Обновляем отображение карты
+					if (gameModule.updateCardStrengthDisplay) {
+						gameModule.updateCardStrengthDisplay(card, row, 'opponent');
+					}
+				});
+			}
 			
 			if (gameModule.updateRowStrength) {
 				gameModule.updateRowStrength(row, 'opponent');
@@ -4955,10 +5102,14 @@ dealDamage: function(card, amount) {
 				gameState.opponent.rows[row].cards.forEach(card => {
 					if (card.underWeather) {
 						card.underWeather = false;
-						if (card.originalStrength !== undefined) {
-							card.strength = card.originalStrength;
-							card.currentStrength = card.originalStrength;
+						
+						if (gameModule && gameModule.refreshCardStrength) {
+							gameModule.refreshCardStrength(card);
+						} else if (card.modifiedStrength !== undefined) {
+							card.strength = card.modifiedStrength;
+							card.currentStrength = card.modifiedStrength;
 						}
+						
 						if (gameModule && gameModule.updateCardStrengthDisplay) {
 							gameModule.updateCardStrengthDisplay(card, row, 'opponent');
 						}
@@ -5348,12 +5499,19 @@ dealDamage: function(card, amount) {
 		},
 		
 		boostCard: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardBoost) {
+				window.gameModule.applyCardBoost(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			card.strength = (card.strength || 0) + amount;
-			card.currentStrength = card.strength;
-			card.modifiedStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength += amount;
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		}
 	},
 	'monsters_ability_3': {
@@ -5397,7 +5555,7 @@ dealDamage: function(card, amount) {
 					
 					this.dealDamage(card, damageAmount);
 					
-					if (card.strength <= 0) {
+					if (card.modifiedStrength <= 0) {
 						unitsToDestroy.push({ card: card, row: targetRow });
 					}
 				}
@@ -5505,18 +5663,40 @@ dealDamage: function(card, amount) {
 		},
 		
 		dealDamage: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardDamage) {
+				window.gameModule.applyCardDamage(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
-			const newStrength = (card.strength || 0) - amount;
-			card.strength = Math.max(0, newStrength);
-			card.currentStrength = card.strength;
-			card._displayStrength = card.strength;
+			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		},
 		
 		destroyCard: function(gameState, card, row, gameModule) {
 			const rowCards = gameState.opponent.rows[row].cards;
-			const cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			let cardIndex = -1;
+			
+			if (card.uniqueId !== undefined) {
+				cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			}
+			if (cardIndex === -1) {
+				cardIndex = rowCards.indexOf(card);
+			}
+			if (cardIndex === -1) {
+				const sameId = rowCards
+					.map((c, index) => ({ c, index }))
+					.filter(entry => entry.c.id === card.id);
+				if (sameId.length === 1) {
+					cardIndex = sameId[0].index;
+				}
+			}
+			
 			if (cardIndex !== -1) {
 				const destroyedCard = rowCards.splice(cardIndex, 1)[0];
 				gameModule.addCardToDiscard(destroyedCard, 'opponent');
@@ -5981,12 +6161,19 @@ dealDamage: function(card, amount) {
 		},
 		
 		boostCard: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardBoost) {
+				window.gameModule.applyCardBoost(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			card.strength = (card.strength || 0) + amount;
-			card.currentStrength = card.strength;
-			card.modifiedStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength += amount;
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		}
 	},
 
@@ -6062,7 +6249,7 @@ dealDamage: function(card, amount) {
 				// Обновляем отображение силы на карте
 				gameModule.updateCardStrengthDisplay(target.card, target.row, 'opponent');
 				
-				if (target.card.strength <= 0) {
+				if (target.card.modifiedStrength <= 0) {
 					unitsToDestroy.push({ card: target.card, row: target.row });
 				}
 			});
@@ -6191,33 +6378,40 @@ dealDamage: function(card, amount) {
 		},
 		
 		dealDamage: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardDamage) {
+				window.gameModule.applyCardDamage(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
-			// Сохраняем текущую силу как базовую для модификаций
-			// Это важно для карт под погодой - сохраняем их текущее состояние
-			if (card._displayStrength !== undefined) {
-				card._displayStrength = Math.max(0, card._displayStrength - amount);
-				card.strength = card._displayStrength;
-				card.currentStrength = card._displayStrength;
-			} else {
-				const newStrength = (card.strength || 0) - amount;
-				card.strength = Math.max(0, newStrength);
-				card.currentStrength = card.strength;
-				card._displayStrength = card.strength;
-			}
-			
-			// Сохраняем модифицированную силу для отслеживания изменений
-			if (card.modifiedStrength === undefined) {
-				card.modifiedStrength = card.strength;
-			} else {
-				card.modifiedStrength = card.strength;
-			}
+			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		},
 		
 		destroyCard: function(gameState, card, row, gameModule) {
 			const rowCards = gameState.opponent.rows[row].cards;
-			const cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			let cardIndex = -1;
+			
+			if (card.uniqueId !== undefined) {
+				cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			}
+			if (cardIndex === -1) {
+				cardIndex = rowCards.indexOf(card);
+			}
+			if (cardIndex === -1) {
+				const sameId = rowCards
+					.map((c, index) => ({ c, index }))
+					.filter(entry => entry.c.id === card.id);
+				if (sameId.length === 1) {
+					cardIndex = sameId[0].index;
+				}
+			}
+			
 			if (cardIndex !== -1) {
 				const destroyedCard = rowCards.splice(cardIndex, 1)[0];
 				gameModule.addCardToDiscard(destroyedCard, 'opponent');
@@ -6255,16 +6449,20 @@ dealDamage: function(card, amount) {
 			gameModule.playWeatherSound('rain');
 			
 			// Уменьшаем силу отрядов противника в этом ряду до 1
-			gameState.opponent.rows[row].cards.forEach(card => {
-				if (card.tags && (card.tags.includes('hero') || card.tags.includes('герой'))) return;
-				
-				if (card.baseStrength === undefined) card.baseStrength = card.strength || 0;
-				if (card.originalStrength === undefined) card.originalStrength = card.strength || 0;
-				
-				card.underWeather = true;
-				card.currentStrength = 1;
-				card.strength = 1;
-			});
+			if (gameModule && gameModule.reduceRowStrengthTo1) {
+				gameModule.reduceRowStrengthTo1(row, 'opponent');
+			} else {
+				gameState.opponent.rows[row].cards.forEach(card => {
+					if (card.tags && (card.tags.includes('hero') || card.tags.includes('герой'))) return;
+					
+					if (card.baseStrength === undefined) card.baseStrength = card.strength || 0;
+					if (card.originalStrength === undefined) card.originalStrength = card.strength || 0;
+					
+					card.underWeather = true;
+					card.currentStrength = 1;
+					card.strength = 1;
+				});
+			}
 			
 			gameModule.updateRowStrength(row, 'opponent');
 			gameModule.updateTotalScoreDisplays();
@@ -6304,9 +6502,12 @@ dealDamage: function(card, amount) {
 				gameState.opponent.rows[row].cards.forEach(card => {
 					if (card.underWeather) {
 						card.underWeather = false;
-						if (card.originalStrength !== undefined) {
-							card.strength = card.originalStrength;
-							card.currentStrength = card.originalStrength;
+						
+						if (gameModule && gameModule.refreshCardStrength) {
+							gameModule.refreshCardStrength(card);
+						} else if (card.modifiedStrength !== undefined) {
+							card.strength = card.modifiedStrength;
+							card.currentStrength = card.modifiedStrength;
 						}
 					}
 				});
@@ -6364,7 +6565,7 @@ dealDamage: function(card, amount) {
 					gameModule.updateRowStrength(target.row, 'opponent');
 					gameModule.updateTotalScoreDisplays();
 					
-					if (target.card.strength <= 0) {
+					if (target.card.modifiedStrength <= 0) {
 						this.destroyCard(gameState, target.card, target.row, gameModule);
 					}
 					
@@ -6601,17 +6802,41 @@ dealDamage: function(card, amount) {
 		},
 		
 		dealDamage: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardDamage) {
+				window.gameModule.applyCardDamage(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			const newStrength = (card.strength || 0) - amount;
-			card.strength = Math.max(0, newStrength);
-			card.currentStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		},
 		
 		destroyCard: function(gameState, card, row, gameModule) {
 			const rowCards = gameState.opponent.rows[row].cards;
-			const cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			let cardIndex = -1;
+			
+			if (card.uniqueId !== undefined) {
+				cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			}
+			if (cardIndex === -1) {
+				cardIndex = rowCards.indexOf(card);
+			}
+			if (cardIndex === -1) {
+				// Последний вариант — ищем по id, но только если карта одна
+				const sameId = rowCards
+					.map((c, index) => ({ c, index }))
+					.filter(entry => entry.c.id === card.id);
+				if (sameId.length === 1) {
+					cardIndex = sameId[0].index;
+				}
+			}
+			
 			if (cardIndex !== -1) {
 				const destroyedCard = rowCards.splice(cardIndex, 1)[0];
 				gameModule.addCardToDiscard(destroyedCard, 'opponent');
@@ -6713,7 +6938,7 @@ dealDamage: function(card, amount) {
 						gameModule.updateCardStrengthDisplay(targetCard, row, 'player');
 						gameModule.updateRowStrength(row, 'player');
 						
-						if (targetCard.strength <= 0) {
+						if (targetCard.modifiedStrength <= 0) {
 							this.destroyCard(gameState, targetCard, row, gameModule);
 						}
 						
@@ -6911,12 +7136,19 @@ dealDamage: function(card, amount) {
 		},
 		
 		dealDamage: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardDamage) {
+				window.gameModule.applyCardDamage(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			const newStrength = (card.strength || 0) - amount;
-			card.strength = Math.max(0, newStrength);
-			card.currentStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		},
 		
 		destroyCard: function(gameState, card, row, gameModule) {
@@ -7104,7 +7336,7 @@ dealDamage: function(card, amount) {
 			
 			this.dealDamage(target.card, sacrificedStrength);
 			
-			if (target.card.strength <= 0) {
+			if (target.card.modifiedStrength <= 0) {
 				this.destroyCard(gameState, target.card, target.row, gameModule);
 			}
 			
@@ -7192,9 +7424,13 @@ dealDamage: function(card, amount) {
 					cards.forEach(card => {
 						const cardId = card.dataset.cardId;
 						const uniqueId = card.dataset.uniqueId;
-						const target = enemyUnits.find(u => 
-							(u.card.id === cardId || u.card.uniqueId === uniqueId)
-						);
+						let target = null;
+						if (uniqueId) {
+							target = enemyUnits.find(u => u.card.uniqueId === uniqueId) || null;
+						}
+						if (!target) {
+							target = enemyUnits.find(u => u.card.id === cardId) || null;
+						}
 						if (target) {
 							card.style.cursor = 'pointer';
 							card.classList.add('damage-target');
@@ -7249,17 +7485,41 @@ dealDamage: function(card, amount) {
 		},
 		
 		dealDamage: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardDamage) {
+				window.gameModule.applyCardDamage(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			const newStrength = (card.strength || 0) - amount;
-			card.strength = Math.max(0, newStrength);
-			card.currentStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		},
 		
 		destroyCard: function(gameState, card, row, gameModule) {
 			const rowCards = gameState.opponent.rows[row].cards;
-			const cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			let cardIndex = -1;
+			
+			if (card.uniqueId !== undefined) {
+				cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			}
+			if (cardIndex === -1) {
+				cardIndex = rowCards.indexOf(card);
+			}
+			if (cardIndex === -1) {
+				// Последний вариант — ищем по id, но только если карта одна
+				const sameId = rowCards
+					.map((c, index) => ({ c, index }))
+					.filter(entry => entry.c.id === card.id);
+				if (sameId.length === 1) {
+					cardIndex = sameId[0].index;
+				}
+			}
+			
 			if (cardIndex !== -1) {
 				const destroyedCard = rowCards.splice(cardIndex, 1)[0];
 				gameModule.addCardToDiscard(destroyedCard, 'opponent');
@@ -7330,9 +7590,7 @@ dealDamage: function(card, amount) {
 			const clickHandler = (target) => {
 				return (event) => {
 					// Проверяем, что цель все еще существует на поле
-					const stillExists = gameState.opponent.rows[target.row].cards.some(
-						c => c.uniqueId === target.card.uniqueId && c.type === 'unit'
-					);
+					const stillExists = gameState.opponent.rows[target.row].cards.includes(target.card);
 					
 					if (!stillExists) {
 						gameModule.showGameMessage('Эта карта уже не на поле', 'warning');
@@ -7359,7 +7617,8 @@ dealDamage: function(card, amount) {
 					gameModule.updateRowStrength(target.row, 'opponent');
 					gameModule.updateTotalScoreDisplays();
 					
-					if (target.card.strength <= 0) {
+					// Карта уничтожается, только если её реальная сила стала 0
+					if (target.card.modifiedStrength <= 0) {
 						this.destroyCard(gameState, target.card, target.row, gameModule);
 					}
 					
@@ -7373,13 +7632,25 @@ dealDamage: function(card, amount) {
 			for (const row of rows) {
 				const rowElement = document.getElementById(`opponent${gameModule.capitalizeFirst(row)}Row`);
 				if (!rowElement) continue;
+				
+				const rowState = gameState.opponent.rows[row];
 				const cards = rowElement.querySelectorAll('.board-card');
-				cards.forEach(cardElement => {
-					const cardId = cardElement.dataset.cardId;
+				
+				cards.forEach((cardElement, index) => {
+					// Сопоставляем элемент доски с картой по uniqueId,
+					// а если его нет — по позиции в ряду.
 					const uniqueId = cardElement.dataset.uniqueId;
-					const target = enemyUnits.find(u => 
-						(u.card.id === cardId || u.card.uniqueId === uniqueId)
-					);
+					let target = null;
+					
+					if (uniqueId) {
+						target = enemyUnits.find(u => u.row === row && u.card.uniqueId === uniqueId) || null;
+					}
+					if (!target && rowState.cards[index]) {
+						const indexedCard = rowState.cards[index];
+						const indexedTarget = enemyUnits.find(u => u.row === row && u.card === indexedCard);
+						if (indexedTarget) target = indexedTarget;
+					}
+					
 					if (target) {
 						cardElement.style.cursor = 'pointer';
 						cardElement.classList.add('damage-target');
@@ -7583,17 +7854,41 @@ dealDamage: function(card, amount) {
 		},
 		
 		dealDamage: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardDamage) {
+				window.gameModule.applyCardDamage(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			const newStrength = (card.strength || 0) - amount;
-			card.strength = Math.max(0, newStrength);
-			card.currentStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		},
 		
 		destroyCard: function(gameState, card, row, gameModule) {
 			const rowCards = gameState.opponent.rows[row].cards;
-			const cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			let cardIndex = -1;
+			
+			if (card.uniqueId !== undefined) {
+				cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			}
+			if (cardIndex === -1) {
+				cardIndex = rowCards.indexOf(card);
+			}
+			if (cardIndex === -1) {
+				// Последний вариант — ищем по id, но только если карта одна
+				const sameId = rowCards
+					.map((c, index) => ({ c, index }))
+					.filter(entry => entry.c.id === card.id);
+				if (sameId.length === 1) {
+					cardIndex = sameId[0].index;
+				}
+			}
+			
 			if (cardIndex !== -1) {
 				const destroyedCard = rowCards.splice(cardIndex, 1)[0];
 				gameModule.addCardToDiscard(destroyedCard, 'opponent');
@@ -7694,7 +7989,7 @@ dealDamage: function(card, amount) {
 							this.dealDamage(card, randomDamage);
 							damagedCount++;
 							
-							if (card.strength <= 0) {
+							if (card.modifiedStrength <= 0) {
 								unitsToDestroy.push({ card: card, row: rowId });
 							}
 						}
@@ -7942,17 +8237,41 @@ dealDamage: function(card, amount) {
 		},
 		
 		dealDamage: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardDamage) {
+				window.gameModule.applyCardDamage(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			const newStrength = (card.strength || 0) - amount;
-			card.strength = Math.max(0, newStrength);
-			card.currentStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		},
 		
 		destroyCard: function(gameState, card, row, gameModule) {
 			const rowCards = gameState.opponent.rows[row].cards;
-			const cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			let cardIndex = -1;
+			
+			if (card.uniqueId !== undefined) {
+				cardIndex = rowCards.findIndex(c => c.uniqueId === card.uniqueId);
+			}
+			if (cardIndex === -1) {
+				cardIndex = rowCards.indexOf(card);
+			}
+			if (cardIndex === -1) {
+				// Последний вариант — ищем по id, но только если карта одна
+				const sameId = rowCards
+					.map((c, index) => ({ c, index }))
+					.filter(entry => entry.c.id === card.id);
+				if (sameId.length === 1) {
+					cardIndex = sameId[0].index;
+				}
+			}
+			
 			if (cardIndex !== -1) {
 				const destroyedCard = rowCards.splice(cardIndex, 1)[0];
 				gameModule.addCardToDiscard(destroyedCard, 'opponent');
@@ -8149,12 +8468,19 @@ dealDamage: function(card, amount) {
 		},
 		
 		boostCard: function(card, amount) {
+			if (window.gameModule && window.gameModule.applyCardBoost) {
+				window.gameModule.applyCardBoost(card, amount);
+				return;
+			}
+			
 			if (card.baseStrength === undefined) card.baseStrength = card.strength;
 			if (card.originalStrength === undefined) card.originalStrength = card.strength;
-			card.strength = (card.strength || 0) + amount;
-			card.currentStrength = card.strength;
-			card.modifiedStrength = card.strength;
-			card._displayStrength = card.strength;
+			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
+			
+			card.modifiedStrength += amount;
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
+			card._displayStrength = card.currentStrength;
 		}
 	},
 	'syndicate_ability_5': {

@@ -436,7 +436,11 @@ const factionAbilitiesModule = {
                     if (!isReturningCard) {
                         const cardToDiscard = JSON.parse(JSON.stringify(card));
                         delete cardToDiscard.summonedByFlock;
-                        gameState[player].discard.push(cardToDiscard);
+                        if (window.gameModule && window.gameModule.addCardToDiscard) {
+                            window.gameModule.addCardToDiscard(card, player);
+                        } else {
+                            gameState[player].discard.push(cardToDiscard);
+                        }
                     } else {
                         if (!cardsToKeep.some(k => k.card === card)) {
                             cardsToKeep.push({ card: card, row: row, player: player });
@@ -459,7 +463,11 @@ const factionAbilitiesModule = {
                     );
                     
                     if (!isReturningTactic) {
-                        gameState[player].discard.push(gameState[player].rows[row].tactic);
+                        if (window.gameModule && window.gameModule.addCardToDiscard) {
+                            window.gameModule.addCardToDiscard(gameState[player].rows[row].tactic, player);
+                        } else {
+                            gameState[player].discard.push(gameState[player].rows[row].tactic);
+                        }
                         gameState[player].rows[row].tactic = null;
                     }
                 }
@@ -476,6 +484,11 @@ const factionAbilitiesModule = {
                 cardToReturn.strength = cardToReturn.baseStrength;
                 cardToReturn.currentStrength = cardToReturn.baseStrength;
                 cardToReturn.modifiedStrength = cardToReturn.baseStrength;
+            } else if (window.gameModule && window.gameModule.getCardBaseStrength) {
+                const baseStrength = window.gameModule.getCardBaseStrength(cardToReturn);
+                cardToReturn.strength = baseStrength;
+                cardToReturn.currentStrength = baseStrength;
+                cardToReturn.modifiedStrength = baseStrength;
             }
             
             cardToReturn.underWeather = false;

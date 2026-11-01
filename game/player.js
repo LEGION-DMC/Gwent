@@ -7,15 +7,19 @@ const playerModule = {
 
 	initializeCardFields: function(card) {
 		if (card.baseStrength === undefined) {
-			card.baseStrength = card.strength;
+			// Изначальную силу берём из описания карты, а не из текущей
+			// (текущая может быть уменьшена погодой).
+			card.baseStrength = window.gameModule && window.gameModule.getCardBaseStrength
+				? window.gameModule.getCardBaseStrength(card)
+				: card.strength;
 		}
 		
 		if (card.modifiedStrength === undefined) {
-			card.modifiedStrength = card.strength;
+			card.modifiedStrength = card.underWeather ? card.baseStrength : card.strength;
 		}
 		
 		if (card.currentStrength === undefined) {
-			card.currentStrength = card.strength;
+			card.currentStrength = card.modifiedStrength;
 		}
 		
 		if (card.underWeather === undefined) {
@@ -145,7 +149,11 @@ const playerModule = {
 			// Удаляем карту
 			const destroyedCard = { ...rowState.cards[cardIndex] };
 			rowState.cards.splice(cardIndex, 1);
-			this.gameState[owner].discard.push(destroyedCard);
+			if (window.gameModule && window.gameModule.addCardToDiscard) {
+				window.gameModule.addCardToDiscard(destroyedCard, owner);
+			} else {
+				this.gameState[owner].discard.push(destroyedCard);
+			}
 			destroyedCount++;
 			
 			if (window.gameModule) {
@@ -277,14 +285,15 @@ const playerModule = {
 			if (unitCard.type === 'unit' && !this.isHeroCard(unitCard)) {
 				this.initializeCardFields(unitCard);
 				
-				// Удваиваем modifiedStrength (базовую силу)
+				// Удваиваем modifiedStrength (силу без учёта погоды)
 				const boostValue = unitCard.modifiedStrength;
-				unitCard.modifiedStrength += boostValue;
 				
-				// Обновляем currentStrength
-				if (!unitCard.underWeather) {
-					unitCard.currentStrength = unitCard.modifiedStrength;
-					unitCard.strength = unitCard.modifiedStrength;
+				if (window.gameModule && window.gameModule.applyCardBoost) {
+					window.gameModule.applyCardBoost(unitCard, boostValue);
+				} else {
+					unitCard.modifiedStrength += boostValue;
+					unitCard.currentStrength = unitCard.underWeather ? 1 : unitCard.modifiedStrength;
+					unitCard.strength = unitCard.currentStrength;
 				}
 				
 				boostedCards++;
@@ -1115,7 +1124,11 @@ const playerModule = {
 			this.removeCardFromHand(boostCard);
 			
 			const boostCardCopy = { ...boostCard };
-			this.gameState.player.discard.push(boostCardCopy);
+			if (window.gameModule && window.gameModule.addCardToDiscard) {
+				window.gameModule.addCardToDiscard(boostCard, 'player');
+			} else {
+				this.gameState.player.discard.push(boostCardCopy);
+			}
 			
 			if (window.gameModule) {
 				window.gameModule.updateRowStrength(row, 'player');
@@ -1193,7 +1206,9 @@ const playerModule = {
 		this.gameState.boostTag = tag;
 		this.gameState.boostTagValue = boostValue;
 		
-		this.highlightPlayerCardsForSpecialTagBoost(tag, boostValue);
+		// Выбирается ряд целиком, поэтому подсвечиваем ряды с нужным тегом,
+		// а не отдельные карты.
+		this.highlightPlayerRowsForSpecialTagBoost(tag);
 	},
 
 	startSpecialCardBoostPlacement: function(card) {
@@ -1274,7 +1289,11 @@ const playerModule = {
 			
 			// Добавляем карту в сброс
 			const boostCardCopy = { ...boostCard };
-			this.gameState.player.discard.push(boostCardCopy);
+			if (window.gameModule && window.gameModule.addCardToDiscard) {
+				window.gameModule.addCardToDiscard(boostCard, 'player');
+			} else {
+				this.gameState.player.discard.push(boostCardCopy);
+			}
 			
 			if (window.gameModule) {
 				window.gameModule.updateRowStrength(row, 'player');
@@ -1312,7 +1331,7 @@ const playerModule = {
 		});
 		
 		if (!hasAvailableRows) {
-			const tagName = tag === 'witcher' ? 'Ведьмак' : 'Преступник';
+			const tagName = this.getTagRussianName(tag);
 			this.showMessage(`Нет карт с тегом "${tagName}" для усиления!`);
 			this.cancelCardSelection();
 		}
@@ -1375,7 +1394,11 @@ const playerModule = {
 			this.removeCardFromHand(boostCard);
 			
 			const boostCardCopy = { ...boostCard };
-			this.gameState.player.discard.push(boostCardCopy);
+			if (window.gameModule && window.gameModule.addCardToDiscard) {
+				window.gameModule.addCardToDiscard(boostCard, 'player');
+			} else {
+				this.gameState.player.discard.push(boostCardCopy);
+			}
 			
 			if (window.gameModule) {
 				window.gameModule.updateRowStrength(row, 'player');
@@ -1456,7 +1479,11 @@ const playerModule = {
 		
 		// Добавляем карту в сброс
 		const boostCardCopy = { ...boostCard };
-		this.gameState.player.discard.push(boostCardCopy);
+		if (window.gameModule && window.gameModule.addCardToDiscard) {
+			window.gameModule.addCardToDiscard(boostCard, 'player');
+		} else {
+			this.gameState.player.discard.push(boostCardCopy);
+		}
 		
 		if (window.gameModule) {
 			window.gameModule.updateRowStrength(row, 'player');
@@ -1559,7 +1586,11 @@ const playerModule = {
 			
 			// Добавляем карту в сброс
 			const boostCardCopy = { ...boostCard };
-			this.gameState.player.discard.push(boostCardCopy);
+			if (window.gameModule && window.gameModule.addCardToDiscard) {
+				window.gameModule.addCardToDiscard(boostCard, 'player');
+			} else {
+				this.gameState.player.discard.push(boostCardCopy);
+			}
 			
 			if (window.gameModule) {
 				window.gameModule.updateRowStrength(row, 'player');
@@ -1878,13 +1909,12 @@ const playerModule = {
 	applyBoostToCard: function(card, boostValue, row, player = 'player') {
 		this.initializeCardFields(card);
 		
-		card.modifiedStrength += boostValue;
-		
-		if (card.underWeather) {
-			card.currentStrength = 1;
+		if (window.gameModule && window.gameModule.applyCardBoost) {
+			window.gameModule.applyCardBoost(card, boostValue);
 		} else {
-			card.currentStrength = card.modifiedStrength;
-			card.strength = card.modifiedStrength;
+			card.modifiedStrength += boostValue;
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
 		}
 		
 		this.createBoostVisualEffectImproved(card, row, boostValue);
@@ -2278,35 +2308,44 @@ const playerModule = {
 		
 		this.removeCardFromHand(damageCard);
 		
-		const damageCardCopy = { ...damageCard };
-		this.gameState.player.discard.push(damageCardCopy);
+		if (window.gameModule && window.gameModule.addCardToDiscard) {
+			window.gameModule.addCardToDiscard(damageCard, 'player');
+		} else {
+			const damageCardCopy = { ...damageCard };
+			this.gameState.player.discard.push(damageCardCopy);
+		}
 		
 		// Инициализируем поля для отслеживания состояний, если их нет
 		this.initializeCardFields(targetCard);
 		
-		// Сохраняем текущую силу до применения урона
-		const currentDisplayStrength = targetCard.currentStrength !== undefined ? 
-			targetCard.currentStrength : targetCard.strength;
+		// Урон уменьшает силу без учёта погоды (modifiedStrength).
+		// Карта уничтожается только если её реальная сила стала 0.
+		if (window.gameModule && window.gameModule.applyCardDamage) {
+			window.gameModule.applyCardDamage(targetCard, damageValue);
+		} else {
+			targetCard.modifiedStrength = Math.max(0, targetCard.modifiedStrength - damageValue);
+			targetCard.currentStrength = targetCard.underWeather ? 1 : targetCard.modifiedStrength;
+			targetCard.strength = targetCard.currentStrength;
+		}
 		
-		// Применяем урон к модифицированной силе (сила без учета погоды)
-		const newModifiedStrength = Math.max(0, targetCard.modifiedStrength - damageValue);
-		targetCard.modifiedStrength = newModifiedStrength;
-		
-		// ВАЖНО: Проверка на уничтожение - используем И modifiedStrength И currentStrength
-		// Карта уничтожается, если:
-		// 1. modifiedStrength (реальная сила) стала 0, ИЛИ
-		// 2. currentStrength (текущая сила) меньше или равна damageValue (для карт под погодой с усилением)
-		const shouldBeDestroyed = (targetCard.modifiedStrength <= 0) || 
-								  (targetCard.underWeather && currentDisplayStrength <= damageValue);
+		const shouldBeDestroyed = targetCard.modifiedStrength <= 0;
 		
 		if (shouldBeDestroyed) {
 			// Карта уничтожена - удаляем с поля
 			const rowState = this.gameState.opponent.rows[row];
-			const cardIndex = rowState.cards.findIndex(c => c.id === targetCard.id);
+			const cardIndex = rowState.cards.findIndex(c =>
+				(c.uniqueId !== undefined && c.uniqueId === targetCard.uniqueId) ||
+				(c.uniqueId === undefined && c === targetCard)
+			);
 			if (cardIndex !== -1) {
-				const destroyedCard = { ...rowState.cards[cardIndex] };
+				const destroyedCard = rowState.cards[cardIndex];
 				rowState.cards.splice(cardIndex, 1);
-				this.gameState.opponent.discard.push(destroyedCard);
+				
+				if (window.gameModule && window.gameModule.addCardToDiscard) {
+					window.gameModule.addCardToDiscard(destroyedCard, 'opponent');
+				} else {
+					this.gameState.opponent.discard.push({ ...destroyedCard });
+				}
 				
 				// Создаем визуальный эффект уничтожения
 				this.createDestroyVisualEffect(targetCard, row);
@@ -2320,16 +2359,6 @@ const playerModule = {
 		} else {
 			// Карта не уничтожена, обновляем отображение
 			this.createDamageVisualEffect(targetCard, row, damageValue);
-			
-			// Если карта НЕ под погодой, обновляем текущую силу
-			if (!targetCard.underWeather) {
-				targetCard.currentStrength = newModifiedStrength;
-				targetCard.strength = newModifiedStrength;
-			} else {
-				// Если карта под погодой, текущая сила остается 1 (или 1+усиление),
-				// но modifiedStrength уже обновлен для будущего восстановления
-				// НЕ меняем currentStrength здесь
-			}
 			
 			if (window.gameModule) {
 				window.gameModule.updateCardStrengthDisplay(targetCard, row, 'opponent');
@@ -2880,8 +2909,12 @@ const playerModule = {
 		
 		this.removeCardFromHand(damageCard);
 		
-		const damageCardCopy = { ...damageCard };
-		this.gameState.player.discard.push(damageCardCopy);
+		if (window.gameModule && window.gameModule.addCardToDiscard) {
+			window.gameModule.addCardToDiscard(damageCard, 'player');
+		} else {
+			const damageCardCopy = { ...damageCard };
+			this.gameState.player.discard.push(damageCardCopy);
+		}
 		
 		const rowState = this.gameState.opponent.rows[row];
 		let destroyedCards = [];
@@ -2895,27 +2928,19 @@ const playerModule = {
 				// Инициализируем поля для отслеживания состояний
 				this.initializeCardFields(card);
 				
-				// Сохраняем текущую силу до применения урона
-				const currentDisplayStrength = card.currentStrength !== undefined ? 
-					card.currentStrength : card.strength;
+				// Урон уменьшает силу без учёта погоды. Карта уничтожается,
+				// только если её реальная сила стала 0.
+				if (window.gameModule && window.gameModule.applyCardDamage) {
+					window.gameModule.applyCardDamage(card, damageValue);
+				} else {
+					card.modifiedStrength = Math.max(0, card.modifiedStrength - damageValue);
+					card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+					card.strength = card.currentStrength;
+				}
 				
-				// Применяем урон к модифицированной силе
-				const newModifiedStrength = Math.max(0, card.modifiedStrength - damageValue);
-				card.modifiedStrength = newModifiedStrength;
-				
-				// ВАЖНО: Проверка на уничтожение
-				const shouldBeDestroyed = (card.modifiedStrength <= 0) || 
-										  (card.underWeather && currentDisplayStrength <= damageValue);
-				
-				if (shouldBeDestroyed) {
+				if (card.modifiedStrength <= 0) {
 					destroyedCards.push(card);
 				} else {
-					// Если карта НЕ под погодой, обновляем текущую силу
-					if (!card.underWeather) {
-						card.currentStrength = newModifiedStrength;
-						card.strength = newModifiedStrength;
-					}
-					
 					this.createDamageVisualEffect(card, row, damageValue);
 					
 					if (window.gameModule) {
@@ -2928,12 +2953,20 @@ const playerModule = {
 		// Удаляем уничтоженные карты
 		for (let i = destroyedCards.length - 1; i >= 0; i--) {
 			const destroyedCard = destroyedCards[i];
-			const cardIndex = rowState.cards.findIndex(c => c.id === destroyedCard.id);
+			const cardIndex = rowState.cards.findIndex(c =>
+				(c.uniqueId !== undefined && c.uniqueId === destroyedCard.uniqueId) ||
+				(c.uniqueId === undefined && c === destroyedCard)
+			);
 			
 			if (cardIndex !== -1) {
-				const destroyedCardCopy = { ...rowState.cards[cardIndex] };
+				const destroyedCardCopy = rowState.cards[cardIndex];
 				rowState.cards.splice(cardIndex, 1);
-				this.gameState.opponent.discard.push(destroyedCardCopy);
+				
+				if (window.gameModule && window.gameModule.addCardToDiscard) {
+					window.gameModule.addCardToDiscard(destroyedCardCopy, 'opponent');
+				} else {
+					this.gameState.opponent.discard.push({ ...destroyedCardCopy });
+				}
 				
 				this.createDestroyVisualEffect(destroyedCard, row);
 				
@@ -3093,7 +3126,11 @@ const playerModule = {
 		
 		// Добавляем карту в сброс игрока
 		const destroyCardCopy = { ...destroyCard };
-		this.gameState.player.discard.push(destroyCardCopy);
+		if (window.gameModule && window.gameModule.addCardToDiscard) {
+			window.gameModule.addCardToDiscard(destroyCard, 'player');
+		} else {
+			this.gameState.player.discard.push(destroyCardCopy);
+		}
 		
 		// Удаляем только артефакты из ряда (НЕ тактики)
 		if (targetType === 'artifact') {
@@ -3118,7 +3155,11 @@ const playerModule = {
 				rowState.cards.splice(cardIndex, 1);
 				
 				// Добавляем ТОЛЬКО ОДНУ копию в сброс противника
-				this.gameState.opponent.discard.push(destroyedCard);
+				if (window.gameModule && window.gameModule.addCardToDiscard) {
+					window.gameModule.addCardToDiscard(destroyedCard, 'opponent');
+				} else {
+					this.gameState.opponent.discard.push(destroyedCard);
+				}
 				
 				// Визуальный эффект
 				this.createArtifactDestroyEffect(targetCard, targetRow, targetType);
@@ -3196,13 +3237,16 @@ const playerModule = {
 	removeBoostFromCard: function(card, boostValue, row) {
 		this.initializeCardFields(card);
 		
-		// Уменьшаем modifiedStrength на значение усиления
-		card.modifiedStrength = Math.max(card.baseStrength || 0, card.modifiedStrength - boostValue);
-		
-		// Обновляем currentStrength
-		if (!card.underWeather) {
-			card.currentStrength = card.modifiedStrength;
-			card.strength = card.modifiedStrength;
+		if (window.gameModule && window.gameModule.applyCardDamage) {
+			// Снятие усиления не может опустить силу ниже изначальной
+			const baseStrength = window.gameModule.getCardBaseStrength(card);
+			const newStrength = Math.max(baseStrength, card.modifiedStrength - boostValue);
+			window.gameModule.applyCardDamage(card, card.modifiedStrength - newStrength);
+		} else {
+			// Уменьшаем modifiedStrength на значение усиления
+			card.modifiedStrength = Math.max(card.baseStrength || 0, card.modifiedStrength - boostValue);
+			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.strength = card.currentStrength;
 		}
 		
 		// Визуальный эффект снятия усиления (красный)
@@ -3364,7 +3408,11 @@ const playerModule = {
 		
 		// Добавляем Казнь в сброс игрока
 		const destroyCardCopy = { ...destroyCard };
-		this.gameState.player.discard.push(destroyCardCopy);
+		if (window.gameModule && window.gameModule.addCardToDiscard) {
+			window.gameModule.addCardToDiscard(destroyCard, 'player');
+		} else {
+			this.gameState.player.discard.push(destroyCardCopy);
+		}
 		
 		let destroyedCount = 0;
 		
@@ -3383,7 +3431,11 @@ const playerModule = {
 			if (cardIndex !== -1) {
 				const destroyedCard = { ...rowState.cards[cardIndex] };
 				rowState.cards.splice(cardIndex, 1);
-				this.gameState[owner].discard.push(destroyedCard);
+				if (window.gameModule && window.gameModule.addCardToDiscard) {
+					window.gameModule.addCardToDiscard(destroyedCard, owner);
+				} else {
+					this.gameState[owner].discard.push(destroyedCard);
+				}
 				destroyedCount++;
 				
 				if (window.gameModule) {
@@ -3993,12 +4045,17 @@ const playerModule = {
 			}
 		}
 
+		const cardBaseStrength = window.gameModule && window.gameModule.getCardBaseStrength
+			? window.gameModule.getCardBaseStrength(card)
+			: (card.baseStrength !== undefined ? card.baseStrength : card.strength);
+
 		const cardCopy = {
 			...card,
 			uniqueId: `${card.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-			baseStrength: card.strength,
-			currentStrength: card.strength,
-			modifiedStrength: card.strength,
+			baseStrength: cardBaseStrength,
+			strength: cardBaseStrength,
+			currentStrength: cardBaseStrength,
+			modifiedStrength: cardBaseStrength,
 			underWeather: false,
 			owner: 'player',
 			row: row
@@ -4211,12 +4268,17 @@ const playerModule = {
 			}
 
 			// Создаём копию и размещаем на поле
+			const baseStrength = window.gameModule && window.gameModule.getCardBaseStrength
+				? window.gameModule.getCardBaseStrength(card)
+				: (card.baseStrength !== undefined ? card.baseStrength : card.strength);
+			
 			const summonCopy = {
 				...card,
 				uniqueId: `${card.id}_call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-				baseStrength: card.strength,
-				currentStrength: card.strength,
-				modifiedStrength: card.strength,
+				baseStrength: baseStrength,
+				currentStrength: baseStrength,
+				modifiedStrength: baseStrength,
+				strength: baseStrength,
 				underWeather: false,
 				owner: 'player',
 				row: targetRow,

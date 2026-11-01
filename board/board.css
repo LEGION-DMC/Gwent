@@ -1526,7 +1526,8 @@
     border-top: 8px solid #d4af37;
 }
 
-.row-boost-target {
+.row-boost-target,
+.tag-boost-target {
     border: 2px solid #4CAF50 !important;
     box-shadow: 0 0 20px rgba(76, 175, 80, 0.4) !important;
     border-radius: 8px;
@@ -1534,7 +1535,8 @@
     cursor: pointer;
 }
 
-.row-boost-target:hover {
+.row-boost-target:hover,
+.tag-boost-target:hover {
     box-shadow: 0 0 35px rgba(76, 175, 80, 0.7) !important;
     transform: scale(1.01);
 }
