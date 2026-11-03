@@ -2050,7 +2050,7 @@ const aiModule = {
 				targetCard.modifiedStrength = targetCard.strength;
 			}
 			targetCard.modifiedStrength = Math.max(0, targetCard.modifiedStrength - damageValue);
-			targetCard.currentStrength = targetCard.underWeather ? 1 : targetCard.modifiedStrength;
+			targetCard.currentStrength = targetCard.modifiedStrength;
 			targetCard.strength = targetCard.currentStrength;
 		}
 		
@@ -2130,7 +2130,7 @@ const aiModule = {
 						card.modifiedStrength = card.strength;
 					}
 					card.modifiedStrength = Math.max(0, card.modifiedStrength - damageValue);
-					card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+					card.currentStrength = card.modifiedStrength;
 					card.strength = card.currentStrength;
 				}
 				

@@ -1624,6 +1624,7 @@ const gameModule = {
 		
 		// Сбрасываем состояние погоды
 		card.underWeather = false;
+		delete card._preWeatherStrength;
 		
 		// Удаляем временные поля
 		delete card._displayStrength;
@@ -1725,11 +1726,16 @@ const gameModule = {
 		}
 		
 		if (typeof card.modifiedStrength !== 'number') {
-			// Под погодой strength может быть равен 1 — тогда реальную силу
-			// восстанавливаем из изначальной.
-			card.modifiedStrength = card.underWeather
-				? baseStrength
-				: (typeof card.strength === 'number' ? card.strength : baseStrength);
+			// Под погодой сила уже приведена к 1 при применении эффекта.
+			// Изначальную силу запоминаем, чтобы вернуть её после очистки погоды.
+			if (card.underWeather) {
+				if (typeof card._preWeatherStrength !== 'number') {
+					card._preWeatherStrength = baseStrength;
+				}
+				card.modifiedStrength = Math.min(1, card._preWeatherStrength);
+			} else {
+				card.modifiedStrength = typeof card.strength === 'number' ? card.strength : baseStrength;
+			}
 		}
 		
 		if (typeof card.currentStrength !== 'number') {
@@ -1746,13 +1752,11 @@ const gameModule = {
 		
 		if (typeof card.modifiedStrength !== 'number') return;
 		
-		// Погода уменьшает силу до 1 (герои не затрагиваются)
-		if (card.underWeather) {
-			card.currentStrength = Math.min(1, card.modifiedStrength);
-		} else {
-			card.currentStrength = card.modifiedStrength;
-		}
-		
+		// Погода уже учтена в modifiedStrength в момент её применения:
+		// сила карты приводится к 1, а последующие усиления/урон
+		// меняют это значение. Поэтому здесь просто синхронизируем
+		// отображаемую силу с фактической.
+		card.currentStrength = Math.max(0, card.modifiedStrength);
 		card.strength = card.currentStrength;
 		card._displayStrength = card.currentStrength;
 	},
@@ -1793,6 +1797,26 @@ const gameModule = {
 		return true;
 	},
 
+	restoreCardFromWeather: function(card) {
+		if (!card || !card.underWeather) return;
+
+		const preWeatherStrength = typeof card._preWeatherStrength === 'number'
+			? card._preWeatherStrength
+			: this.getCardBaseStrength(card);
+		const weatherStrength = Math.min(1, preWeatherStrength);
+		const postWeatherChange = typeof card.modifiedStrength === 'number'
+			? card.modifiedStrength - weatherStrength
+			: 0;
+
+		// Возвращаем силу, которая была до погоды, сохраняя усиления/урон,
+		// применённые уже после неё.
+		card.modifiedStrength = Math.max(0, preWeatherStrength + postWeatherChange);
+		card.underWeather = false;
+		delete card._preWeatherStrength;
+
+		this.refreshCardStrength(card);
+	},
+
 	applyWeatherToCard: function(card, row, player) {
 		if (!card || card.type !== 'unit') return;
 		
@@ -1800,6 +1824,7 @@ const gameModule = {
 		if (isHero) {
 			if (card.underWeather) {
 				card.underWeather = false;
+				delete card._preWeatherStrength;
 				this.refreshCardStrength(card);
 				this.updateCardStrengthDisplay(card, row, player);
 			}
@@ -1813,11 +1838,11 @@ const gameModule = {
 		
 		if (this.isRowUnderWeather(row, player)) {
 			this.normalizeCardStrength(card);
+			this.refreshCardStrength(card);
 		} else {
-			card.underWeather = false;
+			this.restoreCardFromWeather(card);
 		}
 		
-		this.refreshCardStrength(card);
 		this.updateCardStrengthDisplay(card, row, player);
 	},
 
@@ -1832,6 +1857,7 @@ const gameModule = {
 			: (typeof prepared.strength === 'number' ? prepared.strength : undefined);
 		
 		delete prepared._displayStrength;
+		delete prepared._preWeatherStrength;
 		delete prepared.underWeather;
 		delete prepared.boostedCardId;
 		delete prepared.boostedCardUniqueId;
@@ -2051,8 +2077,8 @@ const gameModule = {
 		rows.forEach(row => {
 			players.forEach(player => {
 				this.gameState[player].rows[row].cards.forEach(card => {
-					card.underWeather = false;
-					this.refreshCardStrength(card);
+					if (!card.underWeather) return;
+					this.restoreCardFromWeather(card);
 					this.updateCardStrengthDisplay(card, row, player);
 				});
 				
@@ -2072,7 +2098,15 @@ const gameModule = {
 			}
 			
 			this.normalizeCardStrength(card);
+
+			// Запоминаем силу до погоды, чтобы вернуть её при очистке.
+			// Повторное применение погоды не должно затирать это значение.
+			if (!card.underWeather || typeof card._preWeatherStrength !== 'number') {
+				card._preWeatherStrength = card.modifiedStrength;
+			}
+
 			card.underWeather = true;
+			card.modifiedStrength = Math.min(1, card._preWeatherStrength);
 			this.refreshCardStrength(card);
 			
 			this.updateCardStrengthDisplay(card, row, player);
@@ -2459,6 +2493,35 @@ const gameModule = {
 		});
 		
 		this.updateRowStrength(row, player);
+		
+		// Перерисовка ряда удаляет визуальный слой погоды (он был внутри ряда),
+		// поэтому возвращаем его, если ряд всё ещё под погодой.
+		this.restoreRowWeatherVisual(row);
+	},
+
+	// Возвращает визуальный эффект погоды на ряд после перерисовки/очистки ряда.
+	restoreRowWeatherVisual: function(row) {
+		if (!this.gameState || !this.gameState.weather || !this.gameState.weather.effects) {
+			return;
+		}
+		
+		const rowWeather = this.gameState.weather.effects[row];
+		if (!rowWeather || !rowWeather.card) {
+			return;
+		}
+		
+		// Погода действует только на определённые ряды (см. getWeatherEffectForCard).
+		const weatherEffect = this.getWeatherEffectForCard(rowWeather.card);
+		if (!weatherEffect || !weatherEffect.rows || !weatherEffect.rows.includes(row)) {
+			return;
+		}
+		
+		const image = rowWeather.image || (weatherEffect.images && weatherEffect.images[row]);
+		if (!image) {
+			return;
+		}
+		
+		this.applyVisualWeatherEffect(row, image);
 	},
 
 	displayCardOnRow: function(row, card, player = 'player', insertIndex = -1) {
@@ -2533,6 +2596,7 @@ const gameModule = {
 		copy.currentStrength = baseStrength;
 		copy.modifiedStrength = baseStrength;
 		copy.underWeather = false;
+		delete copy._preWeatherStrength;
 		
 		return copy;
 	},
@@ -3799,9 +3863,19 @@ const gameModule = {
 			return false;
 		}
 		
+		if (this._leaderAbilityInProgress) {
+			this.showGameMessage('Способность уже активирована! Завершите выбор цели.', 'warning');
+			return false;
+		}
+		
 		if (window.leaderAbilities && window.leaderAbilities[abilityId]) {
-			const result = window.leaderAbilities[abilityId].execute(this.gameState, this);
-			if (result !== false) {
+			this._leaderAbilityInProgress = true;
+			
+			const finishAbility = () => {
+				this._leaderAbilityInProgress = false;
+			};
+			
+			const markAbilityUsed = () => {
 				this.gameState.player.abilityUsedThisRound = true;
 				
 				// ===== ВАЖНО: ОБНОВЛЯЕМ ИКОНКУ =====
@@ -3815,7 +3889,48 @@ const gameModule = {
 						window.boardModule.updateAbilityAvailability(this.gameState);
 					}, 100);
 				}
-				
+			};
+			
+			let result;
+			try {
+				result = window.leaderAbilities[abilityId].execute(this.gameState, this);
+			} catch (error) {
+				finishAbility();
+				console.error('[leader ability] Ошибка выполнения способности:', error);
+				return false;
+			}
+			
+			// Асинхронные способности (например, "Мобилизация") должны считаться
+			// использованными только после завершения выбора цели. Иначе отмена
+			// выбора всё равно расходует способность.
+			if (result && typeof result.then === 'function') {
+				return result.then((resolvedResult) => {
+					finishAbility();
+					
+					if (resolvedResult !== false) {
+						markAbilityUsed();
+						return true;
+					}
+					
+					// Выбор отменён - возвращаем иконку в доступное состояние
+					if (window.boardModule?.updateAbilityAvailability) {
+						window.boardModule.updateAbilityAvailability(this.gameState);
+					}
+					return false;
+				}).catch((error) => {
+					finishAbility();
+					console.error('[leader ability] Ошибка выполнения способности:', error);
+					if (window.boardModule?.updateAbilityAvailability) {
+						window.boardModule.updateAbilityAvailability(this.gameState);
+					}
+					return false;
+				});
+			}
+			
+			finishAbility();
+			
+			if (result !== false) {
+				markAbilityUsed();
 				return true;
 			}
 			return false;

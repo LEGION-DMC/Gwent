@@ -274,6 +274,7 @@
 
 .deck-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px); } 
 .deck-modal-overlay.active { opacity: 1; visibility: visible; }
+.deck-modal-wrapper { display: flex; flex-direction: column; align-items: center; gap: 16px; max-height: calc(100% - 40px); }
 .deck-modal { background: linear-gradient(145deg, #1a1a1a, #2a2a2a); border: 2px solid #d4af37; border-radius: 10px; width: 800px; height: 500px; transform: scale(0.9); opacity: 0; transition: all 0.3s ease; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 50px rgba(212, 175, 55, 0.3); } 
 .deck-modal-overlay.active .deck-modal { transform: scale(1); opacity: 1; } 
 .deck-modal__header { display: flex; justify-content: space-between; align-items: center; padding: 0px 15px; border-bottom: 2px solid #d4af37; position: relative; min-height: 50px; }
@@ -309,7 +310,41 @@
         0 0 8px rgba(207, 170, 74, 0.4),
         0 1px 1px rgba(0, 0, 0, 0.3);
 }.deck-modal__close { display: none; } 
-.deck-modal__content { background: url('../ui/fon_dop.jpg') no-repeat center center; background-size: cover; overflow-x: hidden; flex: 1; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 25px; align-content: flex-start; }
+.deck-modal__content { 
+	background: url('../ui/fon_dop.jpg') no-repeat center center; 
+	background-size: cover; 
+	overflow-x: hidden; 
+	flex: 1; 
+	padding: 20px; 
+	display: grid; 
+	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 25px; align-content: flex-start; }
+
+.deck-modal__footer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.deck-modal__cancel {
+	background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+	color: #d4af37;
+	border: 2px solid #d4af37;
+	border-radius: 8px;
+	padding: 10px 35px;
+	cursor: url('../ui/cursor_hover.png'), pointer;
+	font-family: 'Gwent', sans-serif;
+	font-size: 16px;
+	font-weight: bold;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.deck-modal__cancel:hover {
+	transform: scale(1.05);
+	box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+}
 
 .deck-card {
 	position: relative;

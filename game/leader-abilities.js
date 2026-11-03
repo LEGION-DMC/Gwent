@@ -1,7 +1,7 @@
 const leaderAbilities = {
 	'scoiatael_ability_1': {
 		name: 'Махакамская кузня',
-		description: 'Усильте всех Краснолюдов на поле 3 еденицы',
+		description: 'Усильте всех Краснолюдов на поле на 3 еденицы',
 		execute: function(gameState, gameModule) {
 			const boostedCards = [];
 			const rows = ['close', 'ranged', 'siege'];
@@ -46,7 +46,7 @@ const leaderAbilities = {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength += amount;
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		},
@@ -512,7 +512,7 @@ const leaderAbilities = {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		},
@@ -1005,7 +1005,7 @@ const leaderAbilities = {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength += amount;
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		}
@@ -1349,7 +1349,7 @@ const leaderAbilities = {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		},
@@ -1698,7 +1698,7 @@ const leaderAbilities = {
 			}
 			
 			card.modifiedStrength += amount;
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		},
@@ -2200,7 +2200,7 @@ const leaderAbilities = {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		},
@@ -2559,7 +2559,7 @@ const leaderAbilities = {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength += amount;
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		}
@@ -2864,7 +2864,7 @@ const leaderAbilities = {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength += amount;
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		}
@@ -2996,35 +2996,43 @@ const leaderAbilities = {
 				// Закрываем предыдущие модальные окна
 				const existingModals = document.querySelectorAll('.deck-modal-overlay');
 				existingModals.forEach(modal => modal.remove());
+
+				const playerFaction = (gameModule && gameModule.gameState && gameModule.gameState.player && gameModule.gameState.player.faction)
+					|| (cards[0] && cards[0].card && cards[0].card.faction)
+					|| 'neutral';
+				const factionBackground = `faction/${playerFaction}/border_faction.png`;
 				
 				const modalOverlay = document.createElement('div');
 				modalOverlay.className = 'deck-modal-overlay';
 				modalOverlay.innerHTML = `
-					<div class="deck-modal">
-						<div class="deck-modal__header">
-							<div class="deck-modal__title">ВЫБЕРИТЕ БРОНЗОВЫЙ ОТРЯД</div>
-							<div class="deck-modal__count">${cards.length}</div>
-						</div>
-						<div class="deck-modal__content">
-							${cards.map((item, idx) => `
-								<div class="deck-card" data-card-index="${idx}" data-card-id="${item.card.id}">
-									<div class="deck-card__container">
-										<img src="card/${item.card.faction}/${item.card.imageStatic || (item.card.image ? item.card.image.replace('.mp4', '.jpg') : 'placeholder.jpg')}" 
-											 class="deck-card__media" onerror="this.src='card/placeholder.jpg'">
-										<img src="${item.card.border || 'deck/bord_silver.png'}" class="deck-card__border">
-										<img src="${item.card.banner || 'faction/' + item.card.faction + '/banner_silver.png'}" class="deck-card__banner">
-										<div class="deck-card__name">${item.card.name}</div>
-										<div class="deck-card__strength">${item.card.strength || ''}</div>
-										${item.card.position ? `
-										<div class="deck-card__position">
-											<img src="${item.card.positionBanner || 'faction/' + item.card.faction + '/banner_position.png'}" class="deck-card__position-banner">
-											<img src="${this.getPositionIconPath(item.card.position)}" class="deck-card__position-icon">
+					<div class="deck-modal-wrapper">
+						<div class="deck-modal">
+							<div class="deck-modal__header" style="background: url('${factionBackground}') center/cover;">
+								<div class="deck-modal__title">ВЫБЕРИТЕ БРОНЗОВЫЙ ОТРЯД</div>
+								<div class="deck-modal__count">${cards.length}</div>
+							</div>
+							<div class="deck-modal__content">
+								${cards.map((item, idx) => `
+									<div class="deck-card" data-card-index="${idx}" data-card-id="${item.card.id}">
+										<div class="deck-card__container">
+											<img src="card/${item.card.faction}/${item.card.imageStatic || (item.card.image ? item.card.image.replace('.mp4', '.jpg') : 'placeholder.jpg')}" 
+												 class="deck-card__media" onerror="this.src='card/placeholder.jpg'">
+											<img src="${item.card.border || 'deck/bord_silver.png'}" class="deck-card__border">
+											<img src="${item.card.banner || 'faction/' + item.card.faction + '/banner_silver.png'}" class="deck-card__banner">
+											<div class="deck-card__name">${item.card.name}</div>
+											<div class="deck-card__strength">${item.card.strength || ''}</div>
+											${item.card.position ? `
+											<div class="deck-card__position">
+												<img src="${item.card.positionBanner || 'faction/' + item.card.faction + '/banner_position.png'}" class="deck-card__position-banner">
+												<img src="${this.getPositionIconPath(item.card.position)}" class="deck-card__position-icon">
+											</div>
+											` : ''}
 										</div>
-										` : ''}
 									</div>
-								</div>
-							`).join('')}
+								`).join('')}
+							</div>
 						</div>
+						<button class="deck-modal__cancel" type="button">ОТМЕНА</button>
 					</div>
 				`;
 				
@@ -3090,6 +3098,23 @@ const leaderAbilities = {
 				modalOverlay.addEventListener('click', closeHandler);
 				document.addEventListener('keydown', closeHandler);
 				modalOverlay._closeHandler = closeHandler;
+				
+				// Кнопка отмены выбора
+				const cancelBtn = modalOverlay.querySelector('.deck-modal__cancel');
+				if (cancelBtn) {
+					cancelBtn.addEventListener('click', (e) => {
+						e.stopPropagation();
+						if (isResolved) return;
+						this.closeModal(modalOverlay);
+						document.removeEventListener('keydown', closeHandler);
+						resolveOnce(null);
+						audioManager.playSound('button');
+					});
+					
+					cancelBtn.addEventListener('mouseenter', () => {
+						audioManager.playSound('touch');
+					});
+				}
 			});
 		},
 		
@@ -3287,7 +3312,7 @@ const leaderAbilities = {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength += amount;
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 		},
 		
@@ -3353,14 +3378,28 @@ const leaderAbilities = {
 				const uniqueId = cardElement.dataset.uniqueId;
 				const row = cardElement.dataset.row;
 				
+				// Ищем карту по uniqueId: копии одной карты имеют одинаковый id,
+				// поэтому поиск только по id всегда выбирал первую копию в ряду.
 				let targetCard = null;
-				for (const r of rows) {
-					const card = gameState.player.rows[r].cards.find(c => 
-						(c.id === cardId || c.uniqueId === uniqueId)
-					);
-					if (card) {
-						targetCard = card;
-						break;
+				const clickedRowCards = row && gameState.player.rows[row]
+					? gameState.player.rows[row].cards
+					: null;
+				
+				if (clickedRowCards) {
+					targetCard = uniqueId
+						? clickedRowCards.find(c => c.uniqueId === uniqueId) || null
+						: clickedRowCards.find(c => c.id === cardId) || null;
+				}
+				
+				if (!targetCard) {
+					for (const r of rows) {
+						const rowCards = gameState.player.rows[r].cards;
+						targetCard = uniqueId
+							? rowCards.find(c => c.uniqueId === uniqueId) || null
+							: rowCards.find(c => c.id === cardId) || null;
+						if (targetCard) {
+							break;
+						}
 					}
 				}
 				
@@ -3738,7 +3777,7 @@ const leaderAbilities = {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength += amount;
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		}
@@ -4021,7 +4060,7 @@ dealDamage: function(card, amount) {
     
     // Наносим урон МОДИФИЦИРОВАННОЙ силе (реальной силе карты)
     card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
-    card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+    card.currentStrength = card.modifiedStrength;
     card.strength = card.currentStrength;
     card._displayStrength = card.currentStrength;
 },
@@ -4606,7 +4645,7 @@ dealDamage: function(card, amount) {
 			}
 			
 			card.modifiedStrength += amount;
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		}
@@ -5032,9 +5071,15 @@ dealDamage: function(card, amount) {
 					if (card.baseStrength === undefined) card.baseStrength = card.strength || 0;
 					if (card.originalStrength === undefined) card.originalStrength = card.strength || 0;
 					
+					if (!card.underWeather || typeof card._preWeatherStrength !== 'number') {
+						card._preWeatherStrength = card.modifiedStrength !== undefined
+							? card.modifiedStrength
+							: (card.baseStrength || card.strength || 0);
+					}
 					card.underWeather = true;
-					card.currentStrength = 1;
-					card.strength = 1;
+					card.modifiedStrength = Math.min(1, card._preWeatherStrength);
+					card.currentStrength = card.modifiedStrength;
+					card.strength = card.currentStrength;
 					
 					// Обновляем отображение карты
 					if (gameModule.updateCardStrengthDisplay) {
@@ -5101,13 +5146,17 @@ dealDamage: function(card, amount) {
 			if (gameState && gameState.opponent && gameState.opponent.rows && gameState.opponent.rows[row]) {
 				gameState.opponent.rows[row].cards.forEach(card => {
 					if (card.underWeather) {
-						card.underWeather = false;
-						
-						if (gameModule && gameModule.refreshCardStrength) {
-							gameModule.refreshCardStrength(card);
-						} else if (card.modifiedStrength !== undefined) {
-							card.strength = card.modifiedStrength;
-							card.currentStrength = card.modifiedStrength;
+						if (gameModule && gameModule.restoreCardFromWeather) {
+							gameModule.restoreCardFromWeather(card);
+						} else {
+							card.underWeather = false;
+
+							if (gameModule && gameModule.refreshCardStrength) {
+								gameModule.refreshCardStrength(card);
+							} else if (card.modifiedStrength !== undefined) {
+								card.strength = card.modifiedStrength;
+								card.currentStrength = card.modifiedStrength;
+							}
 						}
 						
 						if (gameModule && gameModule.updateCardStrengthDisplay) {
@@ -5123,7 +5172,7 @@ dealDamage: function(card, amount) {
 	},
 	'monsters_ability_2': {
 		name: 'Неутолимый голод',
-		description: 'Уничтожьте дружественный отряд, затем призовите Волколака, усиленного на значение силы уничтоженого отряда, из колоды на поле в этом же ряду',
+		description: 'Уничтожьте дружественный отряд, затем призовите Волколака, усиленного на значение силы уничтоженного отряда, из колоды на поле в этом же ряду',
 		execute: function(gameState, gameModule) {
 			const friendlyUnits = [];
 			const rows = ['close', 'ranged', 'siege'];
@@ -5509,7 +5558,7 @@ dealDamage: function(card, amount) {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength += amount;
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		}
@@ -5673,7 +5722,7 @@ dealDamage: function(card, amount) {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		},
@@ -6171,7 +6220,7 @@ dealDamage: function(card, amount) {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength += amount;
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		}
@@ -6388,7 +6437,7 @@ dealDamage: function(card, amount) {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		},
@@ -6458,9 +6507,15 @@ dealDamage: function(card, amount) {
 					if (card.baseStrength === undefined) card.baseStrength = card.strength || 0;
 					if (card.originalStrength === undefined) card.originalStrength = card.strength || 0;
 					
+					if (!card.underWeather || typeof card._preWeatherStrength !== 'number') {
+						card._preWeatherStrength = card.modifiedStrength !== undefined
+							? card.modifiedStrength
+							: (card.baseStrength || card.strength || 0);
+					}
 					card.underWeather = true;
-					card.currentStrength = 1;
-					card.strength = 1;
+					card.modifiedStrength = Math.min(1, card._preWeatherStrength);
+					card.currentStrength = card.modifiedStrength;
+					card.strength = card.currentStrength;
 				});
 			}
 			
@@ -6501,13 +6556,17 @@ dealDamage: function(card, amount) {
 			if (gameState && gameState.opponent && gameState.opponent.rows[row]) {
 				gameState.opponent.rows[row].cards.forEach(card => {
 					if (card.underWeather) {
-						card.underWeather = false;
-						
-						if (gameModule && gameModule.refreshCardStrength) {
-							gameModule.refreshCardStrength(card);
-						} else if (card.modifiedStrength !== undefined) {
-							card.strength = card.modifiedStrength;
-							card.currentStrength = card.modifiedStrength;
+						if (gameModule && gameModule.restoreCardFromWeather) {
+							gameModule.restoreCardFromWeather(card);
+						} else {
+							card.underWeather = false;
+
+							if (gameModule && gameModule.refreshCardStrength) {
+								gameModule.refreshCardStrength(card);
+							} else if (card.modifiedStrength !== undefined) {
+								card.strength = card.modifiedStrength;
+								card.currentStrength = card.modifiedStrength;
+							}
 						}
 					}
 				});
@@ -6812,7 +6871,7 @@ dealDamage: function(card, amount) {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		},
@@ -7146,7 +7205,7 @@ dealDamage: function(card, amount) {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		},
@@ -7352,11 +7411,16 @@ dealDamage: function(card, amount) {
 		
 		showDeckSelectionModal: function(cards, gameModule) {
 			return new Promise((resolve) => {
+				const playerFaction = (gameModule && gameModule.gameState && gameModule.gameState.player && gameModule.gameState.player.faction)
+					|| (cards[0] && cards[0].card && cards[0].card.faction)
+					|| 'neutral';
+				const factionBackground = `faction/${playerFaction}/border_faction.png`;
+
 				const modalOverlay = document.createElement('div');
 				modalOverlay.className = 'deck-modal-overlay';
 				modalOverlay.innerHTML = `
 					<div class="deck-modal">
-						<div class="deck-modal__header">
+						<div class="deck-modal__header" style="background: url('${factionBackground}') center/cover;">
 							<div class="deck-modal__title">ВЫБЕРИТЕ ОТРЯД ДЛЯ ЖЕРТВОПРИНОШЕНИЯ</div>
 							<div class="deck-modal__count">${cards.length}</div>
 						</div>
@@ -7495,7 +7559,7 @@ dealDamage: function(card, amount) {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		},
@@ -7864,7 +7928,7 @@ dealDamage: function(card, amount) {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		},
@@ -8247,7 +8311,7 @@ dealDamage: function(card, amount) {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength = Math.max(0, card.modifiedStrength - amount);
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		},
@@ -8478,7 +8542,7 @@ dealDamage: function(card, amount) {
 			if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 			
 			card.modifiedStrength += amount;
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 			card._displayStrength = card.currentStrength;
 		}

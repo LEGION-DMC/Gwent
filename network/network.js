@@ -2270,7 +2270,18 @@
 
             game.useLeaderAbility = function () {
                 const result = originals.useLeaderAbility.apply(this, arguments);
-                if (self.active) self.broadcastNow(false);
+                if (self.active) {
+                    if (result && typeof result.then === 'function') {
+                        // Асинхронные способности (например, "Мобилизация")
+                        // синхронизируем после завершения выбора цели.
+                        result.then(
+                            () => self.broadcastNow(false),
+                            () => self.broadcastNow(false)
+                        );
+                    } else {
+                        self.broadcastNow(false);
+                    }
+                }
                 return result;
             };
 

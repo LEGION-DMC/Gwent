@@ -292,7 +292,7 @@ const playerModule = {
 					window.gameModule.applyCardBoost(unitCard, boostValue);
 				} else {
 					unitCard.modifiedStrength += boostValue;
-					unitCard.currentStrength = unitCard.underWeather ? 1 : unitCard.modifiedStrength;
+					unitCard.currentStrength = unitCard.modifiedStrength;
 					unitCard.strength = unitCard.currentStrength;
 				}
 				
@@ -1913,7 +1913,7 @@ const playerModule = {
 			window.gameModule.applyCardBoost(card, boostValue);
 		} else {
 			card.modifiedStrength += boostValue;
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 		}
 		
@@ -2324,7 +2324,7 @@ const playerModule = {
 			window.gameModule.applyCardDamage(targetCard, damageValue);
 		} else {
 			targetCard.modifiedStrength = Math.max(0, targetCard.modifiedStrength - damageValue);
-			targetCard.currentStrength = targetCard.underWeather ? 1 : targetCard.modifiedStrength;
+			targetCard.currentStrength = targetCard.modifiedStrength;
 			targetCard.strength = targetCard.currentStrength;
 		}
 		
@@ -2934,7 +2934,7 @@ const playerModule = {
 					window.gameModule.applyCardDamage(card, damageValue);
 				} else {
 					card.modifiedStrength = Math.max(0, card.modifiedStrength - damageValue);
-					card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+					card.currentStrength = card.modifiedStrength;
 					card.strength = card.currentStrength;
 				}
 				
@@ -3245,7 +3245,7 @@ const playerModule = {
 		} else {
 			// Уменьшаем modifiedStrength на значение усиления
 			card.modifiedStrength = Math.max(card.baseStrength || 0, card.modifiedStrength - boostValue);
-			card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+			card.currentStrength = card.modifiedStrength;
 			card.strength = card.currentStrength;
 		}
 		

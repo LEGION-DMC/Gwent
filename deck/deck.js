@@ -3,13 +3,17 @@ const factionAbilities = {
         {
             id: 'scoiatael_ability_1',
             name: 'Махакамская кузня',
-            description: 'Усильте всех Краснолюдов на поле 3 еденицы',
+            description: 'Усильте всех Краснолюдов на поле на 3 еденицы',
+			requirement: { type: 'tag', value: 'dwarf' },
+			requirementText: 'В колоде должна быть хотя бы одна карта: Краснолюд',
             icon: 'faction/scoiatael/abilities/forge.png'
         },
         {
             id: 'scoiatael_ability_2', 
             name: 'Засада ловчих',
             description: 'Призывите из колоды в руку карту Эльфа',
+            requirement: { type: 'tag', value: 'elf' },
+            requirementText: 'В колоде должна быть хотя бы одна карта: Эльф',
             icon: 'faction/scoiatael/abilities/ambush.png'
         },
         {
@@ -48,6 +52,8 @@ const factionAbilities = {
             id: 'realms_ability_3',
             name: 'Стена щитов',
             description: 'Усильте дружественный отряд на 2 еденицы и призвать в руку артефакт',
+            requirement: { type: 'type', value: 'artifact' },
+            requirementText: 'В колоде должна быть хотя бы одна карта: Артефакт',
             icon: 'faction/realms/abilities/shield.png'
         },
         {
@@ -60,6 +66,8 @@ const factionAbilities = {
             id: 'realms_ability_5',
             name: 'Мобилизация',
             description: 'Призовите бронзовый отряд на поле и усильте его и смежные с ним отряды на 3 еденицы',
+            requirement: { type: 'bronzeUnit' },
+            requirementText: 'В колоде должен быть хотя бы один бронзовый отряд',
             icon: 'faction/realms/abilities/mobilization.png'
         }
     ],
@@ -105,7 +113,9 @@ const factionAbilities = {
         {
             id: 'monsters_ability_2',
             name: 'Неутолимый голод',
-            description: 'Уничтожьте дружественный отряд, затем призовите Волколака, усиленного на значение силы уничтоженого отряда, из колоды на поле в этом же ряду',
+            description: 'Уничтожьте дружественный отряд, затем призовите Волколака, усиленного на значение силы уничтоженного отряда, из колоды на поле в этом же ряду',
+            requirement: { type: 'name', value: 'Волколак' },
+            requirementText: 'В колоде должна быть хотя бы одна карта: Волколак',
             icon: 'faction/monsters/abilities/hangry.png'
         },
         {
@@ -150,12 +160,16 @@ const factionAbilities = {
             id: 'skellige_ability_4',
             name: 'Медвежий ритуал',
             description: 'Нанесите 1 ед. урона дружественному отряду. И призовите Берсерка',
+            requirement: { type: 'name', value: 'Берсерк' },
+            requirementText: 'В колоде должна быть хотя бы одна карта: Берсерк',
             icon: 'faction/skellige/abilities/bear.png'
         },
         {
             id: 'skellige_ability_5',
             name: 'Пламя славы',
             description: 'Переместите не нейтральный отряд из вашей колоды в ваш сброс, затем нанесите вражескому отряду урон, равный значению силы перемещенного отряда',
+            requirement: { type: 'nonNeutralUnit' },
+            requirementText: 'В колоде должен быть хотя бы один не нейтральный отряд',
             icon: 'faction/skellige/abilities/respect.png'
         }
     ],
@@ -176,6 +190,8 @@ const factionAbilities = {
 			id: 'syndicate_ability_3',
 			name: 'Пиратская бухта',
 			description: 'Призовите из колоды в руку 2 карты с тегом "Пират"',
+			requirement: { type: 'tag', value: 'pirat' },
+			requirementText: 'В колоде должна быть хотя бы одна карта: Пират',
 			icon: 'faction/syndicate/abilities/pirates.png'
 		},
 		{
@@ -379,6 +395,10 @@ function createDeckBuildingHTML() {
                             <div class="ability-description">${abilityData.description}</div>
                         </div>
                     </div>
+                </div>
+		
+				<div class="deck-warning hidden" id="abilityWarning">
+                    <div class="deck-warning__body"></div>
                 </div>
 		
                 <div class="stats-info">
@@ -780,6 +800,10 @@ function loadFactionCards(faction) {
     setTimeout(() => {
         displayCollectionCards();
     }, 10);
+	
+    const abilityList = factionAbilities[currentDeck.faction] || [];
+    const abilityData = abilityList.find(a => a.id === currentDeck.ability);
+    updateAbilityWarning(abilityData);
 }
 
 function displayCollectionCards() {
@@ -1592,6 +1616,10 @@ function updateDeckStats() {
     if (heroCardsElement) {
         heroCardsElement.textContent = stats.heroes;
     }
+
+    const abilityList = factionAbilities[currentDeck.faction] || [];
+    const abilityData = abilityList.find(ability => ability.id === currentDeck.ability);
+    updateAbilityWarning(abilityData);
 }
 
 function updateDeckDisplay() {
@@ -2188,6 +2216,54 @@ function updateFactionAbilityDisplay(faction) {
             </div>
         `;
     }
+    
+    updateAbilityWarning(abilityData);
+}
+
+function isAbilityRequirementMet(abilityData) {
+    if (!abilityData || !abilityData.requirement) {
+        return true;
+    }
+
+    const requirement = abilityData.requirement;
+    const cards = Array.isArray(currentDeck.cards) ? currentDeck.cards : [];
+
+    switch (requirement.type) {
+        case 'tag':
+            return cards.some(card => Array.isArray(card.tags) && card.tags.includes(requirement.value));
+        case 'type':
+            return cards.some(card => card.type === requirement.value);
+        case 'name':
+            return cards.some(card => card.name === requirement.value || card.namefull === requirement.value);
+        case 'bronzeUnit':
+            return cards.some(card => card.type === 'unit' && card.rarity === 'bronze');
+        case 'nonNeutralUnit':
+            return cards.some(card => {
+                if (card.type !== 'unit') return false;
+                const faction = card.faction || currentDeck.faction;
+                return !!faction && faction !== 'neutral';
+            });
+        default:
+            return true;
+    }
+}
+
+function updateAbilityWarning(abilityData) {
+    const warning = document.getElementById('abilityWarning');
+    if (!warning) return;
+
+    const requirementText = abilityData && abilityData.requirementText
+        ? abilityData.requirementText
+        : '';
+
+    const warningBody = warning.querySelector('.deck-warning__body');
+    if (warningBody) {
+        warningBody.textContent = requirementText;
+    }
+
+    // Предупреждение показываем только пока условие способности не выполнено.
+    const shouldShow = !!requirementText && !isAbilityRequirementMet(abilityData);
+    warning.classList.toggle('hidden', !shouldShow);
 }
 
 function closeAbilitiesModal(modalOverlay) {

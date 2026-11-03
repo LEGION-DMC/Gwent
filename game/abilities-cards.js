@@ -865,7 +865,7 @@ const skillSystem = {
 		}
 		
 		card.modifiedStrength += boostValue;
-		card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+		card.currentStrength = card.modifiedStrength;
 		card.strength = card.currentStrength;
 		card._displayStrength = card.currentStrength;
 	},
@@ -1125,7 +1125,7 @@ const skillSystem = {
 				} else {
 					if (card.modifiedStrength === undefined) card.modifiedStrength = card.strength;
 					card.modifiedStrength = Math.max(0, card.modifiedStrength - damageValue);
-					card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+					card.currentStrength = card.modifiedStrength;
 					card.strength = card.currentStrength;
 				}
 				
@@ -1805,7 +1805,7 @@ const skillSystem = {
         } else {
             if (card.modifiedStrength === undefined) card.modifiedStrength = card.currentStrength;
             card.modifiedStrength += value;
-            card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+            card.currentStrength = card.modifiedStrength;
         }
         card.state = this.cardStates.BOOSTED;
         this.updateCardDisplay(card);
@@ -1817,7 +1817,7 @@ const skillSystem = {
         } else {
             if (card.modifiedStrength === undefined) card.modifiedStrength = card.currentStrength;
             card.modifiedStrength = Math.max(0, card.modifiedStrength - value);
-            card.currentStrength = card.underWeather ? 1 : card.modifiedStrength;
+            card.currentStrength = card.modifiedStrength;
         }
         
         const isDead = (card.modifiedStrength !== undefined ? card.modifiedStrength : card.currentStrength) <= 0;
