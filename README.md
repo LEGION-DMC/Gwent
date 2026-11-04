@@ -1,5 +1,4 @@
-# GWENT — браузерная карточная игра (HTML/CSS/JS)
-
+# GWENT — карточная игра во вселенной The Witcher
 🔗 **Играть:** https://legion-dmc.github.io/Gwent/
 
 ## Лицензия
