@@ -858,7 +858,7 @@ const playerModule = {
 						return `
 							<div class="deck-card" data-medic-index="${idx}" data-card-id="${item.card.id}">
 								<div class="deck-card__container">
-									<img src="card/${item.card.faction}/${item.card.imageStatic || (item.card.image ? item.card.image.replace('.mp4', '.jpg') : 'placeholder.jpg')}"
+									<img src="card/${item.card.faction}/${item.card.imageStatic || (item.card.image ? item.card.image.replace('.webm', '.jpg') : 'placeholder.jpg')}"
 										 class="deck-card__media" onerror="this.src='card/placeholder.jpg'">
 									<img src="${item.card.border || 'deck/bord_silver.png'}" class="deck-card__border">
 									<img src="${item.card.banner || 'faction/' + item.card.faction + '/banner_silver.png'}" class="deck-card__banner">
@@ -2498,9 +2498,11 @@ const playerModule = {
 				if (hasLeftNeighbor || hasRightNeighbor) {
 					// Создаем виртуальный элемент для позиции
 					const positionMarker = this.createPositionMarker(row, i);
-					positionMarker.classList.add('boost-position-target');
-					this.setupPositionBoostSelectionHandler(positionMarker, row, i);
-					hasAvailableSlots = true;
+					if (positionMarker) {
+						positionMarker.classList.add('boost-position-target');
+						this.setupPositionBoostSelectionHandler(positionMarker, row, i);
+						hasAvailableSlots = true;
+					}
 				}
 			}
 		});
@@ -2549,21 +2551,21 @@ const playerModule = {
 		// Определяем позицию маркера
 		let leftPosition = 0;
 		
+		// Позицию считаем через offsetLeft/offsetWidth, а не через getBoundingClientRect:
+		// всё игровое поле масштабируется CSS-трансформом (.game-board), поэтому
+		// экранные координаты из getBoundingClientRect не совпадают с layout-пикселями,
+		// в которых задаётся style.left. Из-за этого маркеры съезжали влево.
 		if (position === 0) {
 			// Маркер перед первой картой
 			const firstCard = cardsInRow[0];
 			if (firstCard) {
-				const cardRect = firstCard.getBoundingClientRect();
-				const rowRect = rowElement.getBoundingClientRect();
-				leftPosition = (cardRect.left - rowRect.left) - 20; // Слева от карты
+				leftPosition = firstCard.offsetLeft - 20; // Слева от карты
 			}
 		} else if (position >= cardsInRow.length) {
 			// Маркер после последней карты
 			const lastCard = cardsInRow[cardsInRow.length - 1];
 			if (lastCard) {
-				const cardRect = lastCard.getBoundingClientRect();
-				const rowRect = rowElement.getBoundingClientRect();
-				leftPosition = (cardRect.right - rowRect.left) - 15; // Справа от карты
+				leftPosition = lastCard.offsetLeft + lastCard.offsetWidth - 15; // Справа от карты
 			}
 		} else {
 			// Маркер между картами
@@ -2571,18 +2573,14 @@ const playerModule = {
 			const rightCard = cardsInRow[position];
 			
 			if (leftCard && rightCard) {
-				const leftCardRect = leftCard.getBoundingClientRect();
-				const rightCardRect = rightCard.getBoundingClientRect();
-				const rowRect = rowElement.getBoundingClientRect();
-				
 				// Средняя точка между картами
-				const middle = ((leftCardRect.right + rightCardRect.left) / 2) - rowRect.left;
+				const middle = (leftCard.offsetLeft + leftCard.offsetWidth + rightCard.offsetLeft) / 2;
 				leftPosition = middle - 15; // Центрируем маркер
 			}
 		}
 		
 		// Ограничиваем позицию в пределах ряда
-		const rowWidth = rowElement.offsetWidth;
+		const rowWidth = rowElement.clientWidth;
 		leftPosition = Math.max(10, Math.min(leftPosition, rowWidth - 40));
 		
 		// Устанавливаем стили

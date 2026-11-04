@@ -45,9 +45,9 @@
 .turn-timer-display {
     top: auto;
     right: auto;
-    bottom: 1.2%;
+    bottom: 26%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(680%);
 }
 
 /* Превью карты находится внутри сцены и тоже масштабируется вместе с полем.

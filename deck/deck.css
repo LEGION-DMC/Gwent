@@ -416,11 +416,11 @@
     background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
     color: #d4af37;
     border: 1px solid #d4af37;
-    padding: 8px 30px;
+    padding: 9px 20px 5px 20px;
     font-size: 18px;
     font-family: 'Gwent', sans-serif;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     cursor: url('../ui/cursor_hover.png'), pointer;
     transition: all 0.3s ease;
     border-radius: 4px;
@@ -428,7 +428,7 @@
     margin: 0 auto;
     position: absolute;
     overflow: hidden;
-    top: 88%;
+    top: 90%;
     left: 50%;
     transform: translate(-50%, 0);
     transform-origin: center;
