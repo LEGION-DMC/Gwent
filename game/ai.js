@@ -684,7 +684,7 @@ const aiModule = {
 		}
 		
 		if (window.audioManager && window.audioManager.playSound) {
-			audioManager.playSound('card_boost');
+			audioManager.playSound('horn');
 		}
 	},
 
@@ -4469,7 +4469,7 @@ const aiModule = {
 		}
 		
 		if (window.audioManager && window.audioManager.playSound) {
-			audioManager.playSound('card_boost');
+			audioManager.playSound('horn');
 		}
 		
 		if (window.gameModule && boostedCards > 0) {

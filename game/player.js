@@ -328,7 +328,7 @@ const playerModule = {
 		}
 		
 		if (window.audioManager && window.audioManager.playSound) {
-			audioManager.playSound('card_boost');
+			audioManager.playSound('horn');
 		}
 		
 		this.cancelDoubleStrengthSelection();
@@ -4203,7 +4203,7 @@ const playerModule = {
 		}
 		
 		if (window.audioManager && window.audioManager.playSound) {
-			audioManager.playSound('card_boost');
+			audioManager.playSound('horn');
 		}
 		
 		// Показываем сообщение — теперь только реально усиленные карты

@@ -86,6 +86,7 @@ const audioManager = {
 		win: 'sfx/sound/win.mp3',
 		lose: 'sfx/sound/lose.mp3',
 		draw: 'sfx/sound/draw.mp3',
+		horn: 'sfx/sound/horn.mp3',
 		scorch: 'sfx/sound/scorch.mp3',
 		card_close: 'sfx/sound/card_close.wav',
 		card_range: 'sfx/sound/card_range.wav',
