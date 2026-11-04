@@ -42,16 +42,16 @@
 
 .opponent-decks-area {
 	top: 6.3%;
-	right: 5%;
+	right: 4.7%;
 	display: flex;
-	gap: 74px;
+	gap: 80px;
 }
 
 .player-decks-area {
 	bottom: 9.5%;
-	right: 5%;
+	right: 4.7%;
 	display: flex;
-	gap: 74px;
+	gap: 80px;
 }
 
 .deck-slot {
@@ -98,29 +98,25 @@
 }
 
 .player-rows-area .battle-row {
-	margin-top: 15.5px;
+	margin-top: 14px;
 }
 
 .opponent-rows-area .battle-row {
-	margin-top: 20px;
+	margin-top: 15px;
 }
 
 .opponent-rows-area .battle-row #opponentSiegeRow {
-	margin-top: 30px;
+	margin-top: 10px;
 }
 
 .opponent-rows-area .battle-row #opponentSiegeTactics {
 	margin-top: 10px;
 }
 
-.opponent-rows-area .battle-row #opponentSiegeStrength {
-	margin-top: 20px;
-}
-
 .row-strength {
 	width: 50px;
 	height: 50px;
-	transform: translateX(-58px);
+	transform: translateX(-52px);
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
@@ -239,8 +235,8 @@
 .row-available { cursor: url('../ui/cursor_move.png'), pointer; box-shadow: 1px 5px 5px rgba(212, 175, 55, 0.8); }
 .tactic-slot-available { cursor: url('../ui/cursor_move.png'), pointer; box-shadow: 1px 5px 5px rgba(212, 175, 55, 0.8); }
 
-.player-rows-area { bottom: 23.9%; left: 29.6%; width: 980px; } 
-.opponent-rows-area { bottom: 62.5%; left: 29.6%; width: 980px; }
+.player-rows-area { bottom: 23.9%; left: 29.6%; width: 950px; } 
+.opponent-rows-area { bottom: 62.5%; left: 29.6%; width: 950px; }
 
 .cards-row { 
 	display: flex; 

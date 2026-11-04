@@ -5107,8 +5107,10 @@ dealDamage: function(card, amount) {
 		applyVisualWeatherToOpponentRow: function(row, image, gameModule) {
 			const opponentRowElement = document.getElementById(`opponent${gameModule.capitalizeFirst(row)}Row`);
 			if (opponentRowElement) {
+				// Оверлей накрывает весь ряд, включая слот тактики
+				const rowContainer = opponentRowElement.closest('.battle-row') || opponentRowElement;
 				// Удаляем существующий эффект погоды в этом ряду
-				const existingEffect = opponentRowElement.querySelector(`[data-weather-row="${row}"][data-weather-side="opponent"]`);
+				const existingEffect = rowContainer.querySelector(`[data-weather-row="${row}"][data-weather-side="opponent"]`);
 				if (existingEffect) {
 					existingEffect.remove();
 				}
@@ -5127,8 +5129,8 @@ dealDamage: function(card, amount) {
 				`;
 				weatherOverlay.dataset.weatherRow = row;
 				weatherOverlay.dataset.weatherSide = 'opponent';
-				opponentRowElement.style.position = 'relative';
-				opponentRowElement.appendChild(weatherOverlay);
+				rowContainer.style.position = 'relative';
+				rowContainer.appendChild(weatherOverlay);
 			}
 		},
 		
@@ -6530,6 +6532,8 @@ dealDamage: function(card, amount) {
 		applyVisualWeatherToOpponentRow: function(row, image, gameModule) {
 			const opponentRowElement = document.getElementById(`opponent${gameModule.capitalizeFirst(row)}Row`);
 			if (opponentRowElement) {
+				// Оверлей накрывает весь ряд, включая слот тактики
+				const rowContainer = opponentRowElement.closest('.battle-row') || opponentRowElement;
 				const weatherOverlay = document.createElement('div');
 				weatherOverlay.className = 'weather-effect-overlay';
 				weatherOverlay.style.cssText = `
@@ -6544,8 +6548,8 @@ dealDamage: function(card, amount) {
 				`;
 				weatherOverlay.dataset.weatherRow = row;
 				weatherOverlay.dataset.weatherSide = 'opponent';
-				opponentRowElement.style.position = 'relative';
-				opponentRowElement.appendChild(weatherOverlay);
+				rowContainer.style.position = 'relative';
+				rowContainer.appendChild(weatherOverlay);
 			}
 		},
 		

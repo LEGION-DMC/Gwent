@@ -138,7 +138,11 @@ const gameModule = {
 			<div class="timer-time" id="timerTime">60</div>
 			<div class="timer-label">сек.</div>
 		`;
-		document.body.appendChild(timerDisplay);
+
+		// Таймер должен жить внутри игровой сцены, чтобы масштабироваться
+		// вместе с полем на мониторах с другим разрешением.
+		const boardElement = document.querySelector('.game-board');
+		(boardElement || document.body).appendChild(timerDisplay);
 	},
 
     updateTimerDisplay: function() {
@@ -4187,6 +4191,9 @@ const gameModule = {
         
         [playerRowElement, opponentRowElement].forEach(rowElement => {
             if (rowElement) {
+                // Эффект погоды должен накрывать весь ряд, включая слот тактики,
+                // поэтому вешаем оверлей на .battle-row, а не только на .cards-row.
+                const rowContainer = rowElement.closest('.battle-row') || rowElement;
                 const weatherOverlay = document.createElement('div');
                 weatherOverlay.className = 'weather-effect-overlay';
                 weatherOverlay.style.cssText = `
@@ -4201,8 +4208,8 @@ const gameModule = {
                 `;
                 weatherOverlay.dataset.weatherRow = row;
                 weatherOverlay.dataset.weatherSide = rowElement.id.startsWith('player') ? 'player' : 'opponent';
-                rowElement.style.position = 'relative';
-                rowElement.appendChild(weatherOverlay);
+                rowContainer.style.position = 'relative';
+                rowContainer.appendChild(weatherOverlay);
             }
         });
     },

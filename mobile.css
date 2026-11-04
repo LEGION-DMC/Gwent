@@ -1,340 +1,58 @@
-@media (max-width: 1920px) {
-    .board-background { width: 1920px; height: 1053px; }
-  
-    .opponent-leader-area { top: 5.8%; left: 7%; }
-    .player-leader-area { bottom: 0%; left: 7%; }
-  
-    .opponent-decks-area { top: 5.8%; right: 4.7%; gap: 80px; }
-    .player-decks-area { bottom: 0.3%; right: 4.7%; gap: 80px; }
+/* ==========================================================================
+   Адаптивность игрового поля для ПК-мониторов
+   --------------------------------------------------------------------------
+   Поле нарисовано под фиксированный макет 1920×1080. Раньше для каждого
+   разрешения подбирались отдельные координаты, из-за чего на разных
+   мониторах элементы «разъезжались» относительно фона.
 
-    .opponent-total-score { top: 2.9%; left: 8%; }
-    .player-total-score { bottom: -4%; left: 8%; }
-    
-    .player-hand-area { bottom: 2%; left: 29.7%; }
-    
-    .board-card { top: -3px;} 
-  
-    .game-controls { bottom: 18%; right: 13.5%; }
-    #mulliganControls { bottom: 18% !important }
-  
-    .hand-card-strength { font-size: 14px; }
-    .board-card-strength { top: 1.4px;  left: -0.5px; font-size: 14px; } 
-  
-    .weather-card-container { top: 27%; left: 1px; } 
-  
-    .opponent-rows-area { bottom: 61.8%; width: 950px; }
-    .opponent-rows-area .battle-row #opponentSiegeStrength { margin-top: 7.2%; margin-left: 0.7%; font-size: 35px; } 
-    .opponent-rows-area .battle-row #opponentSiegeTactics { margin-top: 7.8%; }
-    .opponent-rows-area .battle-row #opponentSiegeRow { margin-top: 6.6%; margin-left: -5%; }
-    .opponent-rows-area .battle-row #opponentRangedStrength { margin-top: 5.2%; margin-left: 0.7%; font-size: 35px; } 
-    .opponent-rows-area .battle-row #opponentRangedTactics { margin-top: 5.3%; }
-    .opponent-rows-area .battle-row #opponentRangedRow { margin-top: 4.5%; margin-left: -5%; }
-    .opponent-rows-area .battle-row #opponentCloseStrength { margin-top: 5.1%; margin-left: 0.7%; font-size: 35px; } 
-    .opponent-rows-area .battle-row #opponentCloseTactics { margin-top: 3.5%; }
-    .opponent-rows-area .battle-row #opponentCloseRow { margin-top: 4%; margin-left: -5%; }
-  
-    .player-rows-area { bottom: 23.2%; width: 950px; } 
-    .player-rows-area .battle-row #playerSiegeStrength { margin-top: 15%; margin-left: 0.7%; font-size: 35px; } 
-    .player-rows-area .battle-row #playerSiegeTactics { margin-top: 14.8%; }
-    .player-rows-area .battle-row #playerSiegeRow { margin-top: 13%; margin-left: -5%; }
-    .player-rows-area .battle-row #playerRangedStrength { margin-top: 14.6%; margin-left: 0.7%; font-size: 35px; } 
-    .player-rows-area .battle-row #playerRangedTactics { margin-top: 14.2%; }
-    .player-rows-area .battle-row #playerRangedRow { margin-top: 13%; margin-left: -5%; }
-    .player-rows-area .battle-row #playerCloseStrength { margin-top: 14.9%; margin-left: 0.7%; font-size: 35px; } 
-    .player-rows-area .battle-row #playerCloseTactics { margin-top: 16.5%; }
-    .player-rows-area .battle-row #playerCloseRow { margin-top: 13.5%; margin-left: -5%; }
+   Теперь макет 1920×1080 масштабируется целиком (пропорционально) и
+   центрируется в окне. Коэффициент масштаба считает responsive.js и
+   записывает в переменную --gw-scale. Поэтому расстановка элементов
+   всегда остаётся такой же, как в исходном макете, на любом мониторе:
+   1366×768, 1600×900, 1920×1080, 2560×1440, 3440×1440 и т. д.
+   ========================================================================== */
+
+:root {
+    --gw-scale: 1;
 }
 
-@media (max-width: 1848px) {
-    .board-background { width: 1848px; height: 1040px; }
-  
-    .opponent-leader-area { top: 6.8%; left: 7%; }
-    .player-leader-area { bottom: 1.8%; left: 7%; }
-  
-    .opponent-decks-area { top: 7%; right: 4.6%; }
-    .player-decks-area { bottom: 1.8%; right: 4.6%; }
-
-    .opponent-total-score { top: 3.8%; left: 8%; }
-    .player-total-score { bottom: -2%; left: 8%; }
-    
-    .player-hand-area { bottom: 4%; left: 28.6%; }
-  
-    .game-controls { bottom: 20%; right: 4.8%; }
-    #mulliganControls { bottom: 18% !important }
-  
-    .hand-card-strength { top: 1.4px; left: -0.5px; font-size: 15px; }
-    .board-card-strength { top: 1.4px;  left: -0.5px; font-size: 15px; } 
-  
-    .weather-card-container { top: 23%; left: -5.3px; } 
-  
-    .opponent-rows-area { bottom: 61.8%; width: 915px; }
-    .opponent-rows-area .battle-row #opponentSiegeStrength { margin-top: 9.5%; margin-left: 0.08%; }
-    .opponent-rows-area .battle-row #opponentSiegeTactics { margin-top: 9.8%; }
-    .opponent-rows-area .battle-row #opponentSiegeRow { margin-top: 9.6%; margin-left: -5%; }
-    .opponent-rows-area .battle-row #opponentRangedStrength { margin-top: 6.5%; margin-left: 0.08%; }
-    .opponent-rows-area .battle-row #opponentRangedTactics { margin-top: 7.3%; }
-    .opponent-rows-area .battle-row #opponentRangedRow { margin-top: 7.3%; margin-left: -5%; }
-    .opponent-rows-area .battle-row #opponentCloseStrength { margin-top: 5.3%; margin-left: 0.08%; }
-    .opponent-rows-area .battle-row #opponentCloseTactics { margin-top: 5.5%; }
-    .opponent-rows-area .battle-row #opponentCloseRow { margin-top: 5.5%; margin-left: -5%; }
-  
-    .player-rows-area { bottom: 23.2%; width: 915px; } 
-    .player-rows-area .battle-row #playerSiegeStrength { margin-top: 11.8%; margin-left: 0.08%; }
-    .player-rows-area .battle-row #playerSiegeTactics { margin-top: 11.8%; }
-    .player-rows-area .battle-row #playerSiegeRow { margin-top: 11.8%; margin-left: -5%; }
-    .player-rows-area .battle-row #playerRangedStrength { margin-top: 12.3%; margin-left: 0.08%; }
-    .player-rows-area .battle-row #playerRangedTactics { margin-top: 12.2%; }
-    .player-rows-area .battle-row #playerRangedRow { margin-top: 12.2%; margin-left: -5%; }
-    .player-rows-area .battle-row #playerCloseStrength { margin-top: 13.8%; margin-left: 0.08%; }
-    .player-rows-area .battle-row #playerCloseTactics { margin-top: 13.5%; }
-    .player-rows-area .battle-row #playerCloseRow { margin-top: 13.5%; margin-left: -5%; }
-    
-    .crown1-player {
-        position: absolute;
-        top: -5%;
-        height: 32px;
-        left: 110.5%;
-    }
-
-    .crown2-player {
-        position: absolute;
-        top: -5%;
-        height: 32px;
-        left: 110.5%;
-    }
-
-    .crown1-opponent {
-        position: absolute;
-        top: 35%;
-        height: 32px;
-        left: 110.5%;
-    }
-
-    .crown2-opponent {
-        position: absolute;
-        top: 35%;
-        height: 32px;
-        left: 110.5%;
-    }
-}
-  
-@media (max-width: 1694px) {
-    .board-background { width: 1694px; height: 950px; }
-  
-    .leader-card-on-board { width: 95px; height: 135px; } 
-    .opponent-leader-area { top: 7.5%; left: 7%; }
-    .player-leader-area { bottom: 2.2%; left: 7%; }
-  
-    .deck-stack { width: 90px; height: 135px; }
-    .discard-stack { width: 90px; height: 135px; }
-    .opponent-decks-area { top: 6.7%; right: 4.6%; gap: 50px; }
-    .player-decks-area { bottom: 1.2%; right: 4.6%; gap: 50px; }
-    
-    .opponent-total-score { top: 2.5%; left: 7%; }
-    .player-total-score { bottom: -2.8%; left: 7%; }
-    
-    .game-controls { bottom: 19.5%; right: 4.4%; }
-    #mulliganControls { bottom: 18% !important }
-  
-    .hand-card { width: 80px; height: 118px; }
-    .player-hand-area { bottom: 3%; left: 26.3%; }
-    
-    .hand-card-strength { top: 1.4px; left: -0.5px; font-size: 13px; }
-    .board-card-strength { top: -2px;  left: 0px; font-size: 13px; } 
-  
-    .weather-card { width: 80px; height: 118px; }
-    .weather-card-container { top: 17%; left: -15.5px; } 
-  
-    .board-card { width: 77px; height: 110px; top: 4px;} 
-    
-    .board-card.tactic { width: 77px; height: 110px; top: 4px;} 
-    .tactics-slot { width: 130px; height: 120px; transform: translateX(-58px); }
-  
-    .opponent-rows-area { bottom: 59.8%; width: 835px; }
-    .opponent-rows-area .battle-row #opponentSiegeStrength { margin-top: 11.2%; margin-left: 0.4%; }
-    .opponent-rows-area .battle-row #opponentSiegeTactics { margin-top: 9.8%; }
-    .opponent-rows-area .battle-row #opponentSiegeRow { margin-top: 9.6%; margin-left: -7%; }
-    .opponent-rows-area .battle-row #opponentRangedStrength { margin-top: 5.5%; margin-left: 0.4%; }
-    .opponent-rows-area .battle-row #opponentRangedTactics { margin-top: 4.3%; }
-    .opponent-rows-area .battle-row #opponentRangedRow { margin-top: 4.3%; margin-left: -7%; }
-    .opponent-rows-area .battle-row #opponentCloseStrength { margin-top: 1.3%; margin-left: 0.4%; }
-    .opponent-rows-area .battle-row #opponentCloseTactics { margin-top: 0%; }
-    .opponent-rows-area .battle-row #opponentCloseRow { margin-top: 0%; margin-left: -7%; }
-  
-    .player-rows-area { bottom: 23.2%; width: 835px; } 
-    .player-rows-area .battle-row #playerSiegeStrength { margin-top: 12.5%; margin-left: 0.4%; }
-    .player-rows-area .battle-row #playerSiegeTactics { margin-top: 10.5%; }
-    .player-rows-area .battle-row #playerSiegeRow { margin-top: 10.5%; margin-left: -7%; }
-    .player-rows-area .battle-row #playerRangedStrength { margin-top: 15.8%; margin-left: 0.4%; }
-    .player-rows-area .battle-row #playerRangedTactics { margin-top: 14.2%; }
-    .player-rows-area .battle-row #playerRangedRow { margin-top: 14.2%; margin-left: -7%; }
-    .player-rows-area .battle-row #playerCloseStrength { margin-top: 19.9%; margin-left: 0.4%; }
-    .player-rows-area .battle-row #playerCloseTactics { margin-top: 18.5%; }
-    .player-rows-area .battle-row #playerCloseRow { margin-top: 18.5%; margin-left: -7%; }
-    
-    .crown1-player {
-        position: absolute;
-        top: -12%;
-        height: 32px;
-        left: 114.5%;
-    }
-
-    .crown2-player {
-        position: absolute;
-        top: -12%;
-        height: 32px;
-        left: 114.5%;
-    }
-
-    .crown1-opponent {
-        position: absolute;
-        top: 32%;
-        height: 32px;
-        left: 114.5%;
-    }
-
-    .crown2-opponent {
-        position: absolute;
-        top: 32%;
-        height: 32px;
-        left: 114.5%;
-    }
+/* Сцена игры: фиксированный макет, который масштабируется под окно */
+.game-board {
+    top: 50%;
+    left: 50%;
+    width: 1920px;
+    height: 1080px;
+    transform: translate(-50%, -50%) scale(var(--gw-scale, 1));
+    transform-origin: center center;
+    overflow: hidden;
+    background: #0b0806;
+    /* Затемняем поля вокруг сцены, если пропорции монитора не 16:9 */
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.82);
 }
 
-@media (max-width: 1600px) {
-    .board-background { width: 1600px; height: 900px; }
-  
-    .leader-card-on-board { width: 95px; height: 135px; } 
-    .opponent-leader-area { top: 6.5%; left: 7%; }
-    .player-leader-area { bottom: 8.5%; left: 7%; }
-  
-    .deck-stack { width: 90px; height: 135px; }
-    .discard-stack { width: 90px; height: 135px; }
-    .opponent-decks-area { top: 6.3%; right: 3.8%; gap: 50px; }
-    .player-decks-area { bottom: 7.2%; right: 3.8%; gap: 50px; }
-    
-    .opponent-total-score { top: 1.8%; left: 6.5%; }
-    .player-total-score { bottom: 3.3%; left: 6.5%; }
-    
-    .game-controls { bottom: 25.5%; right: 3.6%; }
-    #mulliganControls { bottom: 18% !important }
-  
-    .hand-card { width: 75px; height: 113px; }
-    .player-hand-area { bottom: 9%; left: 24.5%; }
-    
-    .hand-card-strength { top: 1.4px; left: -0.5px; font-size: 13px; }
-    .board-card-strength { top: -2px;  left: 0px; font-size: 13px; } 
-  
-    .weather-card { width: 75px; height: 113px; }
-    .weather-card-container { top: -10%; left: -21.5px; } 
-  
-    .board-card { width: 77px; height: 110px; top: 4px;} 
-    
-    .board-card.tactic { width: 77px; height: 110px; top: 4px;} 
-    .tactics-slot { width: 118px; height: 100px; transform: translateX(-58px); }
-  
-    .opponent-rows-area { bottom: 59.8%; width: 790px; }
-    .opponent-rows-area .battle-row #opponentSiegeStrength { margin-top: 10%; margin-left: 1.3%; }
-    .opponent-rows-area .battle-row #opponentSiegeTactics { margin-top: 7.8%; }
-    .opponent-rows-area .battle-row #opponentSiegeRow { margin-top: 7.6%; margin-left: -7%; }
-    .opponent-rows-area .battle-row #opponentRangedStrength { margin-top: 2.5%; margin-left: 1.3%; }
-    .opponent-rows-area .battle-row #opponentRangedTactics { margin-top: 0.3%; }
-    .opponent-rows-area .battle-row #opponentRangedRow { margin-top: 0.3%; margin-left: -7%; }
-    .opponent-rows-area .battle-row #opponentCloseStrength { margin-top: -3.5%; margin-left: 1.3%; }
-    .opponent-rows-area .battle-row #opponentCloseTactics { margin-top: -4%; }
-    .opponent-rows-area .battle-row #opponentCloseRow { margin-top: -6%; margin-left: -7%; }
-  
-    .player-rows-area { bottom: 23.2%; width: 790px; } 
-    .player-rows-area .battle-row #playerSiegeStrength { margin-top: 1.5%; margin-left: 1.3%; }
-    .player-rows-area .battle-row #playerSiegeTactics { margin-top: -1%; }
-    .player-rows-area .battle-row #playerSiegeRow { margin-top: -1%; margin-left: -7%; }
-    .player-rows-area .battle-row #playerRangedStrength { margin-top: 6.5%; margin-left: 1.3%; }
-    .player-rows-area .battle-row #playerRangedTactics { margin-top: 4.5%; }
-    .player-rows-area .battle-row #playerRangedRow { margin-top: 5%; margin-left: -7%; }
-    .player-rows-area .battle-row #playerCloseStrength { margin-top: 12.7%; margin-left: 1.3%; }
-    .player-rows-area .battle-row #playerCloseTactics { margin-top: 10.3%; }
-    .player-rows-area .battle-row #playerCloseRow { margin-top: 10.3%; margin-left: -7%; }
-    
-    .crown1-player {
-        position: absolute;
-        top: 112%;
-        height: 32px;
-        left: 107.5%;
-    }
-
-    .crown2-player {
-        position: absolute;
-        top: 112%;
-        height: 32px;
-        left: 107.5%;
-    }
-
-    .crown1-opponent {
-        position: absolute;
-        top: 42%;
-        height: 32px;
-        left: 107.5%;
-    }
-
-    .crown2-opponent {
-        position: absolute;
-        top: 42%;
-        height: 32px;
-        left: 107.5%;
-    }
+/* Фон поля всегда занимает всю сцену 1920×1080 */
+.board-background {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: 100% 100%;
 }
 
-@media (max-width: 1598px) {
-    .board-background { width: 1598px; height: 875px; }
-  
-    .leader-card-on-board { width: 95px; height: 135px; } 
-    .opponent-leader-area { top: 5.5%; left: 7%; }
-    .player-leader-area { bottom: 0%; left: 7%; }
-  
-    .deck-stack { width: 90px; height: 135px; }
-    .discard-stack { width: 90px; height: 135px; }
-    .opponent-decks-area { top: 5.5%; right: 3.8%; gap: 50px; }
-    .player-decks-area { bottom: -2%; right: 3.8%; gap: 50px; }
-    
-    .opponent-total-score { top: 0.8%; left: 6.5%; }
-    .player-total-score { bottom: -7.3%; left: 6.5%; }
-    
-    .game-controls { bottom: 18.5%; right: 3.6%; }
-    #mulliganControls { bottom: 18% !important }
-  
-    .hand-card { width: 75px; height: 113px; }
-    .player-hand-area { bottom: -0.7%; left: 24.5%; }
-    
-    .hand-card-strength { top: 1.4px; left: -0.5px; font-size: 13px; }
-    .board-card-strength { top: -2px;  left: 0px; font-size: 13px; } 
-  
-    .weather-card { width: 75px; height: 113px; }
-    .weather-card-container { top: 16.8%; left: -21.5px; } 
-  
-    .board-card { width: 77px; height: 110px; top: 4px;} 
-    
-    .board-card.tactic { width: 77px; height: 110px; top: 4px;} 
-    .tactics-slot { width: 118px; height: 100px; transform: translateX(-58px); }
-  
-    .opponent-rows-area { bottom: 59.8%; width: 790px; }
-    .opponent-rows-area .battle-row #opponentSiegeStrength { margin-top: 17.5%; margin-left: 0.6%; }
-    .opponent-rows-area .battle-row #opponentSiegeTactics { margin-top: 16%; }
-    .opponent-rows-area .battle-row #opponentSiegeRow { margin-top: 16%; margin-left: -7%; }
-    .opponent-rows-area .battle-row #opponentRangedStrength { margin-top: 9.5%; margin-left: 0.6%; }
-    .opponent-rows-area .battle-row #opponentRangedTactics { margin-top: 8.3%; }
-    .opponent-rows-area .battle-row #opponentRangedRow { margin-top: 8.3%; margin-left: -7%; }
-    .opponent-rows-area .battle-row #opponentCloseStrength { margin-top: 3.8%; margin-left: 0.6%; }
-    .opponent-rows-area .battle-row #opponentCloseTactics { margin-top: 1%; }
-    .opponent-rows-area .battle-row #opponentCloseRow { margin-top: 1%; margin-left: -7%; }
-  
-    .player-rows-area { bottom: 23.2%; width: 790px; } 
-    .player-rows-area .battle-row #playerSiegeStrength { margin-top: 17.8%; margin-left: 0.6%; }
-    .player-rows-area .battle-row #playerSiegeTactics { margin-top: 16%; }
-    .player-rows-area .battle-row #playerSiegeRow { margin-top: 16%; margin-left: -7%; }
-    .player-rows-area .battle-row #playerRangedStrength { margin-top: 23%; margin-left: 0.6%; }
-    .player-rows-area .battle-row #playerRangedTactics { margin-top: 21%; }
-    .player-rows-area .battle-row #playerRangedRow { margin-top: 21%; margin-left: -7%; }
-    .player-rows-area .battle-row #playerCloseStrength { margin-top: 29.3%; margin-left: 0.6%; }
-    .player-rows-area .battle-row #playerCloseTactics { margin-top: 27.3%; }
-    .player-rows-area .battle-row #playerCloseRow { margin-top: 25.3%; margin-left: -7%; }
+/* Таймер хода теперь лежит внутри сцены (game.js) и масштабируется вместе
+   с полем. Ставим его в свободную полосу под рукой игрока, чтобы он не
+   перекрывал колоду и счётчик карт. */
+.turn-timer-display {
+    top: auto;
+    right: auto;
+    bottom: 1.2%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Превью карты находится внутри сцены и тоже масштабируется вместе с полем.
+   Оставляем его фиксированным относительно сцены, а не окна. */
+.card-preview {
+    right: 75px;
+    top: 50%;
 }
