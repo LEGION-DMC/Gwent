@@ -2,10 +2,6 @@
 
 🔗 **Играть:** https://legion-dmc.github.io/Gwent/
 
-## Стек
-
-HTML5 · CSS · JS · GitHub Pages
-
 ## Лицензия
 
-MIT. GWENT и The Witcher — товарные знаки CD PROJEKT RED. Фанатский проект.
+MIT. GWENT и The Witcher — товарные знаки CD PROJEKT RED. Некоммерческий фанатский проект.
