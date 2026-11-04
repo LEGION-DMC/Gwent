@@ -313,7 +313,7 @@ function hideFactionSelection() {
 function createDeckBuildingHTML() {
     const faction = window.selectedFaction;
     const leaderImage = `faction/${faction.id}/leader.jpg`;
-    const leaderVideo = `faction/${faction.id}/leader.mp4`;
+    const leaderVideo = `faction/${faction.id}/leader.webm`;
     
     const hasVideo = true; 
     
@@ -878,10 +878,10 @@ function createCardElement(card, context) {
     const cardDisplayMode = window.settingsModule ? window.settingsModule.getCardDisplayMode() : 'animated';
     
     let mediaPath = `card/${card.faction}/${card.image}`;
-    let isVideo = card.image.endsWith('.mp4');
+    let isVideo = card.image.endsWith('.webm');
     
     if (cardDisplayMode === 'static' && isVideo) {
-        mediaPath = mediaPath.replace('.mp4', '.jpg');
+        mediaPath = mediaPath.replace('.webm', '.jpg');
         isVideo = false;
     }
     
@@ -1110,10 +1110,10 @@ function showCardModal(card) {
         mediaPath = `card/${card.faction}/${card.image}`;
     }
     
-    let isVideo = card.image.endsWith('.mp4');
+    let isVideo = card.image.endsWith('.webm');
     
     if (cardDisplayMode === 'static' && isVideo) {
-        mediaPath = mediaPath.replace('.mp4', '.jpg');
+        mediaPath = mediaPath.replace('.webm', '.jpg');
         isVideo = false;
     }
     
@@ -2319,7 +2319,7 @@ function setupLeaderVideoControls() {
                 namefull: faction.leaderName,
                 type: 'leader',
                 faction: faction.id,
-                image: `leader.mp4`,
+                image: `leader.webm`,
                 imageStatic: `leader.jpg`,
                 description: faction.description || '',
                 descriptionfull: faction.descriptionfull || '',

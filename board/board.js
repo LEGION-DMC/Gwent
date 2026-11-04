@@ -386,7 +386,7 @@ const boardModule = {
 			mediaPath = `${basePath}/cards/${cardId}.png`;
 		}
 		
-		const isVideo = mediaPath.endsWith('.mp4');
+		const isVideo = mediaPath.endsWith('.webm');
 		if (isVideo) {
 			if (media.tagName !== 'VIDEO') {
 				const videoEl = document.createElement('video');

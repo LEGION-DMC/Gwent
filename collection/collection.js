@@ -267,10 +267,10 @@ const collectionModule = (function() {
 		
 		const cardDisplayMode = getCardDisplayMode();
 		let mediaPath = `card/${card.faction}/${card.image}`;
-		let isVideo = card.image?.endsWith('.mp4') ?? false;
+		let isVideo = card.image?.endsWith('.webm') ?? false;
 		
 		if (cardDisplayMode === 'static' && isVideo) {
-			mediaPath = mediaPath.replace('.mp4', '.jpg');
+			mediaPath = mediaPath.replace('.webm', '.jpg');
 			isVideo = false;
 		}
 		
@@ -382,10 +382,10 @@ const collectionModule = (function() {
         
         const cardDisplayMode = getCardDisplayMode();
         let mediaPath = `card/${card.faction}/${card.image}`;
-        let isVideo = card.image?.endsWith('.mp4') ?? false;
+        let isVideo = card.image?.endsWith('.webm') ?? false;
         
         if (cardDisplayMode === 'static' && isVideo) {
-            mediaPath = mediaPath.replace('.mp4', '.jpg');
+            mediaPath = mediaPath.replace('.webm', '.jpg');
             isVideo = false;
         }
         

@@ -1099,10 +1099,10 @@ const gameModule = {
         const cardDisplayMode = this.currentSettings.cardDisplayMode;
         
         let mediaPath = `card/${card.faction}/${card.image}`;
-        let isVideo = card.image && card.image.endsWith('.mp4');
+        let isVideo = card.image && card.image.endsWith('.webm');
         
         if (cardDisplayMode === 'static' && isVideo) {
-            mediaPath = mediaPath.replace('.mp4', '.jpg');
+            mediaPath = mediaPath.replace('.webm', '.jpg');
             isVideo = false;
         }
         
@@ -2605,10 +2605,10 @@ const gameModule = {
         const cardDisplayMode = window.settingsModule ? window.settingsModule.getCardDisplayMode() : 'animated';
         
         let mediaPath = `card/${card.faction}/${card.image}`;
-        let isVideo = card.image && card.image.endsWith('.mp4');
+        let isVideo = card.image && card.image.endsWith('.webm');
         
         if (cardDisplayMode === 'static' && isVideo) {
-            mediaPath = mediaPath.replace('.mp4', '.jpg');
+            mediaPath = mediaPath.replace('.webm', '.jpg');
             isVideo = false;
         }
         
@@ -3314,7 +3314,7 @@ const gameModule = {
 			namefull: factionData.leaderName,
 			type: 'leader',
 			faction: faction,
-			image: `leader.mp4`, 
+			image: `leader.webm`, 
 			imageStatic: `leader.jpg`,
 			description: factionData.description,
 			descriptionfull: factionData.descriptionfull,
@@ -3351,7 +3351,7 @@ const gameModule = {
             namefull: factionData.leaderName,
             type: 'leader',
             faction: faction,
-            image: `leader.mp4`,
+            image: `leader.webm`,
             imageStatic: `leader.jpg`,
             description: factionData.description,
             descriptionfull: factionData.descriptionfull,
@@ -3625,7 +3625,7 @@ const gameModule = {
             isVideo = false;
         } else {
             mediaPath = `faction/${leaderData.faction}/${leaderData.image}`;
-            isVideo = leaderData.image.endsWith('.mp4');
+            isVideo = leaderData.image.endsWith('.webm');
         }
         
         let mediaElement = '';
@@ -4081,10 +4081,10 @@ const gameModule = {
             if (isModal) {
                 const isClassicMode = this.gameState.gameSettings.mode === 'classic';
                 const isStaticInModal = isClassicMode ? true : this.currentSettings.cardDisplayMode === 'static';
-                const hasStaticImage = card.image && card.image.includes('.mp4') && card.imageStatic;
+                const hasStaticImage = card.image && card.image.includes('.webm') && card.imageStatic;
                 
                 if (isStaticInModal && hasStaticImage) {
-                    mediaPath = `card/${card.faction}/${card.imageStatic || card.image.replace('.mp4', '.jpg')}`;
+                    mediaPath = `card/${card.faction}/${card.imageStatic || card.image.replace('.webm', '.jpg')}`;
                     isVideo = false;
                 } else {
                     const { mediaPath: normalPath, isVideo: normalIsVideo } = this.getCardMediaPath(card);
