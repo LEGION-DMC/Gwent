@@ -101,6 +101,15 @@ const skillSystem = {
                 type: 'clear_weather'
             }
         },
+        'unity': {
+            name: 'Союз',
+            type: 'passive',
+            description: 'Прочная связь: Умножает силу каждой карты в цепочке на их количество',
+            effect: {
+                type: 'unity',
+                target: 'unit'
+            }
+        },
         
 		'destroy': {
 			name: 'Пламя и пепел',

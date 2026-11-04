@@ -581,7 +581,7 @@
     top: calc(100% + 4px);
     left: 0;
     right: 0;
-    max-height: 240px;
+    max-height: 270px;
     overflow-y: auto;
     background: rgba(15, 15, 20, 0.98);
     border: 1px solid #cfaa4a;

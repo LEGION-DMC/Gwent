@@ -1632,6 +1632,9 @@ const gameModule = {
 		
 		// Удаляем временные поля
 		delete card._displayStrength;
+		delete card._unityBonus;
+		delete card._unityMultiplier;
+		delete card._unityAppliedUniqueId;
 		delete card.summonedByFlock;
 		delete card.summonedByCall;
 		delete card.usedFlockTag;
@@ -1654,7 +1657,12 @@ const gameModule = {
 	restoreAllCardStrengths: function() {
 		const rows = ['close', 'ranged', 'siege'];
 		const players = ['player', 'opponent'];
-		
+		const previousSuppress = this._suppressUnitySound;
+
+		// При массовом восстановлении силы звук усиления «Союза»
+		// не должен проигрываться.
+		this._suppressUnitySound = true;
+
 		rows.forEach(row => {
 			players.forEach(player => {
 				this.gameState[player].rows[row].cards.forEach(card => {
@@ -1669,6 +1677,7 @@ const gameModule = {
 			});
 		});
 		
+		this._suppressUnitySound = previousSuppress;
 		this.updateTotalScoreDisplays();
 	},
 
@@ -1711,6 +1720,177 @@ const gameModule = {
 		}
 		
 		return typeof card.strength === 'number' && !Number.isNaN(card.strength) ? card.strength : 0;
+	},
+
+	isUnityCard: function(card) {
+		return !!(card && card.type === 'unit' && card.ability === 'unity');
+	},
+
+	areUnityCardsLinked: function(first, second) {
+		if (!first || !second) return false;
+
+		// Карты считаются союзными только при полном совпадении названия.
+		const firstName = (first.name || '').trim();
+		const secondName = (second.name || '').trim();
+		return !!firstName && firstName === secondName;
+	},
+
+	getUnityMultiplier: function(count) {
+		// Сила каждой карты в цепочке умножается на количество
+		// одинаковых карт в этой цепочке.
+		return count >= 2 ? count : 1;
+	},
+
+	updateUnityVisualEffect: function(card, row, player, multiplier, delta) {
+		const rowElement = document.getElementById(`${player}${this.capitalizeFirst(row)}Row`);
+		if (!rowElement || !card) return;
+
+		let cardElement = null;
+		if (card.uniqueId) {
+			cardElement = rowElement.querySelector(`[data-unique-id="${card.uniqueId}"]`);
+		}
+
+		if (!cardElement) {
+			const elements = rowElement.querySelectorAll(`[data-card-id="${card.id}"]`);
+			if (elements.length === 1) {
+				cardElement = elements[0];
+			} else if (elements.length > 1) {
+				const rowState = this.gameState[player].rows[row];
+				const position = rowState.cards.findIndex(c =>
+					c.id === card.id && c.uniqueId === card.uniqueId
+				);
+				cardElement = position !== -1 && elements[position] ? elements[position] : elements[0];
+			}
+		}
+
+		if (!cardElement) return;
+
+		const existingOverlay = cardElement.querySelector('.card-unity-overlay');
+
+		// Цепочка распалась — сразу убираем бейдж и подсветку.
+		if (multiplier <= 1) {
+			if (existingOverlay) existingOverlay.remove();
+			cardElement.classList.remove('card-unity-glow');
+			return;
+		}
+
+		// Эффект показываем только в момент усиления, а не на каждом
+		// пересчёте силы и не при ослаблении цепочки.
+		if (delta <= 0) return;
+		if (this._suppressUnitySound) return;
+
+		if (existingOverlay) existingOverlay.remove();
+
+		const overlay = document.createElement('div');
+		overlay.className = 'card-unity-overlay';
+		overlay.textContent = `x${multiplier}`;
+		cardElement.appendChild(overlay);
+
+		// Бейдж и свечение исчезают сами после анимации; страховочные
+		// таймеры убирают их, если animationend не сработал.
+		const removeOverlay = () => {
+			if (overlay.parentNode) overlay.remove();
+		};
+		overlay.addEventListener('animationend', removeOverlay, { once: true });
+		setTimeout(removeOverlay, 1400);
+
+		cardElement.classList.remove('card-unity-glow');
+		void cardElement.offsetWidth;
+		cardElement.classList.add('card-unity-glow');
+		setTimeout(() => cardElement.classList.remove('card-unity-glow'), 1400);
+	},
+
+	applyUnityAbilityToRow: function(row, player = 'player') {
+		const playerState = this.gameState && this.gameState[player];
+		const rowState = playerState && playerState.rows ? playerState.rows[row] : null;
+		if (!rowState || !Array.isArray(rowState.cards)) return 0;
+
+		// Разбиваем ряд на непрерывные цепочки карт со способностью «Союз».
+		// Цепочка продолжается, пока соседние карты имеют одинаковое название.
+		// Любая другая карта разрывает цепочку.
+		const chains = [];
+		let currentChain = [];
+
+		rowState.cards.forEach(card => {
+			if (!this.isUnityCard(card)) {
+				if (currentChain.length) chains.push(currentChain);
+				currentChain = [];
+				return;
+			}
+
+			const previous = currentChain[currentChain.length - 1];
+			if (previous && !this.areUnityCardsLinked(previous, card)) {
+				chains.push(currentChain);
+				currentChain = [];
+			}
+
+			currentChain.push(card);
+		});
+
+		if (currentChain.length) chains.push(currentChain);
+
+		const multipliers = new Map();
+		chains.forEach(chain => {
+			const multiplier = this.getUnityMultiplier(chain.length);
+			chain.forEach(card => {
+				multipliers.set(card, multiplier);
+			});
+		});
+
+		let changedCards = 0;
+		let shouldPlayUnitySound = false;
+
+		rowState.cards.forEach(card => {
+			if (!card || card.type !== 'unit') return;
+
+			const multiplier = multipliers.has(card) ? multipliers.get(card) : 1;
+			const baseStrength = this.getCardBaseStrength(card);
+			const newBonus = Math.max(0, baseStrength * (multiplier - 1));
+			// Старый бонус учитываем только для той же копии карты.
+			// При повторном розыгрыше (например, после Чучела) uniqueId
+			// меняется, поэтому старый бонус не должен применяться повторно.
+			const sameCardInstance = card._unityAppliedUniqueId === card.uniqueId;
+			const previousBonus = sameCardInstance && typeof card._unityBonus === 'number'
+				? card._unityBonus
+				: 0;
+			const delta = newBonus - previousBonus;
+
+			card._unityMultiplier = multiplier;
+			card._unityBonus = newBonus;
+			card._unityAppliedUniqueId = card.uniqueId;
+
+			this.updateUnityVisualEffect(card, row, player, multiplier, delta);
+
+			if (delta === 0) return;
+
+			this.normalizeCardStrength(card);
+
+			if (card.underWeather) {
+				// Под погодой сила уже приведена к 1. Бонус союза
+				// запоминаем в «силе до погоды», чтобы вернуть его
+				// после очистки, не пробивая погодный потолок.
+				if (typeof card._preWeatherStrength === 'number') {
+					card._preWeatherStrength = Math.max(0, card._preWeatherStrength + delta);
+				}
+				card.currentStrength = Math.max(0, card.modifiedStrength);
+				card.strength = card.currentStrength;
+			} else {
+				card.modifiedStrength = Math.max(0, card.modifiedStrength + delta);
+				card.currentStrength = card.modifiedStrength;
+				card.strength = card.currentStrength;
+			}
+
+			changedCards++;
+
+			if (delta > 0) shouldPlayUnitySound = true;
+		});
+
+		if (shouldPlayUnitySound && !this._suppressUnitySound &&
+			window.audioManager && typeof window.audioManager.playSound === 'function') {
+			window.audioManager.playSound('card_boost');
+		}
+
+		return changedCards;
 	},
 
 	normalizeCardStrength: function(card) {
@@ -1862,6 +2042,9 @@ const gameModule = {
 		
 		delete prepared._displayStrength;
 		delete prepared._preWeatherStrength;
+		delete prepared._unityBonus;
+		delete prepared._unityMultiplier;
+		delete prepared._unityAppliedUniqueId;
 		delete prepared.underWeather;
 		delete prepared.boostedCardId;
 		delete prepared.boostedCardUniqueId;
@@ -2337,6 +2520,9 @@ const gameModule = {
 		cardCopy.currentStrength = baseStrength;
 		cardCopy.underWeather = false;
 		delete cardCopy._displayStrength;
+		delete cardCopy._unityBonus;
+		delete cardCopy._unityMultiplier;
+		delete cardCopy._unityAppliedUniqueId;
 		
 		this.gameState[player].discard.push(cardCopy);
 		this.updateDiscardDisplay(player);
@@ -2559,8 +2745,11 @@ const gameModule = {
 	updateRowStrength: function(row, player = 'player') {
 		const rowState = this.gameState[player].rows[row];
 		
-		// Сначала приводим силу каждой карты в соответствие с погодой,
-		// затем суммируем актуальную силу.
+		// Сначала пересчитываем бонусы способности «Союз»,
+		// затем приводим силу каждой карты в соответствие с погодой
+		// и суммируем актуальную силу.
+		this.applyUnityAbilityToRow(row, player);
+		
 		rowState.cards.forEach(card => {
 			this.applyWeatherToCard(card, row, player);
 		});
@@ -2601,6 +2790,9 @@ const gameModule = {
 		copy.modifiedStrength = baseStrength;
 		copy.underWeather = false;
 		delete copy._preWeatherStrength;
+		delete copy._unityBonus;
+		delete copy._unityMultiplier;
+		delete copy._unityAppliedUniqueId;
 		
 		return copy;
 	},

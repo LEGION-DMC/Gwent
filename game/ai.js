@@ -4159,6 +4159,11 @@ const aiModule = {
 		}
 		
 		cardCopy.underWeather = false;
+		delete cardCopy._preWeatherStrength;
+		delete cardCopy._displayStrength;
+		delete cardCopy._unityBonus;
+		delete cardCopy._unityMultiplier;
+		delete cardCopy._unityAppliedUniqueId;
 		
 		this.removeCardFromHand(decoyCard);
 		

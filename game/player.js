@@ -3620,6 +3620,10 @@ const playerModule = {
 		delete cardCopy.completeCalled;
 		delete cardCopy.uniqueId;           
 		delete cardCopy._displayStrength;
+		delete cardCopy._preWeatherStrength;
+		delete cardCopy._unityBonus;
+		delete cardCopy._unityMultiplier;
+		delete cardCopy._unityAppliedUniqueId;
 		delete cardCopy.currentStrength;    
 		delete cardCopy.modifiedStrength;  
 		delete cardCopy.underWeather;

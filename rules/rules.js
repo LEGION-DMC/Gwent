@@ -179,6 +179,7 @@ const ABILITY_ICONS = {
     medic:                    'deck/medic.webp',
     decoy:                    'deck/decoy.webp',
     flock:                    'deck/flock.webp',
+    unity:                    'deck/unity.webp',
     call_rat:                 'deck/call.webp',
     double_row_strength_unit: 'deck/double_row_strength_unit.webp',
     boost_tag_witcher_2:      'deck/witcher.webp',
@@ -218,6 +219,7 @@ const ABILITY_GROUPS = {
             { id: 'medic' },
             { id: 'decoy' },
             { id: 'flock' },
+            { id: 'unity' },
             {
                 id: 'call_rat',
                 title: 'Призыв',
