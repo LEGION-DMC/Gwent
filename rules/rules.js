@@ -223,7 +223,7 @@ const ABILITY_GROUPS = {
             {
                 id: 'call_rat',
                 title: 'Призыв',
-                ids: ['call_rat', 'call_driad', 'call_warrior'],
+                dynamicSummons: true,
                 description: 'Призывает на поле несколько определённых карт.'
             },
             { id: 'double_row_strength_unit' },
@@ -288,6 +288,12 @@ const rulesModule = {
             return `<div class="no-content-selected">Способности ещё не загружены</div>`;
         }
 
+        // Все способности призыва собираются автоматически по типу эффекта.
+        // Новые способности не нужно вручную добавлять в список ниже.
+        const summonAbilityIds = Object.keys(abilities).filter(id =>
+            window.skillSystem?.isSummonAbility?.(id)
+        );
+
         // Значения для групповых способностей: собираем диапазон из ids
         const getRangeValue = (ids, field = 'effect.value') => {
             const values = ids
@@ -330,7 +336,9 @@ const rulesModule = {
                 }
             }
 
-            const iconPath = ABILITY_ICONS[card.id] || `deck/${card.id}.webp`;
+            const iconPath = window.cardsModule?.getAbilityIconPath?.(card.id)
+                || ABILITY_ICONS[card.id]
+                || `deck/${card.id}.webp`;
 
             return `
                 <div class="bloc-rule">
@@ -350,7 +358,14 @@ const rulesModule = {
             const group = ABILITY_GROUPS[groupKey];
             if (!group) return '';
 
-            const items = group.cards.map(renderCard).join('');
+            const groupCards = group.cards.map(card => {
+                if (!card.dynamicSummons) return card;
+
+                const ids = summonAbilityIds.length > 0 ? summonAbilityIds : [card.id];
+                return Object.assign({}, card, { id: ids[0], ids: ids });
+            });
+
+            const items = groupCards.map(renderCard).join('');
             if (!items) return '';
 
             return `<h3>${group.label}</h3>${items}`;

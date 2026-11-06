@@ -147,7 +147,7 @@ const aiModule = {
 			if (card.ability === 'flock') {
 				canPlay = this.canPlayFlockCard(card);
 			}
-			else if (card.ability === 'call') {
+			else if (window.skillSystem && window.skillSystem.isSummonAbility(card)) {
 				canPlay = this.canPlayCallCard(card);
 			}
 			else if (this.isWeatherCard(card)) {
@@ -752,75 +752,36 @@ const aiModule = {
 	},
 
 	canPlayCallCard: function(card) {
-		// Проверяем, есть ли место для призываемой карты
-		if (!card.summon) return false;
-		
-		// Находим карту для призыва
-		let summonedCard = null;
-		let summonCopyCount = 1;
-		
-		if (window.cardsModule && window.cardsModule.cardsData) {
-			for (const factionName in window.cardsModule.cardsData) {
-				const faction = window.cardsModule.cardsData[factionName];
-				for (const cardType in faction) {
-					if (Array.isArray(faction[cardType])) {
-						const foundCard = faction[cardType].find(c => c.name === card.summon);
-						if (foundCard) {
-							summonedCard = foundCard;
-							summonCopyCount = foundCard.copy || 1;
-							break;
-						}
-					}
-				}
-				if (summonedCard) break;
-			}
-		}
-		
-		if (!summonedCard) return false;
-		
-		// Проверяем, есть ли место для всех копий
+		const config = window.skillSystem ? window.skillSystem.getSummonConfig(card) : null;
+		if (!config) return false;
+
+		const summonCopyCount = window.skillSystem.getSummonCount(config, 'opponent', this.gameState);
+		if (summonCopyCount === 0) return false;
+
 		let availableSlots = 0;
 		const rows = ['close', 'ranged', 'siege'];
-		
+
 		rows.forEach(row => {
 			if (this.gameState.opponent.rows[row].cards.length < 9) {
 				availableSlots += (9 - this.gameState.opponent.rows[row].cards.length);
 			}
 		});
-		
+
 		return availableSlots >= summonCopyCount;
 	},
 
 	evaluateCallCard: function(card) {
 		let score = card.strength || 5;
-		
-		if (!card.summon) return score;
-		
-		// Находим призываемую карту
-		let summonedCard = null;
-		let summonCopyCount = 1;
-		let summonedStrength = 0;
-		
-		if (window.cardsModule && window.cardsModule.cardsData) {
-			for (const factionName in window.cardsModule.cardsData) {
-				const faction = window.cardsModule.cardsData[factionName];
-				for (const cardType in faction) {
-					if (Array.isArray(faction[cardType])) {
-						const foundCard = faction[cardType].find(c => c.name === card.summon);
-						if (foundCard) {
-							summonedCard = foundCard;
-							summonCopyCount = foundCard.copy || 1;
-							summonedStrength = foundCard.strength || 0;
-							break;
-						}
-					}
-				}
-				if (summonedCard) break;
-			}
-		}
-		
+
+		const config = window.skillSystem ? window.skillSystem.getSummonConfig(card) : null;
+		if (!config) return score;
+
+		const summonedCard = window.skillSystem.findSummonTemplate(config.summonName);
 		if (!summonedCard) return score;
-		
+
+		const summonCopyCount = window.skillSystem.getSummonCount(config, 'opponent', this.gameState);
+		const summonedStrength = summonedCard.strength || 0;
+
 		// Общая сила призываемых карт
 		const totalSummonedStrength = summonedStrength * summonCopyCount;
 		score += totalSummonedStrength * 0.8;
@@ -1078,9 +1039,9 @@ const aiModule = {
 		if (card.ability === 'flock') {
 			baseScore = this.evaluateFlockCard(card);
 		} 
-		else if (card.ability === 'call') {
-			baseScore = this.evaluateCallCard(card); // НОВОЕ
-		}
+		else if (window.skillSystem && window.skillSystem.isSummonAbility(card)) {
+			baseScore = this.evaluateCallCard(card);
+		} 
 		else if (card.ability === 'double_row_strength') {  
 			baseScore = this.evaluateDoubleStrengthCard(card);  // ← ДОБАВИТЬ
 		}
@@ -3003,7 +2964,7 @@ const aiModule = {
 		if (card.ability === 'flock') {
         this.playFlockCard(card);
 		}
-		else if (card.ability === 'call_rat' || card.ability === 'call_driad') {
+		else if (window.skillSystem && window.skillSystem.isSummonAbility(card)) {
 			this.playCallCard(card);
 		}
 		else if (this.isWeatherCard(card)) {
@@ -3144,97 +3105,38 @@ const aiModule = {
 		}
 		
 		// Активируем способность призыва
-		if (card.summon) {
+		if (window.skillSystem && window.skillSystem.isSummonAbility(card)) {
 			setTimeout(() => {
-				this.activateCallAbilityForAI(cardCopy, card.summon);
+				this.activateSummonAbilityForAI(cardCopy);
 			}, 300);
 		} else {
-			console.warn(`AI: Карта ${card.name} имеет способность 'call', но не указано поле 'summon'.`);
 			if (window.gameModule) {
 				window.gameModule.completeCardPlay();
 			}
 		}
 	},
 
-	activateCallAbilityForAI: function(playedCard, summonedCardName) {
-		console.log(`=== AI активирует способность "Призыв" для карты: ${summonedCardName} ===`);
-		
-		// 1. Найти карту для призыва
-		let cardToSummon = null;
-		let summonCopyCount = 1;
-		
-		if (window.cardsModule && window.cardsModule.cardsData) {
-			for (const factionName in window.cardsModule.cardsData) {
-				const faction = window.cardsModule.cardsData[factionName];
-				for (const cardType in faction) {
-					if (Array.isArray(faction[cardType])) {
-						const foundCard = faction[cardType].find(c => c.name === summonedCardName);
-						if (foundCard) {
-							cardToSummon = foundCard;
-							summonCopyCount = foundCard.copy || 1;
-							break;
-						}
-					}
-				}
-				if (cardToSummon) break;
-			}
+	activateSummonAbilityForAI: function(playedCard) {
+		const result = window.skillSystem.executeSummon(playedCard, 'opponent', this.gameState);
+
+		if (window.gameModule && window.gameModule.showGameMessage) {
+			const message = result.success
+				? (result.partial
+					? `Противник призывает только ${result.summonedCount} из ${result.expectedCount} карт «${result.templateName}»!`
+					: `Противник призывает ${result.summonedCount} карт «${result.templateName}»!`)
+				: `Противник не смог призвать карты: ${result.message}`;
+
+			window.gameModule.showGameMessage(message, result.success ? 'warning' : 'info');
 		}
 
-		if (!cardToSummon) {
-			console.error(`AI: Не удалось найти карту для призыва: ${summonedCardName}`);
-			if (window.gameModule) window.gameModule.completeCardPlay();
-			return;
-		}
-
-		console.log(`AI: Нужно призвать ${summonCopyCount} копий карты ${summonedCardName}`);
-		
-		let summonedCount = 0;
-		
-		for (let i = 0; i < summonCopyCount; i++) {
-			// Находим лучший ряд для призыва
-			let targetRow = this.getBestRowForFlockSummon(cardToSummon);
-			
-			if (!targetRow) {
-				console.warn(`AI: Нет места для ${i+1}-й копии карты "${summonedCardName}"!`);
-				break;
-			}
-
-			// Создаем и размещаем копию
-			const summonCopy = window.gameModule.createCardCopy(cardToSummon);
-			summonCopy.summonedByCall = true;
-			
-			const rowState = this.gameState.opponent.rows[targetRow];
-			if (rowState.cards.length >= 9) {
-				break;
-			}
-
-			const insertPosition = rowState.cards.length;
-			rowState.cards.push(summonCopy);
-			
-			if (window.gameModule) {
-				window.gameModule.displayCardOnRow(targetRow, summonCopy, 'opponent', insertPosition);
-				window.gameModule.updateRowStrength(targetRow, 'opponent');
-			}
-			
-			summonedCount++;
-		}
-
-		const message = summonedCount === summonCopyCount 
-			? `Противник призывает ${summonedCount} ${summonedCount === 1 ? summonedCardName : (summonedCardName === 'Крыса' ? 'Крысы' : summonedCardName + 'ов')}!`
-			: `Противник призывает только ${summonedCount} из ${summonCopyCount} карт!`;
-		
-		if (window.gameModule) {
-			window.gameModule.showGameMessage(message, 'warning');
-			
-			setTimeout(() => {
-				if (window.gameModule && window.gameModule.completeCardPlay) {
-					window.gameModule.completeCardPlay();
-				}
-			}, 800);
-		}
-		
 		if (window.audioManager && window.audioManager.playSound) {
 			audioManager.playSound('card_close');
+		}
+
+		if (window.gameModule && window.gameModule.completeCardPlay) {
+			setTimeout(() => {
+				window.gameModule.completeCardPlay();
+			}, 800);
 		}
 	},
 

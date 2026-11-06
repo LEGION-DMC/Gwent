@@ -100,7 +100,7 @@ const playerModule = {
 						this.startDamageCardPlacement(card);
 					} else if (card.ability && card.ability.startsWith('boost_')) {
 						this.startSpecialBoostPlacement(card);
-					} else if (card.ability === 'call_rat' || card.ability === 'call_driad') {
+					} else if (window.skillSystem && window.skillSystem.isSummonAbility(card)) {
 						this.startCallCardPlacement(card);
 					} else {
 						this.startUnitCardPlacement(card);
@@ -639,7 +639,7 @@ const playerModule = {
 	},
 
 	startCallCardPlacement: function(card) {
-		if (!card.summon) {
+		if (!window.skillSystem || !window.skillSystem.isSummonAbility(card)) {
 			this.showMessage('У карты нет указания, кого призывать!');
 			this.cancelCardSelection();
 			return;
@@ -648,98 +648,39 @@ const playerModule = {
 		this.startUnitCardPlacement(card);
 	},
 
-	activateCallAbility: function(playedCard, summonedCardName) {
-		console.log(`=== Активация способности "Призыв" для карты: ${summonedCardName} ===`);
-		
-		// 1. Найти карту для призыва в глобальной коллекции cardsData (включая скрытые)
-		let cardToSummon = null;
-		let summonCopyCount = 1;
-		
-		if (window.cardsModule && window.cardsModule.cardsData) {
-			for (const factionName in window.cardsModule.cardsData) {
-				const faction = window.cardsModule.cardsData[factionName];
-				for (const cardType in faction) {
-					if (Array.isArray(faction[cardType])) {
-						const foundCard = faction[cardType].find(c => c.name === summonedCardName);
-						if (foundCard) {
-							cardToSummon = foundCard;
-							summonCopyCount = foundCard.copy || 1;
-							break;
-						}
-					}
-				}
-				if (cardToSummon) break;
-			}
-		}
-
-		if (!cardToSummon) {
-			console.error(`Не удалось найти карту для призыва: ${summonedCardName}`);
-			window.gameModule.showGameMessage(`Ошибка: карта "${summonedCardName}" не найдена!`, 'error');
+	activateSummonAbility: function(playedCard) {
+		const config = window.skillSystem ? window.skillSystem.getSummonConfig(playedCard) : null;
+		if (!config) {
 			if (window.gameModule) window.gameModule.completeCardPlay();
 			return;
 		}
 
-		console.log(`Найдена карта для призыва: ${cardToSummon.name}, нужно призвать ${summonCopyCount} копий`);
+		const result = window.skillSystem.executeSummon(playedCard, 'player', this.gameState);
 
-		let summonedCount = 0;
-		const rows = ['close', 'ranged', 'siege'];
-		
-		// Пытаемся призвать указанное количество копий
-		for (let i = 0; i < summonCopyCount; i++) {
-			// 2. Определить подходящий ряд для призыва
-			let targetRow = this.getBestRowForSummon(cardToSummon);
-			
-			if (!targetRow) {
-				console.warn(`Нет места для ${i+1}-й копии карты "${summonedCardName}"!`);
-				break;
+		if (result.success) {
+			const message = result.partial
+				? `Призыв активирован! Призвано только ${result.summonedCount} из ${result.expectedCount} ${this.getCardDeclension(result.expectedCount, result.templateName)} (недостаточно места).`
+				: `Призыв активирован! Призвано ${result.summonedCount} ${this.getCardDeclension(result.summonedCount, result.templateName)}.`;
+
+			if (window.gameModule && window.gameModule.showGameMessage) {
+				window.gameModule.showGameMessage(message, 'info');
 			}
 
-			// 3. Создать копию карты и разместить её на поле
-			const summonCopy = window.gameModule.createCardCopy(cardToSummon);
-			summonCopy.summonedByCall = true;
-			summonCopy.originalCallerId = playedCard.id;
-			summonCopy.copyNumber = i + 1;
-
-			// Добавляем карту в ряд
-			const rowState = this.gameState.player.rows[targetRow];
-			if (rowState.cards.length >= 9) {
-				console.warn(`В ряду ${targetRow} нет места для ${i+1}-й копии!`);
-				break;
-			}
-
-			// Размещаем в конец ряда
-			const insertIndex = rowState.cards.length;
-			rowState.cards.push(summonCopy);
-			
-			if (window.gameModule) {
-				window.gameModule.displayCardOnRow(targetRow, summonCopy, 'player', insertIndex);
-				window.gameModule.updateRowStrength(targetRow, 'player');
-			}
-			
-			summonedCount++;
-		}
-
-		if (summonedCount > 0) {
-			const message = summonedCount === summonCopyCount 
-				? `Призыв активирован! Призвано ${summonedCount} ${this.getCardDeclension(summonedCount, cardToSummon.name)}.`
-				: `Призыв активирован! Призвано только ${summonedCount} из ${summonCopyCount} ${this.getCardDeclension(summonCopyCount, cardToSummon.name)} (недостаточно места).`;
-			
-			window.gameModule.showGameMessage(message, 'info');
-			
 			if (window.audioManager && window.audioManager.playSound) {
 				audioManager.playSound('card_close');
 			}
 		} else {
-			window.gameModule.showGameMessage(`Нет места для призыва карт "${summonedCardName}"!`, 'warning');
+			if (window.gameModule && window.gameModule.showGameMessage) {
+				window.gameModule.showGameMessage(result.message || 'Призыв не сработал', 'warning');
+			}
 		}
 
-		// Завершаем ход после небольшой задержки
-		setTimeout(() => {
-			if (window.gameModule && !playedCard.completeCalled) {
-				playedCard.completeCalled = true;
+		if (window.gameModule && !playedCard.completeCalled) {
+			playedCard.completeCalled = true;
+			setTimeout(() => {
 				window.gameModule.completeCardPlay();
-			}
-		}, 800);
+			}, 500);
+		}
 	},
 
 	activateMedicAbility: function(playedCard) {
@@ -4130,19 +4071,9 @@ const playerModule = {
 				}
 			} 
 
-			else if (card.ability === 'call_rat' || card.ability === 'call_driad') {
-				if (card.summon) {
-					setTimeout(() => {
-						this.activateCallAbility(cardCopy, card.summon);
-					}, 300);
-				} else {
-					console.warn(`Карта ${card.name} имеет способность 'call', но не указано поле 'summon'.`);
-					window.gameModule.completeCardPlay();
-				}
-			}
-			else if (card.ability === 'call_warrior') {
+			else if (window.skillSystem && window.skillSystem.isSummonAbility(card)) {
 				setTimeout(() => {
-					this.activateCallFromDeckAbility(cardCopy, 'Воительница');
+					this.activateSummonAbility(cardCopy);
 				}, 300);
 			}
 			else if (card.ability === 'medic') {      
@@ -4217,116 +4148,7 @@ const playerModule = {
 		}
 	},
 
-	activateCallFromDeckAbility: function(playedCard, summonName) {
-		if (!summonName) {
-			this.returnCardToHand(playedCard);
-			return;
-		}
-
-		const player = this.gameState.player;
-
-		// Собираем кандидатов из колоды и из руки.
-		// playedCard уже убран из руки, поэтому он не попадёт в выборку.
-		const candidates = [];
-
-		// Колода
-		player.deck.forEach(card => {
-			if (card.name === summonName && card.type === 'unit') {
-				candidates.push({ card, source: 'deck' });
-			}
-		});
-
-		// Рука
-		player.hand.forEach(card => {
-			if (card.name === summonName && card.type === 'unit') {
-				candidates.push({ card, source: 'hand' });
-			}
-		});
-
-		// Ничего не нашли — способность не срабатывает
-		if (candidates.length === 0) {
-			this.returnCardToHand(playedCard);
-			return;
-		}
-
-		let summonedCount = 0;
-
-		// Идём с конца, чтобы splice не сбивал индексы
-		for (let i = candidates.length - 1; i >= 0; i--) {
-			const { card, source } = candidates[i];
-
-			const targetRow = this.getBestRowForSummon(card);
-			if (!targetRow) continue;
-
-			// Удаляем из источника
-			if (source === 'deck') {
-				const idx = player.deck.findIndex(c => c === card);
-				if (idx === -1) continue;
-				player.deck.splice(idx, 1);
-			} else {
-				const idx = player.hand.findIndex(c => c === card);
-				if (idx === -1) continue;
-				player.hand.splice(idx, 1);
-			}
-
-			// Создаём копию и размещаем на поле
-			const baseStrength = window.gameModule && window.gameModule.getCardBaseStrength
-				? window.gameModule.getCardBaseStrength(card)
-				: (card.baseStrength !== undefined ? card.baseStrength : card.strength);
-			
-			const summonCopy = {
-				...card,
-				uniqueId: `${card.id}_call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-				baseStrength: baseStrength,
-				currentStrength: baseStrength,
-				modifiedStrength: baseStrength,
-				strength: baseStrength,
-				underWeather: false,
-				owner: 'player',
-				row: targetRow,
-				summonedByCall: true,
-				originalCallerId: playedCard.id
-			};
-
-			player.rows[targetRow].cards.push(summonCopy);
-
-			if (window.gameModule) {
-				window.gameModule.displayCardOnRow(
-					targetRow,
-					summonCopy,
-					'player',
-					player.rows[targetRow].cards.length - 1
-				);
-				window.gameModule.updateRowStrength(targetRow, 'player');
-			}
-
-			summonedCount++;
-		}
-
-		if (summonedCount === 0) {
-			this.returnCardToHand(playedCard);
-			return;
-		}
-
-		if (window.gameModule) {
-			window.gameModule.displayPlayerHand();
-			window.gameModule.displayPlayerDeck();
-			window.gameModule.updateTotalScoreDisplays();
-		}
-
-		if (window.audioManager && window.audioManager.playSound) {
-			audioManager.playSound('card_close');
-		}
-
-		if (window.gameModule && !playedCard.completeCalled) {
-			playedCard.completeCalled = true;
-			setTimeout(() => {
-				window.gameModule.completeCardPlay();
-			}, 500);
-		}
-	},
-
-    removeCardFromHand: function(card) {
+	removeCardFromHand: function(card) {
         if (window.gameModule && window.gameModule.removeCardFromHand) {
             window.gameModule.removeCardFromHand(card, 'player');
         } else {

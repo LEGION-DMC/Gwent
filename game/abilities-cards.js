@@ -188,6 +188,15 @@ const skillSystem = {
 				target: 'self'
 			}
 		},
+		'call_ghost': {
+			name: 'Неупокоенная душа',
+			type: 'special',
+			description: '<span class="ability-hint"><span class="hint-trigger">Призывает</span><span class="hint-tooltip"><strong style="color:#0cbe38">Призыв:</strong> Автоматически размещает на поле указанные карты.</span></span><span class="description-normal"> на поле 3 призрака.',
+			effect: {
+				type: 'summon_named_card', 
+				target: 'self'
+			}
+		},
 		'call_warrior': {
 			name: 'Зов щита',
 			type: 'special',
@@ -594,6 +603,265 @@ const skillSystem = {
 			}
 		}, 	
 
+	},
+
+	// Универсальные типы эффектов призыва.
+	// Добавляя новую способность, достаточно указать один из этих типов —
+	// отдельных проверок по id способности в player.js/ai.js больше не требуется.
+	summonEffectTypes: {
+		'summon_named_card': 'collection',
+		'call_named_card': 'deck_and_hand'
+	},
+
+	getAbilityData: function(cardOrAbility) {
+		if (!cardOrAbility) return null;
+		const abilityId = typeof cardOrAbility === 'string' ? cardOrAbility : cardOrAbility.ability;
+		if (!abilityId) return null;
+		return this.abilities[abilityId] || null;
+	},
+
+	getSummonConfig: function(cardOrAbility) {
+		const card = typeof cardOrAbility === 'string' ? { ability: cardOrAbility } : (cardOrAbility || {});
+		const ability = this.getAbilityData(card);
+		const effect = ability && ability.effect ? ability.effect : null;
+
+		let effectType = effect && effect.type;
+
+		// Поддержка старого формата: ability: 'call' + поле summon у карты
+		if (!effectType && card.ability === 'call' && card.summon) {
+			effectType = 'summon_named_card';
+		}
+
+		const mode = effectType ? this.summonEffectTypes[effectType] : null;
+		if (!mode) return null;
+
+		// Имя можно задать либо в effect.summonName, либо в поле summon самой карты.
+		// Для проверки по одному id карты поле summon недоступно, поэтому здесь
+		// допускаем null — это всё равно способность призыва.
+		const summonName = (effect && effect.summonName) || card.summon || null;
+
+		return {
+			effectType: effectType,
+			mode: mode,
+			summonName: summonName,
+			count: effect && Number.isFinite(effect.count) ? effect.count : null
+		};
+	},
+
+	isSummonAbility: function(cardOrAbility) {
+		return !!this.getSummonConfig(cardOrAbility);
+	},
+
+	findSummonTemplate: function(summonName) {
+		const data = window.cardsModule && window.cardsModule.cardsData;
+		if (!data) return null;
+
+		for (const factionName in data) {
+			const faction = data[factionName];
+			for (const cardType in faction) {
+				if (Array.isArray(faction[cardType])) {
+					const foundCard = faction[cardType].find(c => c.name === summonName);
+					if (foundCard) return foundCard;
+				}
+			}
+		}
+
+		return null;
+	},
+
+	getRowsForCard: function(card) {
+		const allRows = ['close', 'ranged', 'siege'];
+
+		if (!card || !card.position || card.position === 'any-row' || card.position === 'any') {
+			return allRows;
+		}
+
+		if (Array.isArray(card.position)) {
+			return card.position.map(pos => String(pos).replace('-row', ''));
+		}
+
+		return [String(card.position).replace('-row', '')];
+	},
+
+	getSummonCandidates: function(config, owner, gameState) {
+		if (!config) return [];
+
+		const state = gameState && gameState[owner];
+		if (!state) return [];
+
+		if (config.mode === 'collection') {
+			const template = this.findSummonTemplate(config.summonName);
+			return template ? [{ card: template, source: 'collection' }] : [];
+		}
+
+		const candidates = [];
+
+		(state.deck || []).forEach(card => {
+			if (card.name === config.summonName && card.type === 'unit') {
+				candidates.push({ card: card, source: 'deck' });
+			}
+		});
+
+		(state.hand || []).forEach(card => {
+			if (card.name === config.summonName && card.type === 'unit') {
+				candidates.push({ card: card, source: 'hand' });
+			}
+		});
+
+		return candidates;
+	},
+
+	getSummonCount: function(config, owner, gameState) {
+		if (!config || !config.summonName) return 0;
+
+		if (config.mode === 'collection') {
+			const template = this.findSummonTemplate(config.summonName);
+			if (!template) return 0;
+			return config.count !== null ? config.count : (template.copy || 1);
+		}
+
+		return this.getSummonCandidates(config, owner, gameState).length;
+	},
+
+	getBestSummonRow: function(card, owner, gameState) {
+		const state = gameState && gameState[owner];
+		if (!state) return null;
+
+		const availableRows = this.getRowsForCard(card).filter(row =>
+			state.rows[row] && state.rows[row].cards.length < 9
+		);
+
+		if (availableRows.length === 0) return null;
+
+		let bestRow = availableRows[0];
+		let bestStrength = state.rows[bestRow].strength || 0;
+
+		availableRows.forEach(row => {
+			const rowStrength = state.rows[row].strength || 0;
+			if (rowStrength > bestStrength) {
+				bestStrength = rowStrength;
+				bestRow = row;
+			}
+		});
+
+		return bestRow;
+	},
+
+	executeSummon: function(playedCard, owner, gameState) {
+		const config = this.getSummonConfig(playedCard);
+		if (!config) {
+			return { success: false, message: 'Карта не обладает способностью призыва' };
+		}
+		if (!config.summonName) {
+			return { success: false, message: 'Не указано имя карты для призыва' };
+		}
+
+		const state = gameState && gameState[owner];
+		if (!state) {
+			return { success: false, message: 'Не удалось определить сторону призыва' };
+		}
+
+		const template = this.findSummonTemplate(config.summonName);
+		if (!template) {
+			return { success: false, message: `Карта «${config.summonName}» не найдена` };
+		}
+
+		const placements = [];
+
+		if (config.mode === 'deck_and_hand') {
+			const candidates = this.getSummonCandidates(config, owner, gameState);
+			const limit = config.count !== null ? Math.min(config.count, candidates.length) : candidates.length;
+
+			for (let i = 0; i < limit; i++) {
+				placements.push({ card: candidates[i].card, source: candidates[i].source });
+			}
+		} else {
+			const count = config.count !== null ? config.count : (template.copy || 1);
+
+			for (let i = 0; i < count; i++) {
+				placements.push({ card: template, source: 'collection' });
+			}
+		}
+
+		if (placements.length === 0) {
+			return { success: false, message: `Нет карт для призыва «${config.summonName}»` };
+		}
+
+		let summonedCount = 0;
+		const summonedCards = [];
+
+		placements.forEach(placement => {
+			const sourceCard = placement.card;
+			const targetRow = this.getBestSummonRow(sourceCard, owner, gameState);
+			if (!targetRow) return;
+
+			if (placement.source !== 'collection') {
+				const sourceList = placement.source === 'deck' ? state.deck : state.hand;
+				const sourceIndex = sourceList.indexOf(sourceCard);
+				if (sourceIndex === -1) return;
+				sourceList.splice(sourceIndex, 1);
+			}
+
+			const summonCopy = window.gameModule && window.gameModule.createCardCopy
+				? window.gameModule.createCardCopy(sourceCard)
+				: Object.assign({}, sourceCard);
+
+			summonCopy.owner = owner;
+			summonCopy.row = targetRow;
+			summonCopy.summonedByCall = true;
+			summonCopy.originalCallerId = playedCard.id;
+
+			if (config.mode === 'collection') {
+				summonCopy.copyNumber = summonedCount + 1;
+			}
+
+			const rowState = state.rows[targetRow];
+			const insertIndex = rowState.cards.length;
+			rowState.cards.push(summonCopy);
+
+			if (window.gameModule) {
+				if (window.gameModule.displayCardOnRow) {
+					window.gameModule.displayCardOnRow(targetRow, summonCopy, owner, insertIndex);
+				}
+				if (window.gameModule.updateRowStrength) {
+					window.gameModule.updateRowStrength(targetRow, owner);
+				}
+			}
+
+			summonedCards.push(summonCopy);
+			summonedCount++;
+		});
+
+		if (config.mode === 'deck_and_hand' && window.gameModule) {
+			if (owner === 'player') {
+				if (window.gameModule.displayPlayerHand) window.gameModule.displayPlayerHand();
+				if (window.gameModule.displayPlayerDeck) window.gameModule.displayPlayerDeck();
+			} else if (window.gameModule.displayOpponentDeck) {
+				window.gameModule.displayOpponentDeck();
+			}
+		}
+
+		if (window.gameModule && window.gameModule.updateTotalScoreDisplays) {
+			window.gameModule.updateTotalScoreDisplays();
+		}
+
+		if (summonedCount === 0) {
+			return { success: false, message: `Нет места для призыва карт «${config.summonName}»` };
+		}
+
+		const expectedCount = placements.length;
+
+		return {
+			success: true,
+			summonedCount: summonedCount,
+			expectedCount: expectedCount,
+			partial: summonedCount < expectedCount,
+			templateName: template.name,
+			summonedCards: summonedCards,
+			message: summonedCount < expectedCount
+				? `Призвано ${summonedCount} из ${expectedCount} карт «${template.name}» (недостаточно места)`
+				: `Призвано ${summonedCount} карт «${template.name}»`
+		};
 	},
 
 	applyDoubleRowStrengthUnitEffect: function(effect, context) {

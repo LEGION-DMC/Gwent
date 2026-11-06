@@ -134,7 +134,8 @@ const collectionModule = (function() {
 				if (card.type !== 'unit') return false;
 
 				if (currentFilters.ability === 'call') {
-					return card.ability && card.ability.startsWith('call_');
+					return window.skillSystem?.isSummonAbility?.(card.ability)
+						|| (card.ability && card.ability.startsWith('call_'));
 				}
 
 				return card.ability === currentFilters.ability;
@@ -1143,7 +1144,7 @@ function updateSearchUI() {
 			let key = card.ability;
 			let name;
 
-			if (key.startsWith('call_')) {
+			if (window.skillSystem?.isSummonAbility?.(card.ability) || key.startsWith('call_')) {
 				key = 'call';
 				name = 'Призыв';
 			} else {
