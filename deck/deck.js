@@ -241,6 +241,8 @@ let availableCards = {
 
 let displayedCollectionCards = [];
 let lastCollectionFilter = 'all';
+let collectionPositionFilter = 'all';
+let deckPositionFilter = 'all';
 let lastDeckFilter = 'all';
 let factionSortEnabled = false;
 let deckFactionSortEnabled = false;
@@ -248,6 +250,8 @@ let deckFactionSortEnabled = false;
 function initDeckBuilding(faction) {
     window.selectedFaction = faction;
     currentDeck.faction = faction.id;
+    collectionPositionFilter = 'all';
+    deckPositionFilter = 'all';
     
     const savedDeck = localStorage.getItem(`gwent_deck_${faction.id}`);
     
@@ -349,6 +353,20 @@ function createDeckBuildingHTML() {
 							<button class="sort-btn" data-type="units">
 								<img src="deck/unit.png" alt="Отряды" title="">
 							</button>
+							<div class="position-sort-bar" id="collectionPositionBar">
+								<button class="position-sort-btn" data-position="close-row" title="Ближний ряд">
+									<img src="deck/close-row.png" alt="Ближний ряд">
+								</button>
+								<button class="position-sort-btn" data-position="ranged-row" title="Дальний ряд">
+									<img src="deck/ranged-row.png" alt="Дальний ряд">
+								</button>
+								<button class="position-sort-btn" data-position="siege-row" title="Осадный ряд">
+									<img src="deck/siege-row.png" alt="Осадный ряд">
+								</button>
+								<button class="position-sort-btn" data-position="any-row" title="Любой ряд">
+									<img src="deck/any-row.png" alt="Любой ряд">
+								</button>
+							</div>
 							<button class="sort-btn" data-type="specials">
 								<img src="deck/special.png" alt="Спец. карты" title="">
 							</button>
@@ -451,6 +469,20 @@ function createDeckBuildingHTML() {
 							<button class="sort-btn" data-type="units">
 								<img src="deck/unit.png" alt="Отряды" title="">
 							</button>
+							<div class="position-sort-bar" id="deckPositionBar">
+								<button class="position-sort-btn" data-position="close-row" title="Ближний ряд">
+									<img src="deck/close-row.png" alt="Ближний ряд">
+								</button>
+								<button class="position-sort-btn" data-position="ranged-row" title="Дальний ряд">
+									<img src="deck/ranged-row.png" alt="Дальний ряд">
+								</button>
+								<button class="position-sort-btn" data-position="siege-row" title="Осадный ряд">
+									<img src="deck/siege-row.png" alt="Осадный ряд">
+								</button>
+								<button class="position-sort-btn" data-position="any-row" title="Любой ряд">
+									<img src="deck/any-row.png" alt="Любой ряд">
+								</button>
+							</div>
 							<button class="sort-btn" data-type="specials">
 								<img src="deck/special.png" alt="Спец. карты" title="">
 							</button>
@@ -651,6 +683,22 @@ function setupDeckBuildingEventListeners() {
         });
     }
     
+    const positionSortBar = document.getElementById('collectionPositionBar');
+    if (positionSortBar) {
+        positionSortBar.querySelectorAll('.position-sort-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const position = btn.dataset.position;
+                collectionPositionFilter = collectionPositionFilter === position ? 'all' : position;
+                displayCollectionCards();
+                audioManager.playSound('button');
+            });
+            
+            btn.addEventListener('mouseenter', () => {
+                audioManager.playSound('touch');
+            });
+        });
+    }
+    
     const deckFactionSortBtn = document.querySelector('.deck-cards .deck-faction-sort-btn');
     if (deckFactionSortBtn) {
         if (!deckFactionSortEnabled) {
@@ -680,6 +728,22 @@ function setupDeckBuildingEventListeners() {
         
         deckFactionSortBtn.addEventListener('mouseenter', () => {
             audioManager.playSound('touch');
+        });
+    }
+    
+    const deckPositionBar = document.getElementById('deckPositionBar');
+    if (deckPositionBar) {
+        deckPositionBar.querySelectorAll('.position-sort-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const position = btn.dataset.position;
+                deckPositionFilter = deckPositionFilter === position ? 'all' : position;
+                updateDeckDisplay();
+                audioManager.playSound('button');
+            });
+            
+            btn.addEventListener('mouseenter', () => {
+                audioManager.playSound('touch');
+            });
         });
     }
     
@@ -737,6 +801,8 @@ function setupDeckBuildingEventListeners() {
 function backToFactionSelection() {
     factionSortEnabled = false;
     deckFactionSortEnabled = false;
+    collectionPositionFilter = 'all';
+    deckPositionFilter = 'all';
     
     const deckBuildingSection = document.querySelector('.deck-building');
     if (deckBuildingSection) {
@@ -1623,25 +1689,9 @@ function updateDeckStats() {
 }
 
 function updateDeckDisplay() {
-    const deckGrid = document.getElementById('deckGrid');
-    
-    if (currentDeck.cards.length === 0) {
-        deckGrid.innerHTML = `
-            <div class="empty-deck-message">
-                <p>Колода пуста</p>
-                <p>Добавьте карты из коллекции</p>
-                <img src="deck/none_cards.png" alt="Пустая колода" class="empty-deck-icon">
-            </div>
-        `;
-    } else {
-        const activeFilter = document.querySelector('.deck-cards .sort-btn.active:not(.deck-faction-sort-btn)');
-        if (activeFilter) {
-            const filterType = activeFilter.dataset.type;
-            sortDeckWithFactionFilter(filterType);
-        } else {
-            sortDeckWithFactionFilter('all');
-        }
-    }
+    const activeFilter = document.querySelector('.deck-cards .sort-btn.active:not(.deck-faction-sort-btn)');
+    const filterType = activeFilter ? activeFilter.dataset.type : 'all';
+    sortDeckWithFactionFilter(filterType);
 }
 
 function getCardCopyCountInDeck(cardId) {
@@ -1828,6 +1878,45 @@ function sortCollection(type) {
     sortCollectionWithFactionFilter(type);
 }
 
+function getBaseCardPosition(position) {
+    if (!position) return 'any-row';
+    return position.replace(/^hidden-/, '');
+}
+
+function updateCollectionPositionBar(type) {
+    const bar = document.getElementById('collectionPositionBar');
+    if (!bar) return;
+    
+    const isUnits = type === 'units';
+    
+    if (!isUnits) {
+        collectionPositionFilter = 'all';
+    }
+    
+    bar.classList.toggle('visible', isUnits);
+    
+    bar.querySelectorAll('.position-sort-btn').forEach(btn => {
+        btn.classList.toggle('active', isUnits && btn.dataset.position === collectionPositionFilter);
+    });
+}
+
+function updateDeckPositionBar(type) {
+    const bar = document.getElementById('deckPositionBar');
+    if (!bar) return;
+    
+    const isUnits = type === 'units';
+    
+    if (!isUnits) {
+        deckPositionFilter = 'all';
+    }
+    
+    bar.classList.toggle('visible', isUnits);
+    
+    bar.querySelectorAll('.position-sort-btn').forEach(btn => {
+        btn.classList.toggle('active', isUnits && btn.dataset.position === deckPositionFilter);
+    });
+}
+
 function sortCollectionWithFactionFilter(type) {
     const collectionGrid = document.getElementById('collectionGrid');
     
@@ -1857,6 +1946,14 @@ function sortCollectionWithFactionFilter(type) {
     }
     
     sortedCards = sortedCards.filter(card => !card.hidden);
+    
+    updateCollectionPositionBar(type);
+    
+    if (type === 'units' && collectionPositionFilter !== 'all') {
+        sortedCards = sortedCards.filter(card =>
+            getBaseCardPosition(card.position) === collectionPositionFilter
+        );
+    }
     
     const filteredCards = sortedCards.filter(card => {
         if (card.copy && card.copy > 1) {
@@ -1919,6 +2016,8 @@ function sortDeck(type) {
 function sortDeckWithFactionFilter(type) {
     const deckGrid = document.getElementById('deckGrid');
     
+    updateDeckPositionBar(type);
+    
     if (currentDeck.cards.length === 0) {
         deckGrid.innerHTML = `
             <div class="empty-deck-message">
@@ -1957,6 +2056,12 @@ function sortDeckWithFactionFilter(type) {
     
     if (deckFactionSortEnabled && window.selectedFaction) {
         sortedCards = sortedCards.filter(card => card.faction === window.selectedFaction.id);
+    }
+    
+    if (type === 'units' && deckPositionFilter !== 'all') {
+        sortedCards = sortedCards.filter(card =>
+            getBaseCardPosition(card.position) === deckPositionFilter
+        );
     }
     
     const oldCards = Array.from(deckGrid.querySelectorAll('.deck-card')).map(el => el.dataset.cardId);
